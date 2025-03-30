@@ -8,6 +8,11 @@ import {
   LogOut,
   Settings,
   ChevronDown,
+  Home,
+  Info,
+  FileText,
+  DollarSign,
+  Mail,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -23,7 +28,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import LanguageSwitcher from "./LanguageSwitcher"; // Import the switcher
-import { useTranslation } from 'react-i18next'; // Import useTranslation
+import { useTranslation } from "react-i18next"; // Import useTranslation
 
 interface NavbarProps {
   isLoggedIn?: boolean;
@@ -45,22 +50,24 @@ const Navbar = ({
   const { signOut } = useAuth();
   const navigate = useNavigate();
 
-  // Define links using translation keys
+  // Define links using translation keys with icons
   const navLinks = [
-    { name: t('sidebar.home'), path: "/" },
-    { name: t('About Us'), path: "/about" }, // Assuming 'About Us' key exists or needs adding
-    { name: t('Terms'), path: "/terms" },     // Assuming 'Terms' key exists or needs adding
-    { name: t('Pricing'), path: "/pricing" }, // Assuming 'Pricing' key exists or needs adding
-    { name: t('Contact'), path: "/contact" }, // Assuming 'Contact' key exists or needs adding
+    { name: t("sidebar.home"), path: "/", icon: <Home size={16} /> },
+    { name: t("About Us"), path: "/about", icon: <Info size={16} /> },
+    { name: t("Terms"), path: "/terms", icon: <FileText size={16} /> },
+    { name: t("Pricing"), path: "/pricing", icon: <DollarSign size={16} /> },
+    { name: t("Contact"), path: "/contact", icon: <Mail size={16} /> },
   ];
 
-   const dashboardLinks = [
-    { name: t('sidebar.dashboard'), path: "/dashboard" },
-    { name: t('sidebar.inventory'), path: "/inventory-management" },
-    { name: t('sidebar.users'), path: "/users" },
-    { name: t('sidebar.upload'), path: "/upload" },
+  const dashboardLinks = [
+    { name: t("sidebar.dashboard"), path: "/dashboard" },
+    { name: t("sidebar.projects"), path: "/projects" },
+    { name: t("sidebar.inventory"), path: "/inventory-management" },
+    { name: t("sidebar.teams"), path: "/teams" },
+    { name: t("sidebar.suppliers"), path: "/suppliers" },
+    { name: t("sidebar.budget"), path: "/budget" },
+    { name: t("sidebar.reports"), path: "/reports" },
   ];
-
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
@@ -79,8 +86,9 @@ const Navbar = ({
           <div className="flex-shrink-0 flex items-center">
             <Link to="/" className="flex items-center">
               <motion.div
-                whileHover={{ scale: 1.05 }}
+                whileHover={{ scale: 1.05, rotate: [0, -2, 2, -2, 0] }}
                 whileTap={{ scale: 0.95 }}
+                transition={{ duration: 0.5 }}
               >
                 <span className="text-2xl font-bold text-primary">
                   Inventory
@@ -92,15 +100,23 @@ const Navbar = ({
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex md:items-center md:space-x-4">
-            {navLinks.map((link) => (
-              <Link
-                key={link.path}
-                to={link.path}
-                className="text-slate-400 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
-              >
-                {link.name}
-              </Link>
-            ))}
+            {/* Only show marketing links when not logged in */}
+            {!isLoggedIn &&
+              navLinks.map((link) => (
+                <motion.div
+                  key={link.path}
+                  whileHover={{ y: -2 }}
+                  whileTap={{ y: 0 }}
+                >
+                  <Link
+                    to={link.path}
+                    className="text-slate-400 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-1"
+                  >
+                    {link.icon && <span>{link.icon}</span>}
+                    {link.name}
+                  </Link>
+                </motion.div>
+              ))}
 
             {isLoggedIn && (
               <DropdownMenu>
@@ -110,9 +126,12 @@ const Navbar = ({
                     variant="ghost"
                     className="flex items-center gap-1 text-slate-400 hover:text-white"
                   >
-                    <span className="flex items-center gap-1">
-                      {t('sidebar.dashboard')} <ChevronDown size={16} />
-                    </span>
+                    <motion.span
+                      className="flex items-center gap-1"
+                      whileHover={{ y: -1 }}
+                    >
+                      {t("sidebar.dashboard")} <ChevronDown size={16} />
+                    </motion.span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
@@ -127,7 +146,7 @@ const Navbar = ({
                       onClick={() => navigate(link.path)} // Use onClick for navigation
                     >
                       {/* <Link to={link.path} className="w-full"> */}
-                        {link.name}
+                      {link.name}
                       {/* </Link> */}
                     </DropdownMenuItem>
                   ))}
@@ -138,7 +157,7 @@ const Navbar = ({
 
           {/* User Authentication & Language Switcher */}
           <div className="hidden md:flex md:items-center md:space-x-2">
-             {/* Add Language Switcher here */}
+            {/* Add Language Switcher here */}
             <LanguageSwitcher />
 
             {isLoggedIn ? (
@@ -167,27 +186,27 @@ const Navbar = ({
                   {/* Removed asChild from DropdownMenuItem */}
                   <DropdownMenuItem
                     className="text-slate-300 hover:text-white focus:bg-slate-700"
-                    onClick={() => navigate('/profile')} // Use onClick for navigation
+                    onClick={() => navigate("/profile")} // Use onClick for navigation
                   >
                     {/* <Link
                       to="/profile" // Assuming /profile route exists
                       className="flex items-center gap-2 w-full"
                     > */}
-                      <User size={16} />
-                      <span>{t('Profile')}</span> {/* Assuming 'Profile' key */}
+                    <User size={16} />
+                    <span>{t("Profile")}</span> {/* Assuming 'Profile' key */}
                     {/* </Link> */}
                   </DropdownMenuItem>
                   {/* Removed asChild from DropdownMenuItem */}
                   <DropdownMenuItem
                     className="text-slate-300 hover:text-white focus:bg-slate-700"
-                    onClick={() => navigate('/settings')} // Use onClick for navigation
+                    onClick={() => navigate("/settings")} // Use onClick for navigation
                   >
                     {/* <Link
                       to="/settings"
                       className="flex items-center gap-2 w-full"
                     > */}
-                      <Settings size={16} />
-                      <span>{t('sidebar.settings')}</span>
+                    <Settings size={16} />
+                    <span>{t("sidebar.settings")}</span>
                     {/* </Link> */}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator className="bg-slate-700" />
@@ -197,7 +216,7 @@ const Navbar = ({
                   >
                     <div className="flex items-center gap-2 w-full">
                       <LogOut size={16} />
-                      <span>{t('Logout')}</span> {/* Assuming 'Logout' key */}
+                      <span>{t("Logout")}</span> {/* Assuming 'Logout' key */}
                     </div>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -211,11 +230,14 @@ const Navbar = ({
                 >
                   <Link to="/login" className="flex items-center gap-2">
                     <LogIn size={16} />
-                    <span>{t('Login')}</span> {/* Assuming 'Login' key */}
+                    <span>{t("Login")}</span> {/* Assuming 'Login' key */}
                   </Link>
                 </Button>
-                <Button> {/* asChild removed previously */}
-                  <Link to="/register">{t('Register')}</Link> {/* Assuming 'Register' key */}
+                <Button>
+                  {" "}
+                  {/* asChild removed previously */}
+                  <Link to="/register">{t("Register")}</Link>{" "}
+                  {/* Assuming 'Register' key */}
                 </Button>
               </>
             )}
@@ -247,33 +269,47 @@ const Navbar = ({
             className="md:hidden bg-slate-900 border-b border-slate-800"
           >
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.path}
-                  to={link.path}
-                  className="block px-3 py-2 rounded-md text-base font-medium text-slate-400 hover:text-white hover:bg-slate-800"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  {link.name}
-                </Link>
-              ))}
-
-              {isLoggedIn && (
-                <>
-                  <div className="pt-2 pb-1">
-                    <p className="px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                      {t('sidebar.dashboard')}
-                    </p>
-                  </div>
-                  {dashboardLinks.map((link) => (
+              {/* Only show marketing links when not logged in */}
+              {!isLoggedIn &&
+                navLinks.map((link) => (
+                  <motion.div
+                    key={link.path}
+                    initial={{ x: -20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ duration: 0.2 }}
+                  >
                     <Link
-                      key={link.path}
                       to={link.path}
                       className="block px-3 py-2 rounded-md text-base font-medium text-slate-400 hover:text-white hover:bg-slate-800"
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       {link.name}
                     </Link>
+                  </motion.div>
+                ))}
+
+              {isLoggedIn && (
+                <>
+                  <div className="pt-2 pb-1">
+                    <p className="px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                      {t("sidebar.dashboard")}
+                    </p>
+                  </div>
+                  {dashboardLinks.map((link, index) => (
+                    <motion.div
+                      key={link.path}
+                      initial={{ x: -20, opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      transition={{ duration: 0.2, delay: index * 0.05 }}
+                    >
+                      <Link
+                        to={link.path}
+                        className="block px-3 py-2 rounded-md text-base font-medium text-slate-400 hover:text-white hover:bg-slate-800"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        {link.name}
+                      </Link>
+                    </motion.div>
                   ))}
                 </>
               )}
@@ -302,14 +338,14 @@ const Navbar = ({
                         className="block px-3 py-2 rounded-md text-base font-medium text-slate-400 hover:text-white hover:bg-slate-800"
                         onClick={() => setMobileMenuOpen(false)}
                       >
-                        {t('Profile')}
+                        {t("Profile")}
                       </Link>
                       <Link
                         to="/settings"
                         className="block px-3 py-2 rounded-md text-base font-medium text-slate-400 hover:text-white hover:bg-slate-800"
                         onClick={() => setMobileMenuOpen(false)}
                       >
-                        {t('sidebar.settings')}
+                        {t("sidebar.settings")}
                       </Link>
                       <button
                         className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-slate-400 hover:text-white hover:bg-slate-800"
@@ -318,7 +354,7 @@ const Navbar = ({
                           handleLogout();
                         }}
                       >
-                        {t('Logout')}
+                        {t("Logout")}
                       </button>
                     </div>
                   </>
@@ -329,14 +365,14 @@ const Navbar = ({
                       className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-slate-400 hover:text-white hover:bg-slate-800"
                       onClick={() => setMobileMenuOpen(false)}
                     >
-                      {t('Login')}
+                      {t("Login")}
                     </Link>
                     <Link
                       to="/register"
                       className="block w-full text-center px-3 py-2 rounded-md text-base font-medium bg-primary text-white hover:bg-primary/90"
                       onClick={() => setMobileMenuOpen(false)}
                     >
-                      {t('Register')}
+                      {t("Register")}
                     </Link>
                   </div>
                 )}

@@ -97,22 +97,42 @@ const FeatureCard = ({ feature }: { feature: FeatureItem }) => {
       whileTap={{ scale: 0.98 }}
       transition={{ type: "spring", stiffness: 400, damping: 17 }}
     >
-      <Card className="h-full bg-card border-2 border-border hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10 transition-all">
+      <Card className="h-full bg-card border-2 border-border hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10 transition-all overflow-hidden">
         <CardHeader>
           <motion.div
-            className="mb-2"
-            whileHover={{ rotate: [0, -10, 10, -10, 0] }}
+            className="mb-2 p-2 rounded-full bg-primary/10 w-16 h-16 flex items-center justify-center"
+            whileHover={{
+              rotate: [0, -10, 10, -10, 0],
+              scale: 1.1,
+              backgroundColor: "rgba(139, 92, 246, 0.2)",
+            }}
             transition={{ duration: 0.5 }}
+            initial={{ scale: 0.9, opacity: 0.8 }}
+            animate={{ scale: 1, opacity: 1 }}
           >
             {feature.icon}
           </motion.div>
-          <CardTitle className="text-xl">{feature.title}</CardTitle>
+          <CardTitle className="text-xl relative">
+            {feature.title}
+            <motion.div
+              className="absolute -bottom-1 left-0 h-0.5 bg-primary/50"
+              initial={{ width: 0 }}
+              whileInView={{ width: "30%" }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.3, duration: 0.8 }}
+            />
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <CardDescription className="text-sm text-muted-foreground">
             {feature.description}
           </CardDescription>
         </CardContent>
+        <motion.div
+          className="absolute top-0 right-0 w-20 h-20 bg-primary/5 rounded-full -mr-10 -mt-10"
+          animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0.2, 0.1] }}
+          transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+        />
       </Card>
     </motion.div>
   );

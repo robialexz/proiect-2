@@ -25,7 +25,7 @@ import {
   Menu,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useTranslation } from 'react-i18next'; // Import useTranslation
+import { useTranslation } from "react-i18next"; // Import useTranslation
 
 interface NavItemProps {
   icon: React.ReactNode;
@@ -116,39 +116,59 @@ const Sidebar = ({
 
   // Navigation items grouped by category using translation keys
   const mainNavItems = [
-    { icon: <Home size={20} />, label: t('sidebar.home'), to: "/" },
+    { icon: <Home size={20} />, label: t("sidebar.home"), to: "/" },
     {
       icon: <LayoutDashboard size={20} />,
-      label: t('sidebar.dashboard'),
+      label: t("sidebar.dashboard"),
       to: "/dashboard",
     },
     {
+      icon: <FileText size={20} />,
+      label: t("sidebar.projects"),
+      to: "/projects",
+    },
+    {
       icon: <Package size={20} />,
-      label: t('sidebar.inventory'),
+      label: t("sidebar.inventory"),
       to: "/inventory-management",
     },
-    { icon: <Users size={20} />, label: t('sidebar.users'), to: "/users" },
+    {
+      icon: <Users size={20} />,
+      label: t("sidebar.teams"),
+      to: "/teams",
+    },
     {
       icon: <FileSpreadsheet size={20} />,
-      label: t('sidebar.upload'),
-      to: "/upload",
+      label: t("sidebar.suppliers"),
+      to: "/suppliers",
     },
   ];
 
   const secondaryNavItems = [
-    { icon: <Info size={20} />, label: t('About Us'), to: "/about" }, // Assuming 'About Us' key
     {
-      icon: <FileText size={20} />,
-      label: t('Terms and Conditions'), // Assuming 'Terms and Conditions' key
-      to: "/terms",
+      icon: <DollarSign size={20} />,
+      label: t("sidebar.budget"),
+      to: "/budget",
     },
-    { icon: <DollarSign size={20} />, label: t('Pricing'), to: "/pricing" }, // Assuming 'Pricing' key
-    { icon: <Mail size={20} />, label: t('Contact'), to: "/contact" }, // Assuming 'Contact' key
+    {
+      icon: <Mail size={20} />,
+      label: t("sidebar.reports"),
+      to: "/reports",
+    },
+    {
+      icon: <Info size={20} />,
+      label: t("sidebar.resources"),
+      to: "/resources",
+    },
   ];
 
   const settingsNavItems = [
-    { icon: <Settings size={20} />, label: t('sidebar.settings'), to: "/settings" },
-    { icon: <LogOut size={20} />, label: t('Logout'), to: "#logout" }, // Assuming 'Logout' key
+    {
+      icon: <Settings size={20} />,
+      label: t("sidebar.settings"),
+      to: "/settings",
+    },
+    { icon: <LogOut size={20} />, label: t("Logout"), to: "#logout" }, // Assuming 'Logout' key
   ];
 
   const toggleSidebar = () => {
@@ -171,7 +191,7 @@ const Sidebar = ({
             isCollapsed ? "opacity-0" : "opacity-100",
           )}
         >
-          {t('Menu')} {/* Assuming 'Menu' key */}
+          {t("Menu")} {/* Assuming 'Menu' key */}
         </span>
         <Button
           variant="ghost"

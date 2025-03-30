@@ -77,6 +77,59 @@ const HeroSection = ({
             ease: "easeInOut",
           }}
         />
+        {/* Additional animated elements */}
+        <motion.div
+          className="absolute top-40 left-1/4 w-20 h-20 rounded-full bg-blue-500/20"
+          animate={{
+            scale: [1, 1.5, 1],
+            opacity: [0.2, 0.3, 0.2],
+            y: [0, -20, 0],
+          }}
+          transition={{
+            duration: 5,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 1,
+          }}
+        />
+        <motion.div
+          className="absolute bottom-40 right-1/4 w-32 h-32 rounded-full bg-green-500/10"
+          animate={{
+            scale: [1, 1.2, 1],
+            opacity: [0.1, 0.3, 0.1],
+            y: [0, 15, 0],
+          }}
+          transition={{
+            duration: 7,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 2,
+          }}
+        />
+        {/* Floating particles */}
+        {Array.from({ length: 10 }).map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute rounded-full bg-white/20"
+            style={{
+              width: Math.random() * 6 + 2,
+              height: Math.random() * 6 + 2,
+              top: `${Math.random() * 100}%`,
+              left: `${Math.random() * 100}%`,
+            }}
+            animate={{
+              y: [0, -30, 0],
+              x: [0, Math.random() * 20 - 10, 0],
+              opacity: [0, 0.5, 0],
+            }}
+            transition={{
+              duration: Math.random() * 5 + 3,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: Math.random() * 2,
+            }}
+          />
+        ))}
       </div>
 
       <motion.div
@@ -134,9 +187,18 @@ const HeroSection = ({
             {/* Dashboard illustration */}
             <motion.div
               className="bg-slate-800/80 backdrop-blur-sm border border-white/10 rounded-xl shadow-2xl p-6 relative z-10"
-              initial={{ y: 20 }}
-              animate={{ y: [0, -10, 0] }}
-              transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: [0, -10, 0], opacity: 1 }}
+              transition={{
+                duration: 5,
+                repeat: Infinity,
+                ease: "easeInOut",
+                opacity: { duration: 1, ease: "easeIn" },
+              }}
+              whileHover={{
+                scale: 1.03,
+                boxShadow: "0 0 20px rgba(139, 92, 246, 0.5)",
+              }}
             >
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center space-x-2">
