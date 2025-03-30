@@ -1,0 +1,44 @@
+
+[functions.delete-material]
+enabled = true
+verify_jwt = true
+import_map = "./functions/delete-material/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/delete-material/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/delete-material/*.html" ]
+
+[functions.request-suplimentar]
+enabled = true
+verify_jwt = true
+import_map = "./functions/request-suplimentar/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/request-suplimentar/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/request-suplimentar/*.html" ]
+
+[functions.confirm-suplimentar]
+enabled = true
+verify_jwt = true
+import_map = "./functions/confirm-suplimentar/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/confirm-suplimentar/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/confirm-suplimentar/*.html" ]
+
+[functions.adjust-suplimentar]
+enabled = true
+verify_jwt = true
+import_map = "./functions/adjust-suplimentar/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/adjust-suplimentar/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/adjust-suplimentar/*.html" ]

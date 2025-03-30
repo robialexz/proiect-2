@@ -12,6 +12,9 @@ const ContactPage = lazy(() => import("./pages/ContactPage"));
 const LoginPage = lazy(() => import("./pages/LoginPage"));
 const RegisterPage = lazy(() => import("./pages/RegisterPage"));
 const DashboardPage = lazy(() => import("./pages/DashboardPage"));
+// Import InventoryManagementPage normally
+import InventoryManagementPage from "./pages/InventoryManagementPage";
+// const InventoryManagementPage = lazy(() => import("./pages/InventoryManagementPage"));
 
 function App() {
   return (
@@ -33,6 +36,7 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/inventory-management" element={<InventoryManagementPage />} />
             {/* Add tempobook route to prevent catchall from capturing it */}
             {import.meta.env.VITE_TEMPO === "true" && (
               <Route path="/tempobook/*" />
