@@ -188,13 +188,8 @@ const Navbar = ({
                     className="text-slate-300 hover:text-white focus:bg-slate-700"
                     onClick={() => navigate("/profile")} // Use onClick for navigation
                   >
-                    {/* <Link
-                      to="/profile" // Assuming /profile route exists
-                      className="flex items-center gap-2 w-full"
-                    > */}
                     <User size={16} />
-                    <span>{t("Profile")}</span> {/* Assuming 'Profile' key */}
-                    {/* </Link> */}
+                    <span>{t("Profile")}</span>
                   </DropdownMenuItem>
                   {/* Removed asChild from DropdownMenuItem */}
                   <DropdownMenuItem

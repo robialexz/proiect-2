@@ -13,6 +13,7 @@ const ContactPage = lazy(() => import("./pages/ContactPage"));
 const LoginPage = lazy(() => import("./pages/LoginPage"));
 const RegisterPage = lazy(() => import("./pages/RegisterPage"));
 const DashboardPage = lazy(() => import("./pages/DashboardPage"));
+const OverviewPage = lazy(() => import("./pages/OverviewPage"));
 // Import pages that need to be available immediately
 import InventoryManagementPage from "./pages/InventoryManagementPage";
 
@@ -23,6 +24,7 @@ const TeamsPage = lazy(() => import("./pages/TeamsPage"));
 const BudgetPage = lazy(() => import("./pages/BudgetPage"));
 const ReportsPage = lazy(() => import("./pages/ReportsPage"));
 const ResourcesPage = lazy(() => import("./pages/ResourcesPage"));
+const ProfilePage = lazy(() => import("./pages/ProfilePage"));
 
 function App() {
   return (
@@ -45,6 +47,7 @@ function App() {
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/overview" element={<OverviewPage />} />
               <Route
                 path="/inventory-management"
                 element={<InventoryManagementPage />}
@@ -55,6 +58,7 @@ function App() {
               <Route path="/budget" element={<BudgetPage />} />
               <Route path="/reports" element={<ReportsPage />} />
               <Route path="/resources" element={<ResourcesPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
               {/* Add tempobook route to prevent catchall from capturing it */}
               {import.meta.env.VITE_TEMPO === "true" && (
                 <Route path="/tempobook/*" />

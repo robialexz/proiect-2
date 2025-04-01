@@ -23,9 +23,11 @@ import {
   ChevronLeft,
   ChevronRight,
   Menu,
+  User,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useTranslation } from "react-i18next"; // Import useTranslation
+import { useTranslation } from "react-i18next";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface NavItemProps {
   icon: React.ReactNode;
@@ -105,9 +107,9 @@ const Sidebar = ({
 }: SidebarProps) => {
   const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
   const location = useLocation();
-  const { signOut } = useAuth();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
-  const { t } = useTranslation(); // Initialize translation hook
+  const { t } = useTranslation();
 
   const handleLogout = async () => {
     await signOut();
@@ -116,7 +118,7 @@ const Sidebar = ({
 
   // Navigation items grouped by category using translation keys
   const mainNavItems = [
-    { icon: <Home size={20} />, label: t("sidebar.home"), to: "/" },
+    { icon: <Home size={20} />, label: t("sidebar.home"), to: "/overview" },
     {
       icon: <LayoutDashboard size={20} />,
       label: t("sidebar.dashboard"),
@@ -164,11 +166,16 @@ const Sidebar = ({
 
   const settingsNavItems = [
     {
+      icon: <User size={20} />,
+      label: t("sidebar.profile", "Profil"),
+      to: "/profile",
+    },
+    {
       icon: <Settings size={20} />,
       label: t("sidebar.settings"),
       to: "/settings",
     },
-    { icon: <LogOut size={20} />, label: t("Logout"), to: "#logout" }, // Assuming 'Logout' key
+    { icon: <LogOut size={20} />, label: t("Logout"), to: "#logout" },
   ];
 
   const toggleSidebar = () => {
@@ -191,7 +198,7 @@ const Sidebar = ({
             isCollapsed ? "opacity-0" : "opacity-100",
           )}
         >
-          {t("Menu")} {/* Assuming 'Menu' key */}
+          {t("Menu")}
         </span>
         <Button
           variant="ghost"
@@ -216,6 +223,38 @@ const Sidebar = ({
           )}
         </Link>
       </div>
+
+      {/* User profile section */}
+      {user && (
+        <div className="p-4 border-b border-slate-800 flex items-center gap-3">
+          <Link to="/profile">
+            <Avatar className="h-10 w-10 cursor-pointer hover:ring-2 hover:ring-primary transition-all">
+              <AvatarImage
+                src="https://api.dicebear.com/7.x/avataaars/svg?seed=Alex"
+                alt={user.email || "User"}
+              />
+              <AvatarFallback className="bg-primary text-primary-foreground">
+                {user.email ? user.email.substring(0, 2).toUpperCase() : "U"}
+              </AvatarFallback>
+            </Avatar>
+          </Link>
+          {!isCollapsed && (
+            <div className="flex-1 min-w-0">
+              <Link
+                to="/profile"
+                className="hover:text-primary transition-colors"
+              >
+                <p className="text-sm font-medium text-white truncate">
+                  {user.email}
+                </p>
+                <p className="text-xs text-slate-400 truncate">
+                  {t("sidebar.viewProfile", "Vizualizează profilul")}
+                </p>
+              </Link>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Sidebar content */}
       <div className="flex flex-col flex-1 overflow-y-auto py-4 px-2">

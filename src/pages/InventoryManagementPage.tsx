@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import Sidebar from "@/components/layout/Sidebar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRole } from "@/contexts/RoleContext";
-import { Navigate } from "react-router-dom";
+import { Navigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/lib/supabase";
@@ -42,6 +42,9 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
+import SupplierAnnouncementUpload from "@/components/inventory/SupplierAnnouncementUpload";
+import SupplierAnnouncementList from "@/components/inventory/SupplierAnnouncementList";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // --- Types ---
 type Project = { id: string; name: string; created_at: string };
@@ -56,16 +59,22 @@ const InventoryManagementPage: React.FC = () => {
   const { isManager, loading: roleLoading } = useRole();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // URL params
+  const [searchParams, setSearchParams] = useSearchParams();
+
   // State
   const [searchTerm, setSearchTerm] = useState("");
   const [inventoryData, setInventoryData] = useState<MaterialWithProject[]>([]);
   const [loadingData, setLoadingData] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("inventory");
+  const [announcementRefreshTrigger, setAnnouncementRefreshTrigger] =
+    useState(0);
 
   // Project State
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
-    null,
+    searchParams.get("project"),
   );
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
   const [newProjectName, setNewProjectName] = useState("");
@@ -809,6 +818,8 @@ const InventoryManagementPage: React.FC = () => {
   useEffect(() => {
     if (user && selectedProjectId) {
       fetchMaterials();
+      // Update URL with project ID
+      setSearchParams({ project: selectedProjectId });
     } else if (!authLoading) {
       setInventoryData([]);
       setLoadingData(false);
@@ -1207,41 +1218,86 @@ const InventoryManagementPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Data Table Area */}
-            <Card className="bg-slate-800 border-slate-700">
-              <CardHeader>
-                <CardTitle>
-                  {t("inventory.overviewTitle", "Inventory Overview")}{" "}
-                  {selectedProjectId &&
-                  projects.find((p) => p.id === selectedProjectId)
-                    ? `- ${projects.find((p) => p.id === selectedProjectId)?.name}`
-                    : ""}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {fetchError && (
-                  <div className="mb-4 p-4 bg-red-900 border border-red-700 text-red-300 rounded-md">
-                    {fetchError}
-                  </div>
-                )}
-                {selectedProjectId ? (
-                  <DataTable
-                    columns={columns}
-                    data={inventoryData}
-                    setMaterialToRequestSuplimentar={
-                      setMaterialToAdjustSuplimentar
+            {/* Tabs for Inventory and Supplier Announcements */}
+            <Tabs
+              value={activeTab}
+              onValueChange={setActiveTab}
+              className="w-full"
+            >
+              <TabsList className="grid grid-cols-2 mb-6 bg-slate-800">
+                <TabsTrigger
+                  value="inventory"
+                  className="data-[state=active]:bg-slate-700"
+                >
+                  <Package className="h-4 w-4 mr-2" />
+                  {t("inventory.tabs.inventory", "Inventory")}
+                </TabsTrigger>
+                <TabsTrigger
+                  value="announcements"
+                  className="data-[state=active]:bg-slate-700"
+                >
+                  <Truck className="h-4 w-4 mr-2" />
+                  {t("inventory.tabs.announcements", "Supplier Announcements")}
+                </TabsTrigger>
+              </TabsList>
+
+              {/* Inventory Tab */}
+              <TabsContent value="inventory" className="space-y-4">
+                <Card className="bg-slate-800 border-slate-700">
+                  <CardHeader>
+                    <CardTitle>
+                      {t("inventory.overviewTitle", "Inventory Overview")}{" "}
+                      {selectedProjectId &&
+                      projects.find((p) => p.id === selectedProjectId)
+                        ? `- ${projects.find((p) => p.id === selectedProjectId)?.name}`
+                        : ""}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {fetchError && (
+                      <div className="mb-4 p-4 bg-red-900 border border-red-700 text-red-300 rounded-md">
+                        {fetchError}
+                      </div>
+                    )}
+                    {selectedProjectId ? (
+                      <DataTable
+                        columns={columns}
+                        data={inventoryData}
+                        setMaterialToRequestSuplimentar={
+                          setMaterialToAdjustSuplimentar
+                        }
+                      />
+                    ) : (
+                      <p className="text-center text-slate-400 py-10">
+                        {t(
+                          "inventory.selectProjectPrompt",
+                          "Please select or create a project to view inventory.",
+                        )}
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Supplier Announcements Tab */}
+              <TabsContent value="announcements" className="space-y-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Upload Section */}
+                  <SupplierAnnouncementUpload
+                    projectId={selectedProjectId}
+                    onUploadSuccess={() =>
+                      setAnnouncementRefreshTrigger((prev) => prev + 1)
                     }
                   />
-                ) : (
-                  <p className="text-center text-slate-400 py-10">
-                    {t(
-                      "inventory.selectProjectPrompt",
-                      "Please select or create a project to view inventory.",
-                    )}
-                  </p>
-                )}
-              </CardContent>
-            </Card>
+
+                  {/* Announcements List */}
+                  <SupplierAnnouncementList
+                    projectId={selectedProjectId}
+                    refreshTrigger={announcementRefreshTrigger}
+                  />
+                </div>
+              </TabsContent>
+            </Tabs>
           </motion.div>
         </main>
 

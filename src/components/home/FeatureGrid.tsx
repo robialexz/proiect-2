@@ -1,5 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
   BarChart3,
@@ -202,9 +203,9 @@ const FeatureGrid = ({
               variants={itemVariants}
               custom={index}
             >
-              <a href={feature.link} className="block h-full">
+              <Link to={feature.link} className="block h-full">
                 <FeatureCard feature={feature} />
-              </a>
+              </Link>
             </motion.div>
           ))}
         </motion.div>
