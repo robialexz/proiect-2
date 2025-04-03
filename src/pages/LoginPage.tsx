@@ -25,7 +25,7 @@ const LoginPage = () => {
     try {
       const { error } = await signIn(email, password);
       if (error) throw error;
-      navigate("/dashboard");
+      navigate("/");
     } catch (err: any) {
       const errorMessage =
         err.message || "Invalid email or password. Please try again.";

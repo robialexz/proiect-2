@@ -25,6 +25,10 @@ const BudgetPage = lazy(() => import("./pages/BudgetPage"));
 const ReportsPage = lazy(() => import("./pages/ReportsPage"));
 const ResourcesPage = lazy(() => import("./pages/ResourcesPage"));
 const ProfilePage = lazy(() => import("./pages/ProfilePage"));
+const AddMaterialPage = lazy(() => import("./pages/AddMaterialPage"));
+const UploadExcelPage = lazy(() => import("./pages/UploadExcelPage"));
+const SchedulePage = lazy(() => import("./pages/SchedulePage"));
+const DocumentsPage = lazy(() => import("./pages/DocumentsPage"));
 
 function App() {
   return (
@@ -37,35 +41,37 @@ function App() {
             </div>
           }
         >
-          <>
-            <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/about" element={<AboutPage />} />
-              <Route path="/terms" element={<TermsPage />} />
-              <Route path="/pricing" element={<PricingPage />} />
-              <Route path="/contact" element={<ContactPage />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
-              <Route path="/dashboard" element={<DashboardPage />} />
-              <Route path="/overview" element={<OverviewPage />} />
-              <Route
-                path="/inventory-management"
-                element={<InventoryManagementPage />}
-              />
-              <Route path="/projects" element={<ProjectsPage />} />
-              <Route path="/suppliers" element={<SuppliersPage />} />
-              <Route path="/teams" element={<TeamsPage />} />
-              <Route path="/budget" element={<BudgetPage />} />
-              <Route path="/reports" element={<ReportsPage />} />
-              <Route path="/resources" element={<ResourcesPage />} />
-              <Route path="/profile" element={<ProfilePage />} />
-              {/* Add tempobook route to prevent catchall from capturing it */}
-              {import.meta.env.VITE_TEMPO === "true" && (
-                <Route path="/tempobook/*" />
-              )}
-            </Routes>
-            {import.meta.env.VITE_TEMPO === "true" && useRoutes(routes)}
-          </>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/terms" element={<TermsPage />} />
+            <Route path="/pricing" element={<PricingPage />} />
+            <Route path="/contact" element={<ContactPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/overview" element={<OverviewPage />} />
+            <Route
+              path="/inventory-management"
+              element={<InventoryManagementPage />}
+            />
+            <Route path="/projects" element={<ProjectsPage />} />
+            <Route path="/suppliers" element={<SuppliersPage />} />
+            <Route path="/teams" element={<TeamsPage />} />
+            <Route path="/budget" element={<BudgetPage />} />
+            <Route path="/reports" element={<ReportsPage />} />
+            <Route path="/resources" element={<ResourcesPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/add-material" element={<AddMaterialPage />} />
+            <Route path="/upload-excel" element={<UploadExcelPage />} />
+            <Route path="/schedule" element={<SchedulePage />} />
+            <Route path="/documents" element={<DocumentsPage />} />
+            {/* Add tempobook route to prevent catchall from capturing it */}
+            {import.meta.env.VITE_TEMPO === "true" && (
+              <Route path="/tempobook/*" />
+            )}
+          </Routes>
+          {import.meta.env.VITE_TEMPO === "true" && useRoutes(routes)}
         </Suspense>
       </RoleProvider>
     </AuthProvider>
