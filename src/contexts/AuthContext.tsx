@@ -38,15 +38,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Adăugăm un timeout pentru a evita blocarea la "se încarcă..."
+    const timeoutId = setTimeout(() => {
+      if (loading) {
+        console.log("Auth loading timeout reached, forcing loading to false");
+        setLoading(false);
+        // Setăm un profil implicit în caz de timeout
+        if (user && !userProfile) {
+          setUserProfile({
+            displayName: user.email?.split("@")[0] || "User",
+            email: user.email || "",
+          });
+        }
+      }
+    }, 20000); // 20 secunde timeout
+
     // Get initial session
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
 
       if (session?.user) {
-        await fetchUserProfile(session.user.id);
+        try {
+          await fetchUserProfile(session.user.id);
+        } catch (error) {
+          console.error("Error fetching user profile:", error);
+          // Setăm un profil implicit în caz de eroare
+          setUserProfile({
+            displayName: session.user.email?.split("@")[0] || "User",
+            email: session.user.email || "",
+          });
+        }
       }
 
+      setLoading(false);
+    }).catch(error => {
+      console.error("Error getting session:", error);
       setLoading(false);
     });
 
@@ -58,7 +85,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(session?.user ?? null);
 
       if (session?.user) {
-        await fetchUserProfile(session.user.id);
+        try {
+          await fetchUserProfile(session.user.id);
+        } catch (error) {
+          console.error("Error fetching user profile on auth change:", error);
+          // Setăm un profil implicit în caz de eroare
+          setUserProfile({
+            displayName: session.user.email?.split("@")[0] || "User",
+            email: session.user.email || "",
+          });
+        }
       } else {
         setUserProfile(null);
       }
@@ -66,19 +102,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(timeoutId);
+    };
   }, []);
 
   const fetchUserProfile = async (userId: string) => {
     try {
-      const { data, error } = await supabase
+      // Adăugăm un timeout pentru fetchUserProfile
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error("Profile fetch timeout")), 15000); // Mărim timeout-ul la 15 secunde
+      });
+
+      // Creăm promisiunea pentru fetch
+      const fetchPromise = supabase
         .from("profiles")
         .select("display_name, email")
         .eq("id", userId)
         .single();
 
+      // Folosim Promise.race pentru a implementa timeout
+      const { data, error } = await Promise.race([
+        fetchPromise,
+        timeoutPromise.then(() => {
+          throw new Error("Profile fetch timeout");
+        })
+      ]) as any;
+
       if (error) {
-        console.error("Error fetching user profile:", error);
+        console.warn("Error fetching user profile:", error);
+        // Setăm un profil implicit în caz de eroare
+        setUserProfile({
+          displayName: user?.email?.split("@")[0] || "User",
+          email: user?.email || "",
+        });
         return;
       }
 
@@ -89,45 +147,68 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           email: data.email || user?.email || "",
         });
       } else {
-        // Create a profile if it doesn't exist
-        const newProfile = {
-          id: userId,
-          display_name: user?.email?.split("@")[0] || "User",
+        // Profile should have been created by the trigger handle_new_user
+        // If it's not found here, log an error, but don't attempt to create it again.
+        console.warn(
+          `Profile not found for user ${userId}. It should have been created by the trigger.`,
+        );
+        // Set a default profile or handle as needed
+        setUserProfile({
+          displayName: user?.email?.split("@")[0] || "User",
           email: user?.email || "",
-        };
-
-        const { error: insertError } = await supabase
-          .from("profiles")
-          .insert([newProfile]);
-
-        if (insertError) {
-          console.error("Error creating user profile:", insertError);
-        } else {
-          setUserProfile({
-            displayName: newProfile.display_name,
-            email: newProfile.email,
-          });
-        }
+        });
       }
     } catch (err) {
       console.error("Unexpected error fetching user profile:", err);
+      // Setăm un profil implicit în caz de eroare
+      setUserProfile({
+        displayName: user?.email?.split("@")[0] || "User",
+        email: user?.email || "",
+      });
     }
   };
 
   const signIn = async (email: string, password: string) => {
+    console.log("AuthContext: signIn called with email:", email);
     try {
+      console.log("AuthContext: Calling supabase.auth.signInWithPassword");
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
+      console.log("AuthContext: signInWithPassword result:", {
+        success: !!data?.session,
+        error: error ? error.message : null,
+        user: data?.user ? data.user.id : null
+      });
+
       if (error) {
-        console.error("Authentication error:", error.message);
+        console.error("AuthContext: Sign in error:", error.message);
+      } else if (data.session) {
+        console.log("AuthContext: Sign in successful, session established");
+        // Immediately update the session and user state
+        setSession(data.session);
+        setUser(data.user);
+
+        // Try to fetch the user profile
+        if (data.user) {
+          try {
+            await fetchUserProfile(data.user.id);
+          } catch (profileError) {
+            console.error("AuthContext: Error fetching profile after login:", profileError);
+            // Set default profile
+            setUserProfile({
+              displayName: data.user.email?.split("@")[0] || "User",
+              email: data.user.email || "",
+            });
+          }
+        }
       }
 
       return { data: data.session, error };
     } catch (err) {
-      console.error("Supabase connection error:", err);
+      console.error("AuthContext: Supabase connection error:", err);
       return {
         data: null,
         error: new Error(
