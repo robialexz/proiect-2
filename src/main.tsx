@@ -3,8 +3,8 @@ import ReactDOM from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 import { BrowserRouter } from "react-router-dom";
-// Importăm i18n doar când este necesar pentru a reduce timpul de încărcare inițial
-// import "./i18n";
+// Importăm i18n pentru funcționalitatea de traducere
+import "./i18n";
 import { Toaster } from "./components/ui/toaster";
 import NotificationProvider from "./components/ui/notification";
 import { ThemeProvider } from "./contexts/ThemeContext";

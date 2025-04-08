@@ -37,10 +37,16 @@ const LanguageSwitcher: React.FC = () => {
   const { i18n, t } = useTranslation();
 
   const changeLanguage = (lng: string) => {
-    i18n.changeLanguage(lng);
+    // Verificăm dacă i18n este inițializat înainte de a schimba limba
+    if (i18n && typeof i18n.changeLanguage === 'function') {
+      i18n.changeLanguage(lng);
+    } else {
+      console.warn('i18n is not initialized or changeLanguage is not available');
+    }
   };
 
-  const currentLanguageCode = i18n.language.split('-')[0];
+  // Adăugăm verificare pentru a evita eroarea când i18n nu este inițializat
+  const currentLanguageCode = i18n?.language ? i18n.language.split('-')[0] : 'en';
   const currentCountryCode = languageToCountryCode[currentLanguageCode] || 'gb'; // Default to gb flag
 
   return (
