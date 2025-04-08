@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import React, { useState, useEffect, useMemo, Suspense } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -8,10 +8,12 @@ import { useTranslation } from "react-i18next";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/lib/supabase";
 import { Database } from "@/types/supabase";
-import { PlusCircle, Search, BarChart, Zap } from "lucide-react";
+import { PlusCircle, Search, BarChart, Zap, RefreshCw, Download } from "lucide-react";
 import ReportsList from "@/components/reports/ReportsList";
 import ReportForm from "@/components/reports/ReportForm";
 import ReportViewer from "@/components/reports/ReportViewer";
+import useDataLoader from "@/hooks/useDataLoader";
+import { measurePerformance } from "@/lib/performance-optimizer";
 
 type Report = Database["public"]["Tables"]["reports"]["Row"];
 
@@ -27,13 +29,43 @@ const ReportsPage: React.FC = () => {
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [autoGenerateMode, setAutoGenerateMode] = useState(false);
 
-  useEffect(() => {
-    if (user) {
-      fetchReports();
-    }
-  }, [user]);
+  // Folosim hook-ul useDataLoader pentru încărcarea optimizată a rapoartelor
+  const {
+    data: reportsData,
+    isLoading: reportsLoading,
+    error: reportsError,
+    refetch: refetchReports
+  } = useDataLoader<Report>(
+    "reports",
+    "*",
+    { order: { column: "created_at", ascending: false } },
+    "all_reports",
+    15 * 60 * 1000 // 15 minute cache
+  );
 
-  const fetchReports = async () => {
+  // Actualizăm starea rapoartelor când se schimbă datele
+  useEffect(() => {
+    if (reportsData) {
+      setReports(reportsData);
+    }
+
+    setIsLoading(reportsLoading);
+
+    if (reportsError) {
+      console.error("Error fetching reports:", reportsError);
+      toast({
+        variant: "destructive",
+        title: "Error loading reports",
+        description: reportsError.message,
+      });
+      // Fallback la metoda tradițională dacă useDataLoader eșuează
+      fetchReportsFallback();
+    }
+  }, [reportsData, reportsLoading, reportsError]);
+
+  // Metoda de fallback pentru încărcarea rapoartelor
+  const fetchReportsFallback = async () => {
+    const endMeasurement = measurePerformance("Fetch reports fallback");
     try {
       setIsLoading(true);
       const { data, error } = await supabase
@@ -45,7 +77,7 @@ const ReportsPage: React.FC = () => {
 
       setReports(data || []);
     } catch (error: any) {
-      console.error("Error fetching reports:", error);
+      console.error("Error fetching reports (fallback):", error);
       toast({
         variant: "destructive",
         title: "Error loading reports",
@@ -53,10 +85,12 @@ const ReportsPage: React.FC = () => {
       });
     } finally {
       setIsLoading(false);
+      endMeasurement();
     }
   };
 
   const handleDeleteReport = async (reportId: string) => {
+    const endMeasurement = measurePerformance("Delete report");
     try {
       const { error } = await supabase
         .from("reports")
@@ -65,7 +99,12 @@ const ReportsPage: React.FC = () => {
 
       if (error) throw error;
 
+      // Actualizăm starea locală
       setReports(reports.filter((report) => report.id !== reportId));
+
+      // Reîncărcăm datele pentru a asigura sincronizarea
+      refetchReports();
+
       toast({
         title: "Report deleted",
         description: "The report has been successfully deleted",
@@ -77,6 +116,8 @@ const ReportsPage: React.FC = () => {
         title: "Error deleting report",
         description: error.message,
       });
+    } finally {
+      endMeasurement();
     }
   };
 
@@ -118,7 +159,7 @@ const ReportsPage: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-slate-900 text-white">
-      
+
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
         <header className="sticky top-0 z-10 bg-slate-900 border-b border-slate-800 px-6 py-4 shrink-0">
@@ -164,26 +205,51 @@ const ReportsPage: React.FC = () => {
 
         {/* Main Content */}
         <main className="flex-1 overflow-y-auto p-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="space-y-6"
-          >
-            <ReportsList
-              reports={filteredReports}
-              isLoading={isLoading}
-              onEditReport={handleEditReport}
-              onDeleteReport={handleDeleteReport}
-              onViewReport={handleViewReport}
-              onExportReport={handleExportReport}
-              onAutoGenerateReport={() => {
-                setSelectedReport(null);
-                setAutoGenerateMode(true);
-                setIsCreateDialogOpen(true);
-              }}
-            />
-          </motion.div>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key="reports-list"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+              className="space-y-6"
+            >
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold">
+                  {filteredReports.length} {filteredReports.length === 1 ? 'Report' : 'Reports'}
+                </h2>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={refetchReports}
+                  disabled={isLoading}
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Refresh
+                </Button>
+              </div>
+
+              <Suspense fallback={
+                <div className="flex items-center justify-center py-10">
+                  <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                </div>
+              }>
+                <ReportsList
+                  reports={filteredReports}
+                  isLoading={isLoading}
+                  onEditReport={handleEditReport}
+                  onDeleteReport={handleDeleteReport}
+                  onViewReport={handleViewReport}
+                  onExportReport={handleExportReport}
+                  onAutoGenerateReport={() => {
+                    setSelectedReport(null);
+                    setAutoGenerateMode(true);
+                    setIsCreateDialogOpen(true);
+                  }}
+                />
+              </Suspense>
+            </motion.div>
+          </AnimatePresence>
         </main>
       </div>
 
@@ -195,7 +261,7 @@ const ReportsPage: React.FC = () => {
           if (!open) setAutoGenerateMode(false);
         }}
         report={selectedReport || undefined}
-        onSuccess={fetchReports}
+        onSuccess={refetchReports}
         autoGenerate={autoGenerateMode}
       />
 

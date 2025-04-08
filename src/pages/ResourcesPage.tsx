@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import React, { useState, useEffect, useMemo, Suspense } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -8,10 +8,12 @@ import { useTranslation } from "react-i18next";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/lib/supabase";
 import { Database } from "@/types/supabase";
-import { PlusCircle, Search, BookOpen } from "lucide-react";
+import { PlusCircle, Search, BookOpen, RefreshCw } from "lucide-react";
 import ResourcesList from "@/components/resources/ResourcesList";
 import ResourceForm from "@/components/resources/ResourceForm";
 import ResourceAllocations from "@/components/resources/ResourceAllocations";
+import useDataLoader from "@/hooks/useDataLoader";
+import { measurePerformance } from "@/lib/performance-optimizer";
 
 type Resource = Database["public"]["Tables"]["resources"]["Row"];
 
@@ -27,13 +29,43 @@ const ResourcesPage: React.FC = () => {
   const [isMaintenanceDialogOpen, setIsMaintenanceDialogOpen] = useState(false);
   const [selectedResource, setSelectedResource] = useState<Resource | null>(null);
 
-  useEffect(() => {
-    if (user) {
-      fetchResources();
-    }
-  }, [user]);
+  // Folosim hook-ul useDataLoader pentru încărcarea optimizată a resurselor
+  const {
+    data: resourcesData,
+    isLoading: resourcesLoading,
+    error: resourcesError,
+    refetch: refetchResources
+  } = useDataLoader<Resource>(
+    "resources",
+    "*",
+    { order: { column: "created_at", ascending: false } },
+    "all_resources",
+    15 * 60 * 1000 // 15 minute cache
+  );
 
-  const fetchResources = async () => {
+  // Actualizăm starea resurselor când se schimbă datele
+  useEffect(() => {
+    if (resourcesData) {
+      setResources(resourcesData);
+    }
+
+    setIsLoading(resourcesLoading);
+
+    if (resourcesError) {
+      console.error("Error fetching resources:", resourcesError);
+      toast({
+        variant: "destructive",
+        title: "Error loading resources",
+        description: resourcesError.message,
+      });
+      // Fallback la metoda tradițională dacă useDataLoader eșuează
+      fetchResourcesFallback();
+    }
+  }, [resourcesData, resourcesLoading, resourcesError]);
+
+  // Metoda de fallback pentru încărcarea resurselor
+  const fetchResourcesFallback = async () => {
+    const endMeasurement = measurePerformance("Fetch resources fallback");
     try {
       setIsLoading(true);
       const { data, error } = await supabase
@@ -45,7 +77,7 @@ const ResourcesPage: React.FC = () => {
 
       setResources(data || []);
     } catch (error: any) {
-      console.error("Error fetching resources:", error);
+      console.error("Error fetching resources (fallback):", error);
       toast({
         variant: "destructive",
         title: "Error loading resources",
@@ -53,10 +85,12 @@ const ResourcesPage: React.FC = () => {
       });
     } finally {
       setIsLoading(false);
+      endMeasurement();
     }
   };
 
   const handleDeleteResource = async (resourceId: string) => {
+    const endMeasurement = measurePerformance("Delete resource");
     try {
       const { error } = await supabase
         .from("resources")
@@ -65,7 +99,12 @@ const ResourcesPage: React.FC = () => {
 
       if (error) throw error;
 
+      // Actualizăm starea locală
       setResources(resources.filter((resource) => resource.id !== resourceId));
+
+      // Reîncărcăm datele pentru a asigura sincronizarea
+      refetchResources();
+
       toast({
         title: "Resource deleted",
         description: "The resource has been successfully deleted",
@@ -77,6 +116,8 @@ const ResourcesPage: React.FC = () => {
         title: "Error deleting resource",
         description: error.message,
       });
+    } finally {
+      endMeasurement();
     }
   };
 
@@ -119,7 +160,7 @@ const ResourcesPage: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-slate-900 text-white">
-      
+
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
         <header className="sticky top-0 z-10 bg-slate-900 border-b border-slate-800 px-6 py-4 shrink-0">
@@ -151,21 +192,46 @@ const ResourcesPage: React.FC = () => {
 
         {/* Main Content */}
         <main className="flex-1 overflow-y-auto p-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="space-y-6"
-          >
-            <ResourcesList
-              resources={filteredResources}
-              isLoading={isLoading}
-              onEditResource={handleEditResource}
-              onDeleteResource={handleDeleteResource}
-              onViewAllocations={handleViewAllocations}
-              onViewMaintenance={handleViewMaintenance}
-            />
-          </motion.div>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key="resources-list"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+              className="space-y-6"
+            >
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold">
+                  {filteredResources.length} {filteredResources.length === 1 ? 'Resource' : 'Resources'}
+                </h2>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={refetchResources}
+                  disabled={isLoading}
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Refresh
+                </Button>
+              </div>
+
+              <Suspense fallback={
+                <div className="flex items-center justify-center py-10">
+                  <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                </div>
+              }>
+                <ResourcesList
+                  resources={filteredResources}
+                  isLoading={isLoading}
+                  onEditResource={handleEditResource}
+                  onDeleteResource={handleDeleteResource}
+                  onViewAllocations={handleViewAllocations}
+                  onViewMaintenance={handleViewMaintenance}
+                />
+              </Suspense>
+            </motion.div>
+          </AnimatePresence>
         </main>
       </div>
 
@@ -174,7 +240,7 @@ const ResourcesPage: React.FC = () => {
         open={isCreateDialogOpen}
         onOpenChange={setIsCreateDialogOpen}
         resource={selectedResource || undefined}
-        onSuccess={fetchResources}
+        onSuccess={refetchResources}
       />
 
       {/* Resource Allocations Dialog */}

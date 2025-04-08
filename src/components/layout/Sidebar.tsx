@@ -396,6 +396,30 @@ const Sidebar = () => {
             </TooltipProvider>
           )}
 
+          {/* Link către pagina de tutorial */}
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className={cn(
+                    "w-full text-slate-400 hover:text-white hover:bg-slate-800 justify-start",
+                    collapsed && "justify-center"
+                  )}
+                  onClick={() => navigate("/tutorial")}
+                >
+                  <BookOpen size={20} />
+                  {!collapsed && <span className="ml-3">{t("sidebar.tutorial", "Tutorials & Help")}</span>}
+                </Button>
+              </TooltipTrigger>
+              {collapsed && (
+                <TooltipContent side="right">
+                  <p>{t("sidebar.tutorial", "Tutorials & Help")}</p>
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </TooltipProvider>
+
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
