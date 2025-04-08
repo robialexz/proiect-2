@@ -1,5 +1,5 @@
-import React, { useState, useEffect, memo, useCallback } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect, memo, useCallback, Suspense } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Outlet, useLocation, Navigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Navbar from './Navbar';
@@ -11,6 +11,8 @@ import { useMemoizedCallback } from '@/lib/performance';
 import ConnectionStatus from '@/components/ui/connection-status';
 import { routePreloader } from '@/lib/route-preloader';
 import { OfflineIndicator } from '@/components/ui/offline-indicator';
+import usePageTransition from '@/hooks/usePageTransition';
+import { measurePerformance } from '@/lib/performance-optimizer';
 
 const AppLayout: React.FC = () => {
   const location = useLocation();
@@ -18,16 +20,27 @@ const AppLayout: React.FC = () => {
   const { userRole, getWelcomeMessage } = useRole();
   const { addNotification } = useNotification();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isPageLoading, setIsPageLoading] = useState(true);
 
-  // Optimizare: Preîncărcăm rutele adiacente și eliminăm întârzierea artificială
+  // Utilizăm hook-ul de tranziție pentru pagini
+  const { isLoading: isPageLoading, transitionComplete } = usePageTransition();
+
+  // Optimizare: Preîncărcăm rutele adiacente pentru o navigație mai rapidă
   useEffect(() => {
-    // Setarea isPageLoading la false imediat, fără întârziere
-    setIsPageLoading(false);
+    // Măsurăm performanța încărcării paginii
+    const endMeasurement = measurePerformance(`Page load complete: ${location.pathname}`);
 
-    // Preîncărcăm rutele adiacente pentru a îmbunătăți performanța la navigare
+    // Preîncărcăm rutele adiacente pentru a îmbunătăți performanța
     routePreloader.preloadAdjacentRoutes(location.pathname);
-  }, [location.pathname]);
+
+    // Finalizăm măsurătoarea după ce pagina s-a încărcat complet
+    if (transitionComplete) {
+      endMeasurement();
+    }
+
+    return () => {
+      // Curățăm orice resurse necesare
+    };
+  }, [location.pathname, transitionComplete]);
 
   // Afișăm un mesaj de bun venit doar la prima încărcare, nu la fiecare schimbare de pagină
   useEffect(() => {
@@ -108,16 +121,24 @@ const AppLayout: React.FC = () => {
 
         {/* Main content - optimizat pentru performanță */}
         <main className="flex-1 overflow-auto p-4">
-          {/* Eliminăm AnimatePresence pentru a reduce complexitatea render-ului */}
-          <motion.div
-            key={location.pathname}
-            variants={pageTransition}
-            initial="hidden"
-            animate="visible"
-            className="h-full"
-          >
-            <Outlet />
-          </motion.div>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={location.pathname}
+              variants={pageTransition}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              className="h-full"
+            >
+              <Suspense fallback={
+                <div className="flex items-center justify-center h-full">
+                  <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                </div>
+              }>
+                <Outlet />
+              </Suspense>
+            </motion.div>
+          </AnimatePresence>
         </main>
 
         {/* Indicator de stare offline */}

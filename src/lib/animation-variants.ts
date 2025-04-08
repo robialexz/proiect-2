@@ -138,20 +138,23 @@ export const buttonTap = {
   transition: { duration: 0.1 }
 };
 
-// Animații pentru pagini - optimizate pentru performanță
+// Animații pentru pagini - optimizate pentru performanță maximă
 export const pageTransition: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
     transition: {
-      duration: 0.2, // Reduced from 0.5
+      duration: 0.15, // Redus și mai mult pentru tranziții ultra-rapide
       when: "beforeChildren",
-      staggerChildren: 0.05 // Reduced from 0.1
+      staggerChildren: 0.03 // Redus pentru a minimiza întârzierea
     }
   },
   exit: {
     opacity: 0,
-    transition: { duration: 0.1 } // Reduced from 0.3
+    transition: {
+      duration: 0.1,
+      when: "afterChildren"
+    }
   }
 };
 

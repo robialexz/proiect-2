@@ -1,8 +1,14 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { Session, User } from "@supabase/supabase-js";
-import { supabaseService } from "@/lib/supabase-service";
+import { supabaseService, SupabaseErrorResponse } from "@/lib/supabase-service";
 import { cacheService } from "@/lib/cache-service";
+
+// Definim tipul pentru răspunsul de autentificare
+type AuthResponse = {
+  data: any;
+  error: Error | SupabaseErrorResponse | null;
+};
 
 type AuthContextType = {
   session: Session | null;
@@ -11,18 +17,12 @@ type AuthContextType = {
   signIn: (
     email: string,
     password: string,
-  ) => Promise<{
-    error: Error | null;
-    data: Session | null;
-  }>;
+  ) => Promise<AuthResponse>;
   signUp: (
     email: string,
     password: string,
     displayName?: string,
-  ) => Promise<{
-    error: Error | null;
-    data: { user: User | null; session: Session | null };
-  }>;
+  ) => Promise<AuthResponse>;
   updateUserProfile: (displayName: string) => Promise<void>;
   signOut: () => Promise<void>;
   loading: boolean;
@@ -128,7 +128,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       // Verificăm mai întâi dacă profilul este în cache
       const cacheKey = `user_profile_${userId}`;
-      const cachedProfile = cacheService.get(cacheKey, { namespace: 'auth' });
+      const cachedProfile = cacheService.get<{ displayName: string; email: string }>(cacheKey, { namespace: 'auth' });
 
       if (cachedProfile) {
         console.log('Using cached user profile');
@@ -300,12 +300,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Actualizăm profilul în cache
       const cacheKey = `user_profile_${user.id}`;
-      const cachedProfile = cacheService.get(cacheKey, { namespace: 'auth' });
+      const cachedProfile = cacheService.get<{ displayName: string; email: string }>(cacheKey, { namespace: 'auth' });
 
       if (cachedProfile) {
         cacheService.set(
           cacheKey,
-          { ...cachedProfile, displayName },
+          { displayName, email: cachedProfile.email },
           { namespace: 'auth' }
         );
       }

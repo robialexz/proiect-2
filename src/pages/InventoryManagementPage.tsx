@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useEffect, useCallback, useMemo, Suspense } from "react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRole } from "@/contexts/RoleContext";
@@ -7,6 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/lib/supabase";
 import { requestSuplimentar, confirmSuplimentar, adjustSuplimentar, deleteMaterial } from "@/lib/edge-functions";
+import { dataLoader } from "@/lib/data-loader";
+import useDataLoader from "@/hooks/useDataLoader";
+import { measurePerformance } from "@/lib/performance-optimizer";
 import {
   Dialog,
   DialogContent,
@@ -133,8 +136,11 @@ const InventoryManagementPage: React.FC = () => {
     number | string
   >("");
 
-  // --- Data Fetching ---
+  // --- Data Fetching cu optimizări de performanță ---
   const fetchMaterials = useCallback(async () => {
+    // Măsurăm performanța încărcării datelor
+    const endMeasurement = measurePerformance(`Fetch materials for project ${selectedProjectId}`);
+
     // Setăm starea de încărcare
     setLoadingData(true);
     setFetchError(null);
@@ -145,39 +151,46 @@ const InventoryManagementPage: React.FC = () => {
         console.log("No project selected, clearing materials data");
         setInventoryData([]);
         setLoadingData(false);
+        endMeasurement();
         return;
       }
 
-      // Folosim un cache key pentru a stoca datele în localStorage
+      // Folosim dataLoader pentru încărcarea optimizată a datelor
       const cacheKey = `materials_${selectedProjectId}`;
-      const cachedData = localStorage.getItem(cacheKey);
 
-      // Dacă avem date în cache, le folosim pentru afișarea inițială
-      if (cachedData) {
-        const parsedData = JSON.parse(cachedData);
-        setInventoryData(parsedData);
-        // Continuăm cu încărcarea datelor noi în fundal
-      }
+      try {
+        // Încărcăm datele folosind dataLoader
+        const data = await dataLoader.loadData<MaterialWithProject>(
+          "materials",
+          "id, name, dimension, unit, quantity, manufacturer, category, image_url, suplimentar, project_id, cost_per_unit, supplier_id, last_order_date, min_stock_level, max_stock_level, location, notes",
+          { filters: { project_id: selectedProjectId } },
+          cacheKey,
+          30 * 60 * 1000 // 30 minute cache
+        );
 
-      // Construim query-ul pentru a obține materialele
-      let query = supabase.from("materials")
-        .select("id, name, dimension, unit, quantity, manufacturer, category, image_url, suplimentar, project_id, cost_per_unit, supplier_id, last_order_date, min_stock_level, max_stock_level, location, notes")
-        .eq("project_id", selectedProjectId);
+        // Actualizăm starea
+        setInventoryData(data);
+      } catch (loaderError) {
+        console.error("Error using dataLoader:", loaderError);
 
-      // Executăm query-ul
-      const { data, error } = await query;
+        // Fallback la metoda tradițională dacă dataLoader eșuează
+        console.log("Falling back to traditional loading method");
 
-      // Verificăm dacă avem erori
-      if (error) throw error;
+        // Construim query-ul pentru a obține materialele
+        let query = supabase.from("materials")
+          .select("id, name, dimension, unit, quantity, manufacturer, category, image_url, suplimentar, project_id, cost_per_unit, supplier_id, last_order_date, min_stock_level, max_stock_level, location, notes")
+          .eq("project_id", selectedProjectId);
 
-      // Actualizăm starea și cache-ul
-      if (data) {
-        setInventoryData(data as MaterialWithProject[]);
-        localStorage.setItem(cacheKey, JSON.stringify(data));
+        // Executăm query-ul
+        const { data, error } = await query;
 
-        // Setăm un timeout pentru expirarea cache-ului (30 minute)
-        const expireTime = Date.now() + 30 * 60 * 1000;
-        localStorage.setItem(`${cacheKey}_expiry`, expireTime.toString());
+        // Verificăm dacă avem erori
+        if (error) throw error;
+
+        // Actualizăm starea
+        if (data) {
+          setInventoryData(data as MaterialWithProject[]);
+        }
       }
     } catch (error: unknown) {
       console.error("Error fetching materials:", error);
@@ -186,28 +199,52 @@ const InventoryManagementPage: React.FC = () => {
     } finally {
       // Asigurăm-ne că starea de încărcare este setată la false
       setLoadingData(false);
+      endMeasurement();
     }
   }, [selectedProjectId, t]);
 
-  const fetchProjects = useCallback(async () => {
+  // Folosim hook-ul useDataLoader pentru încărcarea proiectelor
+  const {
+    data: projectsData,
+    isLoading: projectsLoading,
+    error: projectsError,
+    refetch: refetchProjects
+  } = useDataLoader(
+    "projects",
+    "id, name, created_at",
+    { order: "created_at" },
+    "projects_data",
+    30 * 60 * 1000 // 30 minute cache
+  );
+
+  // Actualizăm starea proiectelor când se schimbă datele
+  useEffect(() => {
+    if (projectsData && projectsData.length > 0) {
+      setProjects(projectsData);
+
+      // Dacă nu avem un proiect selectat, selectăm primul din listă
+      if (!selectedProjectId) {
+        setSelectedProjectId(projectsData[0].id);
+      }
+      // Dacă proiectul selectat nu există în lista de proiecte, selectăm primul proiect
+      else if (!projectsData.some((p) => p.id === selectedProjectId)) {
+        setSelectedProjectId(projectsData[0].id);
+      }
+    }
+
+    setLoadingProjects(projectsLoading);
+
+    if (projectsError) {
+      console.error("Error fetching projects:", projectsError);
+      // Fallback la metoda tradițională dacă useDataLoader eșuează
+      fetchProjectsFallback();
+    }
+  }, [projectsData, projectsLoading, projectsError, selectedProjectId]);
+
+  // Metoda de fallback pentru încărcarea proiectelor
+  const fetchProjectsFallback = useCallback(async () => {
     setLoadingProjects(true);
     try {
-      // Folosim un cache key pentru a stoca datele în localStorage
-      const cacheKey = 'projects_data';
-      const cachedData = localStorage.getItem(cacheKey);
-
-      // Dacă avem date în cache, le folosim pentru afișarea inițială
-      if (cachedData) {
-        const parsedData = JSON.parse(cachedData);
-        setProjects(parsedData);
-
-        // Dacă nu avem un proiect selectat, selectăm primul din listă
-        if (!selectedProjectId && parsedData.length > 0) {
-          setSelectedProjectId(parsedData[0].id);
-        }
-        // Continuăm cu încărcarea datelor noi în fundal
-      }
-
       // Executăm query-ul pentru a obține proiectele
       const { data, error } = await supabase
         .from("projects")
@@ -217,13 +254,7 @@ const InventoryManagementPage: React.FC = () => {
       if (error) throw error;
 
       if (data) {
-        // Actualizăm starea și cache-ul
         setProjects(data);
-        localStorage.setItem(cacheKey, JSON.stringify(data));
-
-        // Setăm un timeout pentru expirarea cache-ului (30 minute)
-        const expireTime = Date.now() + 30 * 60 * 1000;
-        localStorage.setItem(`${cacheKey}_expiry`, expireTime.toString());
 
         // Dacă nu avem un proiect selectat, selectăm primul din listă
         if (!selectedProjectId && data.length > 0) {
@@ -238,7 +269,7 @@ const InventoryManagementPage: React.FC = () => {
         setSelectedProjectId(null);
       }
     } catch (error: any) {
-      console.error("Error fetching projects:", error);
+      console.error("Error fetching projects (fallback):", error);
       setFetchError(
         t("inventory.errors.fetchProjectsFailed", { message: error.message }),
       );
@@ -268,7 +299,7 @@ const InventoryManagementPage: React.FC = () => {
         console.log("Project created:", data);
         setIsProjectModalOpen(false);
         setNewProjectName("");
-        await fetchProjects();
+        await refetchProjects();
         setSelectedProjectId(data.id);
         toast({
           title: t("inventory.toasts.projectCreated", "Project Created"),
