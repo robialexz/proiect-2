@@ -2,13 +2,14 @@ import React from "react";
 import { motion } from "framer-motion";
 import Sidebar from "@/components/layout/Sidebar";
 import { useAuth } from "@/contexts/AuthContext";
-import { Navigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom"; // Import useNavigate
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Upload, BarChart2, Package, Users, AlertCircle } from "lucide-react";
 
 const DashboardPage = () => {
   const { user, loading } = useAuth();
+  const navigate = useNavigate(); // Initialize useNavigate
 
   if (loading) {
     return (
@@ -34,7 +35,11 @@ const DashboardPage = () => {
               <span className="text-sm text-slate-400">
                 Welcome, {user.email}
               </span>
-              <Button size="sm" variant="outline">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => navigate("/upload-excel")} // Add onClick handler
+              >
                 <Upload className="h-4 w-4 mr-2" />
                 Upload Excel
               </Button>
@@ -52,26 +57,26 @@ const DashboardPage = () => {
               {[
                 {
                   title: "Total Items",
-                  value: "1,234",
-                  change: "+12%",
+                  value: "...", // Placeholder
+                  change: "...", // Placeholder
                   icon: <Package className="h-8 w-8 text-primary" />,
                 },
                 {
                   title: "Low Stock Items",
-                  value: "23",
-                  change: "-5%",
+                  value: "...", // Placeholder
+                  change: "...", // Placeholder
                   icon: <AlertCircle className="h-8 w-8 text-amber-500" />,
                 },
                 {
                   title: "Active Users",
-                  value: "42",
-                  change: "+8%",
+                  value: "...", // Placeholder
+                  change: "...", // Placeholder
                   icon: <Users className="h-8 w-8 text-green-500" />,
                 },
                 {
                   title: "Reports Generated",
-                  value: "156",
-                  change: "+24%",
+                  value: "...", // Placeholder
+                  change: "...", // Placeholder
                   icon: <BarChart2 className="h-8 w-8 text-blue-500" />,
                 },
               ].map((stat, i) => (
@@ -91,7 +96,7 @@ const DashboardPage = () => {
                     <CardContent>
                       <div className="text-2xl font-bold">{stat.value}</div>
                       <p className="text-xs text-slate-400 mt-1">
-                        {stat.change} from last month
+                        {stat.change} (Example Data)
                       </p>
                     </CardContent>
                   </Card>
@@ -108,24 +113,24 @@ const DashboardPage = () => {
                   <div className="space-y-4">
                     {[
                       {
-                        action: "Added new inventory item",
-                        user: "John Doe",
-                        time: "2 hours ago",
+                        action: "Example: Added new item", // Placeholder
+                        user: "User Name", // Placeholder
+                        time: "Recent", // Placeholder
                       },
                       {
-                        action: "Updated stock levels",
-                        user: "Jane Smith",
-                        time: "5 hours ago",
+                        action: "Example: Updated stock", // Placeholder
+                        user: "Another User", // Placeholder
+                        time: "Recent", // Placeholder
                       },
                       {
-                        action: "Generated monthly report",
-                        user: "Mike Johnson",
-                        time: "1 day ago",
+                        action: "Example: Generated report", // Placeholder
+                        user: "Admin User", // Placeholder
+                        time: "Recent", // Placeholder
                       },
                       {
-                        action: "Added new user",
-                        user: "Sarah Williams",
-                        time: "2 days ago",
+                        action: "Example: Added user", // Placeholder
+                        user: "System", // Placeholder
+                        time: "Recent", // Placeholder
                       },
                     ].map((activity, i) => (
                       <div
@@ -152,13 +157,18 @@ const DashboardPage = () => {
                   <CardTitle>Quick Actions</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <Button className="w-full justify-start" size="sm">
+                  <Button
+                    className="w-full justify-start"
+                    size="sm"
+                    onClick={() => navigate("/upload-excel")} // Add onClick handler
+                  >
                     <Upload className="h-4 w-4 mr-2" /> Upload Inventory
                   </Button>
                   <Button
                     className="w-full justify-start"
                     size="sm"
                     variant="outline"
+                    onClick={() => navigate("/reports")} // Add onClick handler
                   >
                     <BarChart2 className="h-4 w-4 mr-2" /> Generate Report
                   </Button>
@@ -166,6 +176,7 @@ const DashboardPage = () => {
                     className="w-full justify-start"
                     size="sm"
                     variant="outline"
+                    onClick={() => navigate("/add-material")} // Add onClick handler
                   >
                     <Package className="h-4 w-4 mr-2" /> Add New Item
                   </Button>
@@ -173,6 +184,7 @@ const DashboardPage = () => {
                     className="w-full justify-start"
                     size="sm"
                     variant="outline"
+                    onClick={() => navigate("/teams")} // Add onClick handler
                   >
                     <Users className="h-4 w-4 mr-2" /> Manage Users
                   </Button>
@@ -187,3 +199,4 @@ const DashboardPage = () => {
 };
 
 export default DashboardPage;
+

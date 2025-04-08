@@ -244,11 +244,9 @@ const SchedulePage: React.FC = () => {
               open={isAddEventDialogOpen}
               onOpenChange={setIsAddEventDialogOpen}
             >
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="mr-2 h-4 w-4" />
-                  {t("Add Event")}
-                </Button>
+              <DialogTrigger className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2">
+                <Plus className="mr-2 h-4 w-4" />
+                {t("Add Event")}
               </DialogTrigger>
               <DialogContent className="bg-slate-800 border-slate-700 text-white">
                 <DialogHeader>
@@ -628,3 +626,4 @@ const SchedulePage: React.FC = () => {
 };
 
 export default SchedulePage;
+

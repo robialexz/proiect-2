@@ -7,6 +7,7 @@ import { Navigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/lib/supabase";
+import { requestSuplimentar, confirmSuplimentar, adjustSuplimentar, deleteMaterial } from "@/lib/edge-functions";
 import {
   Dialog,
   DialogContent,
@@ -28,11 +29,12 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Upload, PlusCircle, Search, FolderPlus } from "lucide-react";
+import { Upload, PlusCircle, Search, FolderPlus, Package, Truck } from "lucide-react";
 import { DataTable } from "@/components/inventory/data-table";
 import { getColumns, type Material } from "@/components/inventory/columns";
 import * as XLSX from "xlsx";
 import { useTranslation } from "react-i18next";
+import ManagerFields from "@/components/inventory/ManagerFields";
 import {
   Select,
   SelectContent,
@@ -89,6 +91,7 @@ const InventoryManagementPage: React.FC = () => {
     quantity: 0,
     manufacturer: "",
     category: "",
+    image_url: "",
     // Manager fields
     cost_per_unit: "",
     supplier_id: "",
@@ -140,10 +143,21 @@ const InventoryManagementPage: React.FC = () => {
     setLoadingData(true);
     setFetchError(null);
     try {
-      const { data, error } = await supabase
-        .from("materials")
-        .select("*")
-        .eq("project_id", selectedProjectId);
+      let query = supabase.from("materials").select("*");
+
+      // Only apply the filter if selectedProjectId is not null
+      if (selectedProjectId) {
+        query = query.eq("project_id", selectedProjectId);
+      } else {
+        // When no project is selected, either show all materials or none
+        // Option 1: Show all materials
+        // No additional filter needed
+
+        // Option 2: Show no materials (uncomment the line below)
+        // return setInventoryData([]);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
       if (data) setInventoryData(data as MaterialWithProject[]);
     } catch (error: unknown) {
@@ -270,7 +284,7 @@ const InventoryManagementPage: React.FC = () => {
         return;
     }
     console.log(
-      `Invoking confirm-suplimentar: ID=${materialId}, Add=${quantityToAdd}, NewSupl=${newSuplimentarValue}`,
+      `Confirming supplementary quantity: ID=${materialId}, Add=${quantityToAdd}, NewSupl=${newSuplimentarValue}`,
     );
     setFetchError(null);
     setIsConfirmModalOpen(false);
@@ -278,53 +292,45 @@ const InventoryManagementPage: React.FC = () => {
     setConfirmationOption("full");
     setConfirmedPartialQuantity("");
     try {
-      const { data, error: invokeError } = await supabase.functions.invoke(
-        "confirm-suplimentar",
-        {
-          body: {
-            material_id: materialId,
-            quantity_to_add: quantityToAdd,
-            new_suplimentar_value: newSuplimentarValue,
-          },
-          method: "POST",
-        },
-      );
-      if (invokeError) {
-        let ed = invokeError.message;
-        if (
-          invokeError.context &&
-          typeof invokeError.context.json === "function"
-        ) {
-          try {
-            const fe = await invokeError.context.json();
-            ed = fe.details || fe.error || ed;
-          } catch (_) {}
+      // We'll use the confirmSuplimentar function but we need to update the material directly
+      // since our edge function might not support the exact parameters we need
+      const { data, error } = await confirmSuplimentar(materialId);
+
+      if (error) {
+        console.error("Error confirming supplementary quantity:", error);
+        setFetchError(
+          t("inventory.errors.confirmFailed", { details: error.message }) ||
+            `Confirm failed: ${error.message}`,
+        );
+        toast({
+          variant: "destructive",
+          title: t("inventory.toasts.confirmError", "Confirmation Error"),
+          description: error.message,
+        });
+        return;
+      }
+
+      // Now update the material quantity directly
+      if (quantityToAdd > 0) {
+        const { data: material } = await supabase
+          .from("materials")
+          .select("quantity")
+          .eq("id", materialId)
+          .single();
+
+        if (material) {
+          const newQuantity = (material.quantity || 0) + quantityToAdd;
+          await supabase
+            .from("materials")
+            .update({
+              quantity: newQuantity,
+              suplimentar: newSuplimentarValue
+            })
+            .eq("id", materialId);
         }
-        setFetchError(
-          t("inventory.errors.confirmFailed", { details: ed }) ||
-            `Confirm failed: ${ed}`,
-        );
-        toast({
-          variant: "destructive",
-          title: t("inventory.toasts.confirmError", "Confirmation Error"),
-          description: ed,
-        });
-        return;
       }
-      if (data?.error) {
-        setFetchError(
-          t("inventory.errors.confirmFunctionError", {
-            details: data.details || data.error,
-          }) || `Confirm function error: ${data.details || data.error}`,
-        );
-        toast({
-          variant: "destructive",
-          title: t("inventory.toasts.confirmError", "Confirmation Error"),
-          description: data.details || data.error,
-        });
-        return;
-      }
-      console.log(`Confirm processed for ${materialId}.`);
+
+      console.log(`Supplementary quantity confirmed for ${materialId}.`);
       fetchMaterials();
       toast({
         title: t(
@@ -333,7 +339,7 @@ const InventoryManagementPage: React.FC = () => {
         ),
       });
     } catch (error: any) {
-      console.error("Error calling confirm-suplimentar:", error);
+      console.error("Error confirming supplementary quantity:", error);
       setFetchError(
         t("inventory.errors.unexpectedConfirmError", {
           message: error.message,
@@ -353,47 +359,24 @@ const InventoryManagementPage: React.FC = () => {
     const materialName = materialToDelete.name;
     setMaterialToDelete(null);
     try {
-      console.log(`Invoking delete-material: ID=${materialIdToDelete}`);
-      const { data, error: invokeError } = await supabase.functions.invoke(
-        "delete-material",
-        { body: { material_id: materialIdToDelete }, method: "POST" },
-      );
-      if (invokeError) {
-        let ed = invokeError.message;
-        if (
-          invokeError.context &&
-          typeof invokeError.context.json === "function"
-        ) {
-          try {
-            const fe = await invokeError.context.json();
-            ed = fe.details || fe.error || ed;
-          } catch (_) {}
-        }
+      console.log(`Deleting material: ID=${materialIdToDelete}`);
+      const { data, error } = await deleteMaterial(materialIdToDelete);
+
+      if (error) {
+        console.error("Error deleting material:", error);
         setFetchError(
-          t("inventory.errors.deleteFailed", { details: ed }) ||
-            `Delete failed: ${ed}`,
+          t("inventory.errors.deleteFailed", { details: error.message }) ||
+            `Delete failed: ${error.message}`,
         );
         toast({
           variant: "destructive",
           title: t("inventory.toasts.deleteError", "Delete Error"),
-          description: ed,
+          description: error.message,
         });
         return;
       }
-      if (data?.error) {
-        setFetchError(
-          t("inventory.errors.deleteFunctionError", {
-            details: data.details || data.error,
-          }) || `Delete function error: ${data.details || data.error}`,
-        );
-        toast({
-          variant: "destructive",
-          title: t("inventory.toasts.deleteError", "Delete Error"),
-          description: data.details || data.error,
-        });
-        return;
-      }
-      console.log(`Delete processed for ${materialIdToDelete}.`);
+
+      console.log(`Material deleted successfully: ${materialIdToDelete}`);
       fetchMaterials();
       toast({
         title: t("inventory.toasts.deleteSuccess", "Material Deleted"),
@@ -568,6 +551,7 @@ const InventoryManagementPage: React.FC = () => {
         quantity: quantityValue,
         manufacturer: newMaterial.manufacturer || null,
         category: newMaterial.category || null,
+        image_url: newMaterial.image_url || null,
         suplimentar: 0,
         // Manager fields
         cost_per_unit: cost,
@@ -646,56 +630,30 @@ const InventoryManagementPage: React.FC = () => {
     const materialId = materialToAdjustSuplimentar.id;
     const quantityToAdjust = adjustmentQuantity * adjustmentSign;
     console.log(
-      `Invoking adjust-suplimentar: ID=${materialId}, Adjust=${quantityToAdjust}`,
+      `Adjusting supplementary quantity: ID=${materialId}, Adjust=${quantityToAdjust}`,
     );
     setFetchError(null);
     setIsAdjustModalOpen(false);
     setMaterialToAdjustSuplimentar(null);
     setAdjustmentQuantity("");
     try {
-      const { data, error: invokeError } = await supabase.functions.invoke(
-        "adjust-suplimentar",
-        {
-          body: { material_id: materialId, adjustment_value: quantityToAdjust },
-          method: "POST",
-        },
-      );
-      if (invokeError) {
-        let ed = invokeError.message;
-        if (
-          invokeError.context &&
-          typeof invokeError.context.json === "function"
-        ) {
-          try {
-            const fe = await invokeError.context.json();
-            ed = fe.details || fe.error || ed;
-          } catch (_) {}
-        }
+      const { data, error } = await adjustSuplimentar(materialId, quantityToAdjust);
+
+      if (error) {
+        console.error("Error adjusting supplementary quantity:", error);
         setFetchError(
-          t("inventory.errors.adjustFailed", { details: ed }) ||
-            `Adjust failed: ${ed}`,
+          t("inventory.errors.adjustFailed", { details: error.message }) ||
+            `Adjust failed: ${error.message}`,
         );
         toast({
           variant: "destructive",
           title: t("inventory.toasts.adjustError", "Adjustment Error"),
-          description: ed,
+          description: error.message,
         });
         return;
       }
-      if (data?.error) {
-        setFetchError(
-          t("inventory.errors.adjustFunctionError", {
-            details: data.details || data.error,
-          }) || `Adjust function error: ${data.details || data.error}`,
-        );
-        toast({
-          variant: "destructive",
-          title: t("inventory.toasts.adjustError", "Adjustment Error"),
-          description: data.details || data.error,
-        });
-        return;
-      }
-      console.log(`Adjust processed for ${materialId}.`);
+
+      console.log(`Supplementary quantity adjusted for ${materialId}.`);
       fetchMaterials();
       toast({
         title: t(
@@ -704,7 +662,7 @@ const InventoryManagementPage: React.FC = () => {
         ),
       });
     } catch (error: any) {
-      console.error("Error calling adjust-suplimentar:", error);
+      console.error("Error adjusting supplementary quantity:", error);
       setFetchError(
         t("inventory.errors.unexpectedAdjustError", {
           message: error.message,
@@ -767,6 +725,7 @@ const InventoryManagementPage: React.FC = () => {
           quantity: editMaterialData.quantity,
           manufacturer: editMaterialData.manufacturer || null,
           category: editMaterialData.category || null,
+          image_url: editMaterialData.image_url || null,
           // Manager fields
           cost_per_unit: cost || null,
           supplier_id: editMaterialData.supplier_id || null,
@@ -908,10 +867,10 @@ const InventoryManagementPage: React.FC = () => {
                 onValueChange={(value) => setSelectedProjectId(value || null)}
               >
                 <SelectTrigger className="w-[200px] bg-slate-800 border-slate-700 h-9">
-                  {" "}
+
                   <SelectValue
                     placeholder={t("inventory.selectProject", "Select Project")}
-                  />{" "}
+                  />
                 </SelectTrigger>
                 <SelectContent className="bg-slate-800 border-slate-700 text-white">
                   {projects.map((project) => (
@@ -937,46 +896,35 @@ const InventoryManagementPage: React.FC = () => {
                   if (!open) setNewProjectName("");
                 }}
               >
-                <DialogTrigger asChild>
-                  {" "}
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    title={
-                      t("inventory.createNewProject", "Create New Project") ||
-                      ""
-                    }
-                  >
-                    {" "}
-                    <FolderPlus className="h-4 w-4" />{" "}
-                  </Button>{" "}
+                <DialogTrigger className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2">
+                  <FolderPlus className="h-4 w-4 mr-2" />
+                  {t("inventory.createNewProject", "Create New Project")}
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-[425px] bg-slate-800 border-slate-700 text-white">
                   <DialogHeader>
-                    {" "}
                     <DialogTitle>
                       {t(
                         "inventory.newProjectDialog.title",
                         "Create New Project",
                       )}
-                    </DialogTitle>{" "}
+                    </DialogTitle>
                     <DialogDescription>
                       {t(
                         "inventory.newProjectDialog.description",
                         "Enter a name for the new project.",
                       )}
-                    </DialogDescription>{" "}
+                    </DialogDescription>
                   </DialogHeader>
                   <div className="grid gap-4 py-4">
-                    {" "}
+
                     <div className="grid grid-cols-4 items-center gap-4">
-                      {" "}
+
                       <Label
                         htmlFor="projectName"
                         className="text-right text-slate-400"
                       >
                         {t("inventory.form.name", "Name")}*
-                      </Label>{" "}
+                      </Label>
                       <Input
                         id="projectName"
                         value={newProjectName}
@@ -986,21 +934,21 @@ const InventoryManagementPage: React.FC = () => {
                           "Project Name",
                         )}
                         className="col-span-3 bg-slate-700 border-slate-600"
-                      />{" "}
-                    </div>{" "}
+                      />
+                    </div>
                   </div>
                   <DialogFooter>
-                    {" "}
+
                     <Button
                       type="button"
                       variant="outline"
                       onClick={() => setIsProjectModalOpen(false)}
                     >
                       {t("common.cancel", "Cancel")}
-                    </Button>{" "}
+                    </Button>
                     <Button type="submit" onClick={handleCreateProject}>
                       {t("common.create", "Create Project")}
-                    </Button>{" "}
+                    </Button>
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
@@ -1031,7 +979,7 @@ const InventoryManagementPage: React.FC = () => {
                     onClick={handleUploadClick}
                     disabled={!selectedProjectId}
                   >
-                    <Upload className="h-4 w-4 mr-2" />{" "}
+                    <Upload className="h-4 w-4 mr-2" />
                     {t("inventory.uploadExcel", "Upload Excel")}
                   </Button>
                 )}
@@ -1050,11 +998,9 @@ const InventoryManagementPage: React.FC = () => {
                       });
                   }}
                 >
-                  <DialogTrigger asChild>
-                    <Button variant="secondary" disabled={!selectedProjectId}>
-                      <PlusCircle className="h-4 w-4 mr-2" />{" "}
-                      {t("inventory.addMaterial", "Add Material")}
-                    </Button>
+                  <DialogTrigger className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-secondary text-secondary-foreground hover:bg-secondary/80 h-9 px-4 py-2" disabled={!selectedProjectId}>
+                    <PlusCircle className="h-4 w-4 mr-2" />
+                    {t("inventory.addMaterial", "Add Material")}
                   </DialogTrigger>
                   <DialogContent className="sm:max-w-[600px] bg-slate-800 border-slate-700 text-white max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
@@ -1175,17 +1121,107 @@ const InventoryManagementPage: React.FC = () => {
                           className="col-span-3 bg-slate-700 border-slate-600"
                         />
                       </div>
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <Label
+                          htmlFor="image_url"
+                          className="text-right text-slate-400"
+                        >
+                          {t("inventory.form.imageUrl", "Image")}
+                        </Label>
+                        <div className="col-span-3 space-y-2">
+                          <div className="flex items-center gap-2">
+                            <Input
+                              id="image_url"
+                              value={newMaterial.image_url}
+                              onChange={handleNewMaterialChange}
+                              placeholder={t(
+                                "inventory.form.imageUrlPlaceholder",
+                                "URL to material image",
+                              )}
+                              className="flex-1 bg-slate-700 border-slate-600"
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="bg-slate-700 border-slate-600 hover:bg-slate-600"
+                              onClick={() => document.getElementById('image-upload')?.click()}
+                            >
+                              <Upload className="h-4 w-4 mr-2" />
+                              {t("inventory.form.uploadImage", "Upload")}
+                            </Button>
+                            <input
+                              id="image-upload"
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={async (e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  try {
+                                    // Upload to Supabase Storage
+                                    const fileExt = file.name.split('.').pop();
+                                    const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+                                    const filePath = `materials/${fileName}`;
+
+                                    const { data, error } = await supabase.storage
+                                      .from('materials')
+                                      .upload(filePath, file);
+
+                                    if (error) throw error;
+
+                                    // Get public URL
+                                    const { data: urlData } = supabase.storage
+                                      .from('materials')
+                                      .getPublicUrl(filePath);
+
+                                    setNewMaterial({
+                                      ...newMaterial,
+                                      image_url: urlData.publicUrl
+                                    });
+
+                                    toast({
+                                      title: t("inventory.imageUpload.success", "Image uploaded"),
+                                      description: t("inventory.imageUpload.successDesc", "Image has been uploaded successfully"),
+                                    });
+                                  } catch (error: any) {
+                                    console.error("Error uploading image:", error);
+                                    toast({
+                                      variant: "destructive",
+                                      title: t("inventory.imageUpload.error", "Upload failed"),
+                                      description: error.message,
+                                    });
+                                  }
+                                }
+                              }}
+                            />
+                          </div>
+                          {newMaterial.image_url && (
+                            <div className="flex items-center gap-2">
+                              <img
+                                src={newMaterial.image_url}
+                                alt="Preview"
+                                className="h-16 w-16 object-cover rounded-md border border-slate-600"
+                              />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                                onClick={() => setNewMaterial({...newMaterial, image_url: ""})}
+                              >
+                                {t("inventory.form.removeImage", "Remove")}
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
 
                       {/* Import and use ManagerFields component */}
                       <div className="col-span-4">
-                        {React.createElement(
-                          require("@/components/inventory/ManagerFields")
-                            .default,
-                          {
-                            data: newMaterial,
-                            onChange: handleNewMaterialChange,
-                          },
-                        )}
+                        <ManagerFields
+                          data={newMaterial}
+                          onChange={handleNewMaterialChange}
+                        />
                       </div>
                     </div>
                     <DialogFooter>
@@ -1246,7 +1282,7 @@ const InventoryManagementPage: React.FC = () => {
                 <Card className="bg-slate-800 border-slate-700">
                   <CardHeader>
                     <CardTitle>
-                      {t("inventory.overviewTitle", "Inventory Overview")}{" "}
+                      {t("inventory.overviewTitle", "Inventory Overview")}
                       {selectedProjectId &&
                       projects.find((p) => p.id === selectedProjectId)
                         ? `- ${projects.find((p) => p.id === selectedProjectId)?.name}`
@@ -1308,7 +1344,7 @@ const InventoryManagementPage: React.FC = () => {
           onOpenChange={(open) => !open && setMaterialToDelete(null)}
         >
           <AlertDialogContent className="bg-slate-800 border-slate-700 text-white">
-            {" "}
+
             <AlertDialogHeader>
               <AlertDialogTitle>
                 {t("inventory.deleteDialog.title", "Are you absolutely sure?")}
@@ -1317,13 +1353,13 @@ const InventoryManagementPage: React.FC = () => {
                 {t(
                   "inventory.deleteDialog.description",
                   "This action cannot be undone. This will permanently delete the material",
-                )}{" "}
+                )}
                 <span className="font-semibold text-slate-300">
                   {materialToDelete?.name}
                 </span>
                 .
               </AlertDialogDescription>
-            </AlertDialogHeader>{" "}
+            </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel
                 onClick={() => setMaterialToDelete(null)}
@@ -1337,7 +1373,7 @@ const InventoryManagementPage: React.FC = () => {
               >
                 {t("common.delete", "Delete")}
               </AlertDialogAction>
-            </AlertDialogFooter>{" "}
+            </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
 
@@ -1350,17 +1386,17 @@ const InventoryManagementPage: React.FC = () => {
           }}
         >
           <DialogContent className="sm:max-w-[425px] bg-slate-800 border-slate-700 text-white">
-            {" "}
+
             <DialogHeader>
-              {" "}
+
               <DialogTitle>
                 {t(
                   "inventory.adjustDialog.title",
                   "Adjust Supplementary Quantity",
                 )}
-              </DialogTitle>{" "}
+              </DialogTitle>
               <DialogDescription>
-                {" "}
+
                 {t(
                   "inventory.adjustDialog.description",
                   "Adjust supplementary quantity for {{materialName}}. Current: {{currentValue}}",
@@ -1368,19 +1404,19 @@ const InventoryManagementPage: React.FC = () => {
                     materialName: materialToAdjustSuplimentar?.name,
                     currentValue: materialToAdjustSuplimentar?.suplimentar ?? 0,
                   },
-                )}{" "}
-              </DialogDescription>{" "}
-            </DialogHeader>{" "}
+                )}
+              </DialogDescription>
+            </DialogHeader>
             <div className="grid gap-4 py-4">
-              {" "}
+
               <div className="grid grid-cols-4 items-center gap-4">
-                {" "}
+
                 <Label
                   htmlFor="adjustQuantity"
                   className="text-right text-slate-400"
                 >
                   {t("inventory.form.quantity", "Quantity")}*
-                </Label>{" "}
+                </Label>
                 <Input
                   id="adjustQuantity"
                   type="number"
@@ -1395,35 +1431,35 @@ const InventoryManagementPage: React.FC = () => {
                     "Enter quantity",
                   )}
                   className="col-span-3 bg-slate-700 border-slate-600"
-                />{" "}
-              </div>{" "}
-            </div>{" "}
+                />
+              </div>
+            </div>
             <DialogFooter className="sm:justify-between">
-              {" "}
+
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setMaterialToAdjustSuplimentar(null)}
               >
                 {t("common.cancel", "Cancel")}
-              </Button>{" "}
+              </Button>
               <div className="flex gap-2">
-                {" "}
+
                 <Button
                   type="button"
                   variant="destructive"
                   onClick={() => handleAdjustSuplimentar(-1)}
                 >
                   {t("inventory.adjustDialog.subtract", "Subtract")}
-                </Button>{" "}
+                </Button>
                 <Button
                   type="button"
                   onClick={() => handleAdjustSuplimentar(1)}
                 >
                   {t("inventory.adjustDialog.add", "Add")}
-                </Button>{" "}
-              </div>{" "}
-            </DialogFooter>{" "}
+                </Button>
+              </div>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
 
@@ -1436,17 +1472,17 @@ const InventoryManagementPage: React.FC = () => {
           }}
         >
           <DialogContent className="sm:max-w-md bg-slate-800 border-slate-700 text-white">
-            {" "}
+
             <DialogHeader>
-              {" "}
+
               <DialogTitle>
                 {t(
                   "inventory.confirmDialog.title",
                   "Confirm Supplementary Quantity",
                 )}
-              </DialogTitle>{" "}
+              </DialogTitle>
               <DialogDescription>
-                {" "}
+
                 {t(
                   "inventory.confirmDialog.description",
                   "Confirm procurement status for {{materialName}} (Requested: {{requestedValue}}).",
@@ -1455,48 +1491,48 @@ const InventoryManagementPage: React.FC = () => {
                     requestedValue:
                       materialToConfirmSuplimentar?.suplimentar ?? 0,
                   },
-                )}{" "}
-              </DialogDescription>{" "}
-            </DialogHeader>{" "}
+                )}
+              </DialogDescription>
+            </DialogHeader>
             <div className="py-4 space-y-4">
-              {" "}
+
               <RadioGroup
                 value={confirmationOption}
                 onValueChange={(value: "full" | "partial" | "none") =>
                   setConfirmationOption(value)
                 }
               >
-                {" "}
+
                 <div className="flex items-center space-x-2">
-                  {" "}
-                  <RadioGroupItem value="full" id="r-full" />{" "}
+
+                  <RadioGroupItem value="full" id="r-full" />
                   <Label htmlFor="r-full">
                     {t(
                       "inventory.confirmDialog.optionFull",
                       "Fulfilled entirely ({{value}})",
                       { value: materialToConfirmSuplimentar?.suplimentar ?? 0 },
                     )}
-                  </Label>{" "}
-                </div>{" "}
+                  </Label>
+                </div>
                 <div className="flex items-center space-x-2">
-                  {" "}
-                  <RadioGroupItem value="partial" id="r-partial" />{" "}
+
+                  <RadioGroupItem value="partial" id="r-partial" />
                   <Label htmlFor="r-partial">
                     {t(
                       "inventory.confirmDialog.optionPartial",
                       "Partially fulfilled",
                     )}
-                  </Label>{" "}
-                </div>{" "}
+                  </Label>
+                </div>
                 {confirmationOption === "partial" && (
                   <div className="grid grid-cols-4 items-center gap-4 pl-6">
-                    {" "}
+
                     <Label
                       htmlFor="partialQuantity"
                       className="text-right text-slate-400 col-span-1"
                     >
                       {t("inventory.confirmDialog.receivedLabel", "Received:")}
-                    </Label>{" "}
+                    </Label>
                     <Input
                       id="partialQuantity"
                       type="number"
@@ -1513,37 +1549,37 @@ const InventoryManagementPage: React.FC = () => {
                         "Quantity",
                       )}
                       className="col-span-3 bg-slate-700 border-slate-600 h-8"
-                    />{" "}
+                    />
                   </div>
-                )}{" "}
+                )}
                 <div className="flex items-center space-x-2">
-                  {" "}
-                  <RadioGroupItem value="none" id="r-none" />{" "}
+
+                  <RadioGroupItem value="none" id="r-none" />
                   <Label htmlFor="r-none">
                     {t(
                       "inventory.confirmDialog.optionNone",
                       "Could not procure",
                     )}
-                  </Label>{" "}
-                </div>{" "}
-              </RadioGroup>{" "}
-            </div>{" "}
+                  </Label>
+                </div>
+              </RadioGroup>
+            </div>
             <DialogFooter>
-              {" "}
+
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setMaterialToConfirmSuplimentar(null)}
               >
                 {t("common.cancel", "Cancel")}
-              </Button>{" "}
+              </Button>
               <Button
                 type="button"
                 onClick={handleProcessSuplimentarConfirmation}
               >
                 {t("common.confirm", "Confirm")}
-              </Button>{" "}
-            </DialogFooter>{" "}
+              </Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
 
@@ -1556,21 +1592,21 @@ const InventoryManagementPage: React.FC = () => {
           }}
         >
           <DialogContent className="sm:max-w-[600px] bg-slate-800 border-slate-700 text-white max-h-[90vh] overflow-y-auto">
-            {" "}
+
             <DialogHeader>
-              {" "}
+
               <DialogTitle>
                 {t("inventory.editDialog.title", "Edit Material")}
-              </DialogTitle>{" "}
+              </DialogTitle>
               <DialogDescription>
                 {t(
                   "inventory.editDialog.description",
                   "Update details. Click save when done.",
                 )}
-              </DialogDescription>{" "}
-            </DialogHeader>{" "}
+              </DialogDescription>
+            </DialogHeader>
             <div className="grid gap-4 py-4">
-              {" "}
+
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="name" className="text-right text-slate-400">
                   {t("inventory.form.name", "Name")}*
@@ -1585,7 +1621,7 @@ const InventoryManagementPage: React.FC = () => {
                   )}
                   className="col-span-3 bg-slate-700 border-slate-600"
                 />
-              </div>{" "}
+              </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label
                   htmlFor="dimension"
@@ -1603,7 +1639,7 @@ const InventoryManagementPage: React.FC = () => {
                   )}
                   className="col-span-3 bg-slate-700 border-slate-600"
                 />
-              </div>{" "}
+              </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="unit" className="text-right text-slate-400">
                   {t("inventory.form.unit", "Unit")}*
@@ -1618,7 +1654,7 @@ const InventoryManagementPage: React.FC = () => {
                   )}
                   className="col-span-3 bg-slate-700 border-slate-600"
                 />
-              </div>{" "}
+              </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="quantity" className="text-right text-slate-400">
                   {t("inventory.form.quantity", "Quantity")}*
@@ -1631,7 +1667,7 @@ const InventoryManagementPage: React.FC = () => {
                   placeholder="0"
                   className="col-span-3 bg-slate-700 border-slate-600"
                 />
-              </div>{" "}
+              </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label
                   htmlFor="manufacturer"
@@ -1649,7 +1685,7 @@ const InventoryManagementPage: React.FC = () => {
                   )}
                   className="col-span-3 bg-slate-700 border-slate-600"
                 />
-              </div>{" "}
+              </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="category" className="text-right text-slate-400">
                   {t("inventory.form.category", "Category")}
@@ -1665,35 +1701,220 @@ const InventoryManagementPage: React.FC = () => {
                   className="col-span-3 bg-slate-700 border-slate-600"
                 />
               </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label
+                  htmlFor="image_url"
+                  className="text-right text-slate-400"
+                >
+                  {t("inventory.form.imageUrl", "Image")}
+                </Label>
+                <div className="col-span-3 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Input
+                      id="image_url"
+                      value={editMaterialData.image_url ?? ""}
+                      onChange={handleEditMaterialChange}
+                      placeholder={t(
+                        "inventory.form.imageUrlPlaceholder",
+                        "URL to material image",
+                      )}
+                      className="flex-1 bg-slate-700 border-slate-600"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="bg-slate-700 border-slate-600 hover:bg-slate-600"
+                      onClick={() => document.getElementById('edit-image-upload')?.click()}
+                    >
+                      <Upload className="h-4 w-4 mr-2" />
+                      {t("inventory.form.uploadImage", "Upload")}
+                    </Button>
+                    <input
+                      id="edit-image-upload"
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          try {
+                            // Upload to Supabase Storage
+                            const fileExt = file.name.split('.').pop();
+                            const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+                            const filePath = `materials/${fileName}`;
+
+                            const { data, error } = await supabase.storage
+                              .from('materials')
+                              .upload(filePath, file);
+
+                            if (error) throw error;
+
+                            // Get public URL
+                            const { data: urlData } = supabase.storage
+                              .from('materials')
+                              .getPublicUrl(filePath);
+
+                            setEditMaterialData({
+                              ...editMaterialData,
+                              image_url: urlData.publicUrl
+                            });
+
+                            toast({
+                              title: t("inventory.imageUpload.success", "Image uploaded"),
+                              description: t("inventory.imageUpload.successDesc", "Image has been uploaded successfully"),
+                            });
+                          } catch (error: any) {
+                            console.error("Error uploading image:", error);
+                            toast({
+                              variant: "destructive",
+                              title: t("inventory.imageUpload.error", "Upload failed"),
+                              description: error.message,
+                            });
+                          }
+                        }
+                      }}
+                    />
+                  </div>
+                  {editMaterialData.image_url && (
+                    <div className="flex items-center gap-2">
+                      <img
+                        src={editMaterialData.image_url}
+                        alt="Preview"
+                        className="h-16 w-16 object-cover rounded-md border border-slate-600"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                        onClick={() => setEditMaterialData({...editMaterialData, image_url: ""})}
+                      >
+                        {t("inventory.form.removeImage", "Remove")}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
               {/* Import and use ManagerFields component */}
               <div className="col-span-4">
-                {React.createElement(
-                  require("@/components/inventory/ManagerFields").default,
-                  {
-                    data: editMaterialData,
-                    onChange: handleEditMaterialChange,
-                  },
-                )}
+                <ManagerFields
+                  data={editMaterialData}
+                  onChange={handleEditMaterialChange}
+                />
               </div>
-            </div>{" "}
+            </div>
             <DialogFooter>
-              {" "}
+
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setIsEditModalOpen(false)}
               >
                 {t("common.cancel", "Cancel")}
-              </Button>{" "}
+              </Button>
               <Button type="submit" onClick={handleUpdateMaterial}>
                 {t("common.save", "Save Changes")}
-              </Button>{" "}
-            </DialogFooter>{" "}
+              </Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
 
-        {/* View Dialog (Add if needed) */}
-        {/* <Dialog open={isViewModalOpen} onOpenChange={setIsViewModalOpen}> ... </Dialog> */}
+        {/* View Material Dialog */}
+        <Dialog
+          open={isViewModalOpen}
+          onOpenChange={(open) => {
+            setIsViewModalOpen(open);
+            if (!open) setMaterialToView(null);
+          }}
+        >
+          <DialogContent className="sm:max-w-[600px] bg-slate-800 border-slate-700 text-white max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>
+                {materialToView?.name}
+              </DialogTitle>
+              <DialogDescription>
+                {t("inventory.viewDialog.description", "Material details")}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-6 py-4">
+              {/* Material Image */}
+              {materialToView?.image_url && (
+                <div className="flex justify-center">
+                  <img
+                    src={materialToView.image_url}
+                    alt={materialToView.name}
+                    className="max-h-[200px] object-contain rounded-md border border-slate-700"
+                  />
+                </div>
+              )}
+
+              {/* Material Details */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h3 className="text-sm font-medium text-slate-400 mb-1">{t("inventory.columns.dimension", "Dimension")}</h3>
+                  <p>{materialToView?.dimension || "-"}</p>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-slate-400 mb-1">{t("inventory.columns.unit", "Unit")}</h3>
+                  <p>{materialToView?.unit}</p>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-slate-400 mb-1">{t("inventory.columns.quantity", "Quantity")}</h3>
+                  <p>{materialToView?.quantity}</p>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-slate-400 mb-1">{t("inventory.columns.manufacturer", "Manufacturer")}</h3>
+                  <p>{materialToView?.manufacturer || "-"}</p>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-slate-400 mb-1">{t("inventory.columns.category", "Category")}</h3>
+                  <p>{materialToView?.category || "-"}</p>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-slate-400 mb-1">{t("inventory.columns.suplimentar", "Supplementary")}</h3>
+                  <p>{materialToView?.suplimentar || 0}</p>
+                </div>
+
+                {/* Manager Fields */}
+                {isManager && (
+                  <>
+                    <div className="col-span-2 mt-2">
+                      <h3 className="text-md font-semibold text-slate-300 mb-2">{t("inventory.managerFields.title", "Manager Information")}</h3>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-slate-400 mb-1">{t("inventory.managerFields.costPerUnit", "Cost Per Unit")}</h3>
+                      <p>{materialToView?.cost_per_unit ? `$${materialToView.cost_per_unit}` : "-"}</p>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-slate-400 mb-1">{t("inventory.managerFields.location", "Location")}</h3>
+                      <p>{materialToView?.location || "-"}</p>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-slate-400 mb-1">{t("inventory.managerFields.minStockLevel", "Min Stock Level")}</h3>
+                      <p>{materialToView?.min_stock_level || "-"}</p>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-slate-400 mb-1">{t("inventory.managerFields.maxStockLevel", "Max Stock Level")}</h3>
+                      <p>{materialToView?.max_stock_level || "-"}</p>
+                    </div>
+                    <div className="col-span-2">
+                      <h3 className="text-sm font-medium text-slate-400 mb-1">{t("inventory.managerFields.notes", "Notes")}</h3>
+                      <p className="whitespace-pre-wrap">{materialToView?.notes || "-"}</p>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                onClick={() => setIsViewModalOpen(false)}
+              >
+                {t("common.close", "Close")}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

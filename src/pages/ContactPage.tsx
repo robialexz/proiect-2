@@ -5,13 +5,13 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Mail, Phone, MapPin, Clock } from "lucide-react";
-import Navbar from "@/components/layout/Navbar";
+import ModernNavbar from "@/components/layout/ModernNavbar";
 import Footer from "@/components/layout/Footer";
 
 const ContactPage = () => {
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
+      <ModernNavbar />
       <div className="pt-20 pb-16 px-4">
         <div className="container mx-auto max-w-6xl">
           <motion.div
@@ -156,3 +156,4 @@ const ContactPage = () => {
 };
 
 export default ContactPage;
+

@@ -1,12 +1,12 @@
 import React from "react";
 import { motion } from "framer-motion";
-import Navbar from "@/components/layout/Navbar";
+import ModernNavbar from "@/components/layout/ModernNavbar";
 import Footer from "@/components/layout/Footer";
 
 const TermsPage = () => {
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
+      <ModernNavbar />
       <div className="pt-20 pb-16 px-4">
         <div className="container mx-auto max-w-4xl">
           <motion.div
@@ -135,3 +135,4 @@ const TermsPage = () => {
 };
 
 export default TermsPage;
+

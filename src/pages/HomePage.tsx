@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import Navbar from "@/components/layout/Navbar";
+import ModernNavbar from "@/components/layout/ModernNavbar";
 import Footer from "@/components/layout/Footer";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -121,7 +121,7 @@ const HomePage = () => {
   return (
     <div className="min-h-screen bg-slate-900 text-white">
       {/* Navigation */}
-      <Navbar
+      <ModernNavbar
         isLoggedIn={!!user}
         userName={userProfile?.displayName || user?.email || ""}
         userAvatar=""
@@ -875,3 +875,4 @@ const HomePage = () => {
 };
 
 export default HomePage;
+

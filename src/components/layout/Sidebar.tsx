@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,310 +15,431 @@ import {
   Package,
   Users,
   FileSpreadsheet,
-  Info,
-  FileText,
+  Briefcase,
+  Building,
   DollarSign,
-  Mail,
-  LogOut,
+  BarChart,
+  FileText,
+  Calendar,
+  FolderArchive,
   Settings,
   ChevronLeft,
   ChevronRight,
-  Menu,
-  User,
+  ChevronDown,
+  LogOut,
+  HelpCircle,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useNotification } from "@/components/ui/notification";
+import { fadeInLeft, fadeInRight } from "@/lib/animation-variants";
 
-interface NavItemProps {
+interface NavItem {
+  title: string;
   icon: React.ReactNode;
-  label: string;
-  to: string;
-  isCollapsed?: boolean;
-  isActive?: boolean;
-  onClick?: () => void;
+  href: string;
+  badge?: string | number;
+  badgeColor?: string;
 }
 
-const NavItem = ({
-  icon,
-  label,
-  to,
-  isCollapsed = false,
-  isActive = false,
-  onClick,
-}: NavItemProps) => {
-  if (to === "#logout") {
-    return (
-      <TooltipProvider delayDuration={0}>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size={isCollapsed ? "icon" : "default"}
-              className={cn(
-                "w-full justify-start gap-3 transition-all duration-300 text-slate-400 hover:text-white",
-                isActive ? "bg-slate-800 text-white" : "hover:bg-slate-800",
-                isCollapsed ? "h-10 w-10 p-0" : "h-10 px-4",
-              )}
-              onClick={onClick}
-            >
-              {icon}
-              {!isCollapsed && <span>{label}</span>}
-            </Button>
-          </TooltipTrigger>
-          {isCollapsed && <TooltipContent side="right">{label}</TooltipContent>}
-        </Tooltip>
-      </TooltipProvider>
-    );
-  }
-
-  return (
-    <TooltipProvider delayDuration={0}>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Link to={to} className="w-full">
-            <Button
-              variant="ghost"
-              size={isCollapsed ? "icon" : "default"}
-              className={cn(
-                "w-full justify-start gap-3 transition-all duration-300 text-slate-400 hover:text-white",
-                isActive ? "bg-slate-800 text-white" : "hover:bg-slate-800",
-                isCollapsed ? "h-10 w-10 p-0" : "h-10 px-4",
-              )}
-            >
-              {icon}
-              {!isCollapsed && <span>{label}</span>}
-            </Button>
-          </Link>
-        </TooltipTrigger>
-        {isCollapsed && <TooltipContent side="right">{label}</TooltipContent>}
-      </Tooltip>
-    </TooltipProvider>
-  );
-};
-
-interface SidebarProps {
-  defaultCollapsed?: boolean;
-  className?: string;
+interface NavGroup {
+  title: string;
+  items: NavItem[];
+  icon?: React.ReactNode;
+  expanded?: boolean;
 }
 
-const Sidebar = ({
-  defaultCollapsed = false,
-  className = "",
-}: SidebarProps) => {
-  const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
-  const location = useLocation();
-  const { user, signOut } = useAuth();
-  const navigate = useNavigate();
+const Sidebar = () => {
   const { t } = useTranslation();
+  const { userProfile, signOut } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { addNotification } = useNotification();
+  const [collapsed, setCollapsed] = useState(false);
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
+    dashboard: true,
+    management: true,
+    reports: true,
+  });
 
-  const handleLogout = async () => {
-    await signOut();
-    navigate("/");
-  };
-
-  // Navigation items grouped by category using translation keys
-  const mainNavItems = [
-    { icon: <Home size={20} />, label: t("sidebar.home"), to: "/overview" },
+  // Definim grupurile de navigare
+  const navGroups: NavGroup[] = [
     {
+      title: t("sidebar.dashboardGroup"),
       icon: <LayoutDashboard size={20} />,
-      label: t("sidebar.dashboard"),
-      to: "/dashboard",
+      items: [
+        {
+          title: t("sidebar.dashboard"),
+          icon: <Home size={20} />,
+          href: "/dashboard",
+        },
+        {
+          title: t("sidebar.overview"),
+          icon: <BarChart size={20} />,
+          href: "/overview",
+        },
+      ],
     },
     {
-      icon: <FileText size={20} />,
-      label: t("sidebar.projects"),
-      to: "/projects",
+      title: t("sidebar.managementGroup"),
+      icon: <Briefcase size={20} />,
+      items: [
+        {
+          title: t("sidebar.projects"),
+          icon: <Briefcase size={20} />,
+          href: "/projects",
+          badge: 3,
+          badgeColor: "bg-blue-500",
+        },
+        {
+          title: t("sidebar.inventory"),
+          icon: <Package size={20} />,
+          href: "/inventory-management",
+          badge: 12,
+          badgeColor: "bg-green-500",
+        },
+        {
+          title: t("sidebar.suppliers"),
+          icon: <Building size={20} />,
+          href: "/suppliers",
+        },
+        {
+          title: t("sidebar.teams"),
+          icon: <Users size={20} />,
+          href: "/teams",
+        },
+        {
+          title: t("sidebar.budget"),
+          icon: <DollarSign size={20} />,
+          href: "/budget",
+        },
+      ],
     },
     {
-      icon: <Package size={20} />,
-      label: t("sidebar.inventory"),
-      to: "/inventory-management",
-    },
-    {
-      icon: <Users size={20} />,
-      label: t("sidebar.teams"),
-      to: "/teams",
-    },
-    {
+      title: t("sidebar.reportsGroup"),
       icon: <FileSpreadsheet size={20} />,
-      label: t("sidebar.suppliers"),
-      to: "/suppliers",
+      items: [
+        {
+          title: t("sidebar.reports"),
+          icon: <FileSpreadsheet size={20} />,
+          href: "/reports",
+        },
+        {
+          title: t("sidebar.schedule"),
+          icon: <Calendar size={20} />,
+          href: "/schedule",
+        },
+        {
+          title: t("sidebar.documents"),
+          icon: <FileText size={20} />,
+          href: "/documents",
+        },
+        {
+          title: t("sidebar.resources"),
+          icon: <FolderArchive size={20} />,
+          href: "/resources",
+        },
+      ],
     },
   ];
 
-  const secondaryNavItems = [
-    {
-      icon: <DollarSign size={20} />,
-      label: t("sidebar.budget"),
-      to: "/budget",
-    },
-    {
-      icon: <Mail size={20} />,
-      label: t("sidebar.reports"),
-      to: "/reports",
-    },
-    {
-      icon: <Info size={20} />,
-      label: t("sidebar.resources"),
-      to: "/resources",
-    },
-  ];
+  // Verificăm dacă un item este activ
+  const isActive = (href: string) => location.pathname === href;
 
-  const settingsNavItems = [
-    {
-      icon: <User size={20} />,
-      label: t("sidebar.profile", "Profil"),
-      to: "/profile",
-    },
-    {
-      icon: <Settings size={20} />,
-      label: t("sidebar.settings"),
-      to: "/settings",
-    },
-    { icon: <LogOut size={20} />, label: t("Logout"), to: "#logout" },
-  ];
-
-  const toggleSidebar = () => {
-    setIsCollapsed(!isCollapsed);
+  // Gestionăm expandarea/colapsarea grupurilor
+  const toggleGroup = (groupTitle: string) => {
+    setExpandedGroups((prev) => ({
+      ...prev,
+      [groupTitle]: !prev[groupTitle],
+    }));
   };
+
+  // Gestionăm deconectarea
+  const handleSignOut = async () => {
+    await signOut();
+    addNotification({
+      type: "success",
+      title: "Deconectat",
+      message: "Te-ai deconectat cu succes",
+      duration: 3000,
+    });
+    navigate("/login");
+  };
+
+  // Când se schimbă ruta, expandăm automat grupul corespunzător
+  useEffect(() => {
+    navGroups.forEach((group) => {
+      const activeItem = group.items.find((item) => isActive(item.href));
+      if (activeItem) {
+        setExpandedGroups((prev) => ({
+          ...prev,
+          [group.title]: true,
+        }));
+      }
+    });
+  }, [location.pathname]);
 
   return (
-    <aside
+    <div
       className={cn(
-        "flex flex-col h-full bg-slate-900 border-r border-slate-800 transition-all duration-300",
-        isCollapsed ? "w-16" : "w-64 lg:w-72",
-        className,
+        "h-screen bg-slate-900 border-r border-slate-800 flex flex-col transition-all duration-300",
+        collapsed ? "w-16" : "w-64"
       )}
     >
-      {/* Mobile toggle */}
-      <div className="lg:hidden flex items-center justify-between p-4 border-b border-slate-800">
-        <span
-          className={cn(
-            "font-semibold transition-opacity text-white",
-            isCollapsed ? "opacity-0" : "opacity-100",
-          )}
-        >
-          {t("Menu")}
-        </span>
+      {/* Logo and collapse button */}
+      <div className="flex items-center justify-between p-4 border-b border-slate-800">
+        {!collapsed && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="flex items-center"
+          >
+            <span className="text-xl font-bold text-primary">Inventory</span>
+            <span className="text-xl font-bold text-white">Pro</span>
+          </motion.div>
+        )}
         <Button
           variant="ghost"
           size="icon"
-          onClick={toggleSidebar}
-          className="lg:hidden text-slate-400 hover:text-white"
+          onClick={() => setCollapsed(!collapsed)}
+          className="text-slate-400 hover:text-white"
         >
-          <Menu size={20} />
+          {collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
         </Button>
       </div>
 
-      {/* Sidebar header with logo */}
-      <div className="p-4 border-b border-slate-800 hidden lg:block">
-        <Link to="/" className="flex items-center">
-          <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center mr-2">
-            <span className="text-primary-foreground font-bold">IM</span>
-          </div>
-          {!isCollapsed && (
-            <span className="font-bold text-xl text-white">
-              InventoryMaster
-            </span>
+      {/* User profile */}
+      <div className="p-4 border-b border-slate-800">
+        <div className="flex items-center">
+          <Avatar className="h-10 w-10">
+            <AvatarImage
+              src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${userProfile?.displayName || "user"}`}
+              alt={userProfile?.displayName || "User"}
+            />
+            <AvatarFallback>
+              {userProfile?.displayName?.charAt(0) || "U"}
+            </AvatarFallback>
+          </Avatar>
+          {!collapsed && (
+            <motion.div
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -10 }}
+              className="ml-3"
+            >
+              <p className="font-medium text-sm">
+                {userProfile?.displayName || "Utilizator"}
+              </p>
+              <p className="text-xs text-slate-400 truncate max-w-[160px]">
+                {userProfile?.email || ""}
+              </p>
+            </motion.div>
           )}
-        </Link>
+        </div>
       </div>
 
-      {/* User profile section */}
-      {user && (
-        <div className="p-4 border-b border-slate-800 flex items-center gap-3">
-          <Link to="/profile">
-            <Avatar className="h-10 w-10 cursor-pointer hover:ring-2 hover:ring-primary transition-all">
-              <AvatarImage
-                src="https://api.dicebear.com/7.x/avataaars/svg?seed=Alex"
-                alt={user.email || "User"}
-              />
-              <AvatarFallback className="bg-primary text-primary-foreground">
-                {user.email ? user.email.substring(0, 2).toUpperCase() : "U"}
-              </AvatarFallback>
-            </Avatar>
-          </Link>
-          {!isCollapsed && (
-            <div className="flex-1 min-w-0">
-              <Link
-                to="/profile"
-                className="hover:text-primary transition-colors"
-              >
-                <p className="text-sm font-medium text-white truncate">
-                  {user.email}
-                </p>
-                <p className="text-xs text-slate-400 truncate">
-                  {t("sidebar.viewProfile", "Vizualizează profilul")}
-                </p>
-              </Link>
+      {/* Navigation */}
+      <div className="flex-1 overflow-y-auto py-4">
+        <nav className="px-2 space-y-1">
+          {navGroups.map((group) => (
+            <div key={group.title} className="mb-4">
+              {/* Group header */}
+              {!collapsed ? (
+                <button
+                  onClick={() => toggleGroup(group.title)}
+                  className="flex items-center justify-between w-full px-3 py-2 text-sm font-medium text-slate-400 hover:text-white rounded-md"
+                >
+                  <div className="flex items-center">
+                    {group.icon}
+                    <span className="ml-3">{group.title}</span>
+                  </div>
+                  <ChevronDown
+                    size={16}
+                    className={cn(
+                      "transition-transform duration-200",
+                      expandedGroups[group.title] ? "transform rotate-180" : ""
+                    )}
+                  />
+                </button>
+              ) : (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={() => toggleGroup(group.title)}
+                        className="flex items-center justify-center w-full p-2 text-slate-400 hover:text-white rounded-md"
+                      >
+                        {group.icon}
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="right">
+                      <p>{group.title}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+
+              {/* Group items */}
+              <AnimatePresence>
+                {(expandedGroups[group.title] || collapsed) && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="mt-1 space-y-1"
+                  >
+                    {group.items.map((item) => (
+                      <TooltipProvider key={item.href}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Link
+                              to={item.href}
+                              className={cn(
+                                "flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors",
+                                isActive(item.href)
+                                  ? "bg-slate-800 text-white"
+                                  : "text-slate-400 hover:text-white hover:bg-slate-800",
+                                collapsed && "justify-center px-2"
+                              )}
+                            >
+                              <span className="relative">
+                                {item.icon}
+                                {item.badge && !collapsed && (
+                                  <span
+                                    className={cn(
+                                      "absolute -top-1 -right-1 flex items-center justify-center w-4 h-4 text-[10px] font-bold text-white rounded-full",
+                                      item.badgeColor || "bg-primary"
+                                    )}
+                                  >
+                                    {item.badge}
+                                  </span>
+                                )}
+                              </span>
+                              {!collapsed && (
+                                <span className="ml-3 flex-1">{item.title}</span>
+                              )}
+                              {!collapsed && item.badge && (
+                                <span
+                                  className={cn(
+                                    "ml-auto flex items-center justify-center min-w-[20px] h-5 px-1 text-xs font-bold text-white rounded-full",
+                                    item.badgeColor || "bg-primary"
+                                  )}
+                                >
+                                  {item.badge}
+                                </span>
+                              )}
+                            </Link>
+                          </TooltipTrigger>
+                          {collapsed && (
+                            <TooltipContent side="right">
+                              <p>{item.title}</p>
+                              {item.badge && (
+                                <span
+                                  className={cn(
+                                    "ml-1 inline-flex items-center justify-center min-w-[20px] h-5 px-1 text-xs font-bold text-white rounded-full",
+                                    item.badgeColor || "bg-primary"
+                                  )}
+                                >
+                                  {item.badge}
+                                </span>
+                              )}
+                            </TooltipContent>
+                          )}
+                        </Tooltip>
+                      </TooltipProvider>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
-          )}
-        </div>
-      )}
-
-      {/* Sidebar content */}
-      <div className="flex flex-col flex-1 overflow-y-auto py-4 px-2">
-        {/* Main navigation */}
-        <div className="space-y-1">
-          {mainNavItems.map((item) => (
-            <NavItem
-              key={item.to}
-              icon={item.icon}
-              label={item.label}
-              to={item.to}
-              isCollapsed={isCollapsed}
-              isActive={location.pathname === item.to}
-            />
           ))}
-        </div>
+        </nav>
+      </div>
 
-        {/* Secondary navigation */}
-        <div className="mt-6 pt-6 border-t border-slate-800 space-y-1">
-          {secondaryNavItems.map((item) => (
-            <NavItem
-              key={item.to}
-              icon={item.icon}
-              label={item.label}
-              to={item.to}
-              isCollapsed={isCollapsed}
-              isActive={location.pathname === item.to}
-            />
-          ))}
-        </div>
+      {/* Footer */}
+      <div className="p-4 border-t border-slate-800">
+        <div className="space-y-2">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className={cn(
+                    "w-full text-slate-400 hover:text-white hover:bg-slate-800 justify-start",
+                    collapsed && "justify-center"
+                  )}
+                  onClick={() => navigate("/settings")}
+                >
+                  <Settings size={20} />
+                  {!collapsed && <span className="ml-3">{t("sidebar.settings")}</span>}
+                </Button>
+              </TooltipTrigger>
+              {collapsed && (
+                <TooltipContent side="right">
+                  <p>{t("sidebar.settings")}</p>
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </TooltipProvider>
 
-        {/* Settings and logout */}
-        <div className="mt-6 pt-6 border-t border-slate-800 space-y-1">
-          {settingsNavItems.map((item) => (
-            <NavItem
-              key={item.to}
-              icon={item.icon}
-              label={item.label}
-              to={item.to}
-              isCollapsed={isCollapsed}
-              isActive={location.pathname === item.to}
-              onClick={item.to === "#logout" ? handleLogout : undefined}
-            />
-          ))}
-        </div>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className={cn(
+                    "w-full text-slate-400 hover:text-white hover:bg-slate-800 justify-start",
+                    collapsed && "justify-center"
+                  )}
+                  onClick={() => {
+                    addNotification({
+                      type: "info",
+                      title: "Ajutor",
+                      message: "Secțiunea de ajutor va fi disponibilă în curând",
+                      duration: 3000,
+                    });
+                  }}
+                >
+                  <HelpCircle size={20} />
+                  {!collapsed && <span className="ml-3">{t("sidebar.help")}</span>}
+                </Button>
+              </TooltipTrigger>
+              {collapsed && (
+                <TooltipContent side="right">
+                  <p>{t("sidebar.help")}</p>
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </TooltipProvider>
 
-        {/* Collapse toggle button */}
-        <div className="mt-auto pt-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleSidebar}
-            className="w-full h-10 justify-center hidden lg:flex text-slate-400 hover:text-white"
-          >
-            {isCollapsed ? (
-              <ChevronRight size={20} />
-            ) : (
-              <ChevronLeft size={20} />
-            )}
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className={cn(
+                    "w-full text-slate-400 hover:text-white hover:bg-slate-800 justify-start",
+                    collapsed && "justify-center"
+                  )}
+                  onClick={handleSignOut}
+                >
+                  <LogOut size={20} />
+                  {!collapsed && <span className="ml-3">{t("sidebar.logout")}</span>}
+                </Button>
+              </TooltipTrigger>
+              {collapsed && (
+                <TooltipContent side="right">
+                  <p>{t("sidebar.logout")}</p>
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </TooltipProvider>
         </div>
       </div>
-    </aside>
+    </div>
   );
 };
 

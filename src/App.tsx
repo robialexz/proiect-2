@@ -1,8 +1,10 @@
 import { Suspense, lazy } from "react";
-import { useRoutes, Routes, Route } from "react-router-dom";
-import routes from "tempo-routes";
+import { Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { RoleProvider } from "./contexts/RoleContext";
+
+// Import layout component
+const AppLayout = lazy(() => import("./components/layout/AppLayout"));
 
 // Lazy load pages for better performance
 const HomePage = lazy(() => import("./pages/HomePage"));
@@ -42,6 +44,7 @@ function App() {
           }
         >
           <Routes>
+            {/* Public routes */}
             <Route path="/" element={<HomePage />} />
             <Route path="/about" element={<AboutPage />} />
             <Route path="/terms" element={<TermsPage />} />
@@ -49,23 +52,24 @@ function App() {
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
-            <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/overview" element={<OverviewPage />} />
-            <Route
-              path="/inventory-management"
-              element={<InventoryManagementPage />}
-            />
-            <Route path="/projects" element={<ProjectsPage />} />
-            <Route path="/suppliers" element={<SuppliersPage />} />
-            <Route path="/teams" element={<TeamsPage />} />
-            <Route path="/budget" element={<BudgetPage />} />
-            <Route path="/reports" element={<ReportsPage />} />
-            <Route path="/resources" element={<ResourcesPage />} />
-            <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/add-material" element={<AddMaterialPage />} />
-            <Route path="/upload-excel" element={<UploadExcelPage />} />
-            <Route path="/schedule" element={<SchedulePage />} />
-            <Route path="/documents" element={<DocumentsPage />} />
+
+            {/* Protected routes inside AppLayout */}
+            <Route path="/" element={<AppLayout />}>
+              <Route path="dashboard" element={<DashboardPage />} />
+              <Route path="overview" element={<OverviewPage />} />
+              <Route path="inventory-management" element={<InventoryManagementPage />} />
+              <Route path="projects" element={<ProjectsPage />} />
+              <Route path="suppliers" element={<SuppliersPage />} />
+              <Route path="teams" element={<TeamsPage />} />
+              <Route path="budget" element={<BudgetPage />} />
+              <Route path="reports" element={<ReportsPage />} />
+              <Route path="resources" element={<ResourcesPage />} />
+              <Route path="profile" element={<ProfilePage />} />
+              <Route path="add-material" element={<AddMaterialPage />} />
+              <Route path="upload-excel" element={<UploadExcelPage />} />
+              <Route path="schedule" element={<SchedulePage />} />
+              <Route path="documents" element={<DocumentsPage />} />
+            </Route>
             {/* Add tempobook route to prevent catchall from capturing it */}
             {import.meta.env.VITE_TEMPO === "true" && (
               <Route path="/tempobook/*" />

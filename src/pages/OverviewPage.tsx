@@ -353,7 +353,7 @@ const OverviewPage: React.FC = () => {
                           variant="ghost"
                           className="w-full justify-center hover:bg-slate-700 hover:text-primary"
                           onClick={() => {
-                            window.location.href = `/inventory-management?project=${project.id}`;
+                            window.location.href = `/inventory?project=${project.id}`;
                           }}
                         >
                           {t("overview.viewInventory", "View Inventory")}
@@ -444,7 +444,7 @@ const OverviewPage: React.FC = () => {
                                 size="sm"
                                 className="h-8 w-8 p-0"
                                 onClick={() => {
-                                  window.location.href = `/inventory-management?project=${material.project_id}`;
+                                  window.location.href = `/inventory?project=${material.project_id}`;
                                 }}
                               >
                                 <ArrowUpRight className="h-4 w-4" />
@@ -511,7 +511,7 @@ const OverviewPage: React.FC = () => {
                                 size="sm"
                                 className="h-8 w-8 p-0"
                                 onClick={() => {
-                                  window.location.href = `/inventory-management?project=${announcement.project_id}`;
+                                  window.location.href = `/inventory?project=${announcement.project_id}`;
                                 }}
                               >
                                 <ArrowUpRight className="h-4 w-4" />
@@ -533,3 +533,4 @@ const OverviewPage: React.FC = () => {
 };
 
 export default OverviewPage;
+

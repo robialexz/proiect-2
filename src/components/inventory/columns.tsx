@@ -25,6 +25,7 @@ export type Material = {
   manufacturer: string | null;
   category: string | null;
   suplimentar: number | null;
+  image_url?: string | null;
   // Additional fields for managers
   cost_per_unit?: number | null;
   supplier_id?: string | null;
@@ -87,6 +88,24 @@ export const getColumns = ({
             }
           >
             {material.name}
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "image_url",
+      header: t("inventory.columns.image", "Image"),
+      cell: ({ row }) => {
+        const imageUrl = row.getValue("image_url") as string | null;
+        return imageUrl ? (
+          <img
+            src={imageUrl}
+            alt={row.getValue("name")}
+            className="w-10 h-10 object-cover rounded-md"
+          />
+        ) : (
+          <div className="w-10 h-10 bg-slate-700 rounded-md flex items-center justify-center text-slate-400">
+            No img
           </div>
         );
       },

@@ -1,0 +1,143 @@
+{
+  "title": "Teams",
+  "subtitle": "Manage your teams and team members",
+  "teamLabel": "Team",
+  "noDescription": "No description provided",
+  "createdAt": "Created",
+  "list": {
+    "title": "Teams",
+    "description": "View and manage all your teams",
+    "searchPlaceholder": "Search teams...",
+    "columns": {
+      "name": "Name",
+      "description": "Description",
+      "createdAt": "Created At",
+      "actions": "Actions"
+    },
+    "noTeams": "No teams found. Create a new one!",
+    "noSearchResults": "No teams found matching your search",
+    "teamsFound": "teams found",
+    "tryDifferentSearch": "Try a different search term or clear the search",
+    "createTeamPrompt": "Create your first team to start collaborating with others"
+  },
+  "actions": {
+    "addTeam": "Add Team",
+    "manageTeam": "Manage Team",
+    "viewMembers": "View Members",
+    "manageMembers": "Manage Members",
+    "edit": "Edit",
+    "delete": "Delete"
+  },
+  "form": {
+    "createTitle": "Create New Team",
+    "editTitle": "Edit Team",
+    "createDescription": "Fill in the details to create a new team",
+    "editDescription": "Update the team details",
+    "fields": {
+      "name": "Team Name",
+      "description": "Description"
+    },
+    "placeholders": {
+      "name": "Enter team name",
+      "description": "Enter a description for the team"
+    },
+    "descriptions": {
+      "name": "Your team's name, visible to all members",
+      "description": "A brief description of the team's purpose"
+    },
+    "validation": {
+      "nameRequired": "Team name is required"
+    },
+    "createSuccess": "Team created successfully",
+    "createSuccessDescription": "The new team has been created and is ready to use",
+    "updateSuccess": "Team updated successfully",
+    "updateSuccessDescription": "The team details have been updated",
+    "createError": "Error creating team",
+    "updateError": "Error updating team",
+    "errorDescription": "An error occurred. Please try again."
+  },
+  "members": {
+    "title": "{{teamName}} Team Members",
+    "description": "Manage your team members",
+    "addMembersPrompt": "Add members to your team",
+    "addMembersDescription": "Invite team members to collaborate on projects together",
+    "searchPlaceholder": "Search members...",
+    "addMember": "Add Member",
+    "columns": {
+      "name": "Name",
+      "email": "Email",
+      "role": "Role",
+      "phone": "Phone",
+      "actions": "Actions"
+    },
+    "noMembers": "This team has no members. Add one!",
+    "noSearchResults": "No members found matching your search",
+    "membersFound": "members found",
+    "actions": {
+      "manageMember": "Manage Member",
+      "edit": "Edit",
+      "delete": "Delete"
+    },
+    "roles": {
+      "manager": "Manager",
+      "lead": "Lead",
+      "member": "Member",
+      "guest": "Guest"
+    },
+    "form": {
+      "createTitle": "Add New Member",
+      "editTitle": "Edit Member",
+      "createDescription": "Fill in the details to add a new team member",
+      "editDescription": "Update the member details",
+      "fields": {
+        "name": "Name",
+        "email": "Email",
+        "role": "Role",
+        "phone": "Phone"
+      },
+      "placeholders": {
+        "name": "Enter member name",
+        "email": "Enter email address",
+        "role": "Select a role",
+        "phone": "Enter phone number"
+      },
+      "descriptions": {
+        "phone": "Optional: Member's phone number"
+      },
+      "validation": {
+        "nameRequired": "Name is required",
+        "emailInvalid": "Email address is not valid",
+        "roleRequired": "Role is required"
+      },
+      "createSuccess": "Member added successfully",
+      "createSuccessDescription": "The new member has been added to the team",
+      "updateSuccess": "Member updated successfully",
+      "updateSuccessDescription": "The member details have been updated",
+      "createError": "Error adding member",
+      "updateError": "Error updating member",
+      "errorDescription": "An error occurred. Please try again."
+    },
+    "notifications": {
+      "memberDeleted": "Member deleted",
+      "memberDeletedDescription": "The member has been removed from the team"
+    },
+    "errors": {
+      "fetchFailed": "Error loading members",
+      "fetchFailedDescription": "Could not load team members. Please try again.",
+      "deleteFailed": "Error deleting member",
+      "deleteFailedDescription": "Could not delete the member. Please try again."
+    }
+  },
+  "notifications": {
+    "teamDeleted": "Team deleted",
+    "teamDeletedDescription": "The team has been successfully deleted"
+  },
+  "errors": {
+    "fetchFailed": "Error loading teams",
+    "fetchFailedDescription": "Could not load teams. Please try again.",
+    "deleteFailed": "Error deleting team",
+    "deleteFailedDescription": "Could not delete the team. Please try again.",
+    "nameRequired": "Team name is required",
+    "nameRequiredDesc": "Please enter a name for your team"
+  }
+}

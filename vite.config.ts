@@ -7,7 +7,31 @@ import { tempo } from "tempo-devtools/dist/vite";
 export default defineConfig({
   base: process.env.NODE_ENV === "development" ? "/" : process.env.VITE_BASE_PATH || "/",
   optimizeDeps: {
-    entries: ["src/main.tsx", "src/tempobook/**/*"],
+    entries: ["src/main.tsx"],
+    include: [
+      "react",
+      "react-dom",
+      "react-router-dom",
+      "@supabase/supabase-js",
+      "framer-motion"
+    ],
+    esbuildOptions: {
+      target: 'es2020',
+    },
+  },
+  build: {
+    target: 'es2020',
+    minify: 'terser',
+    cssMinify: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'ui-components': ['@/components/ui'],
+          'supabase': ['@supabase/supabase-js'],
+        },
+      },
+    },
   },
   plugins: [
     react(),
@@ -22,5 +46,8 @@ export default defineConfig({
   server: {
     // @ts-ignore
     allowedHosts: true,
+    hmr: {
+      overlay: false, // Disable error overlay for better performance
+    },
   }
 });

@@ -305,3 +305,4 @@ const AddMaterialPage: React.FC = () => {
 };
 
 export default AddMaterialPage;
+

@@ -4,6 +4,10 @@ import LanguageDetector from "i18next-browser-languagedetector";
 // If using HTTP backend to load translations:
 // import HttpApi from 'i18next-http-backend';
 
+// Import translation files
+import enTeams from './locales/en/teams.json';
+import roTeams from './locales/ro/teams.json';
+
 // Define resources directly for simplicity initially
 // Later, you might switch to HttpApi to load from public/locales
 const resources = {
@@ -28,6 +32,15 @@ const resources = {
         reports: "Reports",
         resources: "Resources",
         settings: "Settings",
+        profile: "Profile",
+        logout: "Logout",
+        help: "Help",
+        schedule: "Schedule",
+        documents: "Documents",
+        viewProfile: "View profile",
+        dashboardGroup: "Dashboard",
+        managementGroup: "Management",
+        reportsGroup: "Reports & Resources",
       },
       overview: {
         title: "Overview",
@@ -354,6 +367,15 @@ const resources = {
         reports: "Rapports",
         resources: "Ressources",
         settings: "Paramètres",
+        profile: "Profil",
+        logout: "Déconnexion",
+        help: "Aide",
+        schedule: "Calendrier",
+        documents: "Documents",
+        viewProfile: "Voir le profil",
+        dashboardGroup: "Tableau de Bord",
+        managementGroup: "Gestion",
+        reportsGroup: "Rapports & Ressources",
       },
       common: {
         save: "Enregistrer",
@@ -475,6 +497,15 @@ const resources = {
         reports: "Berichte",
         resources: "Ressourcen",
         settings: "Einstellungen",
+        profile: "Profil",
+        logout: "Abmelden",
+        help: "Hilfe",
+        schedule: "Zeitplan",
+        documents: "Dokumente",
+        viewProfile: "Profil anzeigen",
+        dashboardGroup: "Dashboard",
+        managementGroup: "Verwaltung",
+        reportsGroup: "Berichte & Ressourcen",
       },
       common: {
         save: "Speichern",
@@ -573,39 +604,67 @@ const resources = {
           adjustTooltip: "Klicken, um Zusatzmenge anzupassen",
         },
       },
+      teams: enTeams,
+    },
+  },
+  ro: {
+    translation: {
+      // Add Romanian translations here
+      language: "Limbă",
+      languages: {
+        en: "Engleză",
+        ro: "Română",
+        fr: "Franceză",
+        de: "Germană",
+      },
+      sidebar: {
+        home: "Prezentare generală",
+        dashboard: "Panou de control",
+        projects: "Proiecte",
+        inventory: "Gestionare inventar",
+        teams: "Echipe",
+        suppliers: "Furnizori",
+        budget: "Buget",
+        reports: "Rapoarte",
+        resources: "Resurse",
+        settings: "Setări",
+      },
+      common: {
+        loading: "Se încarcă...",
+        back: "Înapoi",
+        cancel: "Anulează",
+        save: "Salvează",
+        create: "Creează",
+        refresh: "Reîmprospătează"
+      },
+      teams: roTeams,
     },
   },
 };
 
 i18n
   // detect user language
-  // learn more: https://github.com/i18next/i18next-browser-languageDetector
   .use(LanguageDetector)
   // pass the i18n instance to react-i18next.
   .use(initReactI18next)
   // init i18next
-  // for all options read: https://www.i18next.com/overview/configuration-options
   .init({
-    debug: true, // Set to false in production
-    fallbackLng: "en", // Fallback language if detection fails
+    debug: false, // Disable debug mode for better performance
+    fallbackLng: "ro", // Set Romanian as fallback language
     interpolation: {
       escapeValue: false, // not needed for react as it escapes by default
     },
     resources: resources,
     detection: {
       // order and from where user language should be detected
-      order: ["localStorage", "navigator", "htmlTag", "path", "subdomain"],
+      order: ["localStorage", "navigator"],
       // keys or params to lookup language from
       lookupLocalStorage: "i18nextLng",
       // cache user language on
       caches: ["localStorage"],
-      // optional htmlTag with lang attribute, the default is:
-      htmlTag: document.documentElement,
     },
-    // If using HttpApi backend:
-    // backend: {
-    //   loadPath: '/locales/{{lng}}/{{ns}}.json',
-    // },
+    // Force Romanian language
+    lng: "ro",
   });
 
 export default i18n;

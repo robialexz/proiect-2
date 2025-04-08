@@ -19,14 +19,30 @@ const LoginPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("Login form submitted.");
     setError(null);
     setLoading(true);
 
     try {
-      const { error } = await signIn(email, password);
-      if (error) throw error;
-      navigate("/");
+      console.log("Calling signIn function with email:", email);
+      const { data: sessionData, error: signInError } = await signIn(email, password);
+      console.log("signIn function returned:", {
+        success: !!sessionData,
+        error: signInError ? signInError.message : null
+      });
+
+      if (signInError) {
+        console.log("signIn returned an error, throwing...");
+        throw signInError;
+      }
+
+      // Adăugăm o mică întârziere pentru a permite actualizarea stării
+      console.log("signIn successful, navigating to / after short delay");
+      setTimeout(() => {
+        navigate("/overview");
+      }, 500);
     } catch (err: any) {
+      console.log("Caught error during login:", err);
       const errorMessage =
         err.message || "Invalid email or password. Please try again.";
       setError(errorMessage);
@@ -165,3 +181,4 @@ const LoginPage = () => {
 };
 
 export default LoginPage;
+
