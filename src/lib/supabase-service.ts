@@ -1,5 +1,9 @@
 import { supabase } from './supabase';
 import { PostgrestError } from '@supabase/supabase-js';
+import fallbackAuth from "./fallback-auth";
+
+// Flag pentru a activa autentificarea de rezervă
+const USE_FALLBACK_AUTH = true; // Setați la false pentru a dezactiva autentificarea de rezervă
 
 // Tipuri pentru gestionarea erorilor
 export interface SupabaseErrorResponse {
@@ -75,7 +79,7 @@ const handlePromise = async <T>(promise: Promise<{ data: T | null; error: Postgr
 // Serviciu pentru interacțiuni cu Supabase
 export const supabaseService = {
   // Funcții generice CRUD
-  async select<T>(table: string, columns: string = '*', options?: { 
+  async select<T>(table: string, columns: string = '*', options?: {
     filters?: Record<string, any>;
     order?: { column: string; ascending?: boolean };
     limit?: number;
@@ -175,9 +179,78 @@ export const supabaseService = {
   auth: {
     async signIn(email: string, password: string) {
       try {
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-        return handleResponse(data, error as unknown as PostgrestError);
+        console.log('Starting authentication process for:', email);
+
+        // Dacă autentificarea de rezervă este activată, o folosim
+        if (USE_FALLBACK_AUTH) {
+          console.log('Using fallback authentication due to Supabase connectivity issues');
+
+          try {
+            // Încercăm autentificarea de rezervă
+            const fallbackResult = await fallbackAuth.signIn(email, password);
+
+            if (fallbackResult.status === 'success' && fallbackResult.data) {
+              console.log('Fallback authentication successful');
+
+              // Salvăm sesiunea în localStorage pentru a o putea recupera mai târziu
+              localStorage.setItem('fallback_session', JSON.stringify(fallbackResult.data.session));
+
+              return {
+                data: {
+                  session: fallbackResult.data.session,
+                  user: fallbackResult.data.user
+                },
+                error: null,
+                status: 'success'
+              };
+            } else {
+              console.error('Fallback authentication failed:', fallbackResult.error);
+              return {
+                data: null,
+                error: fallbackResult.error,
+                status: 'error'
+              };
+            }
+          } catch (fallbackError) {
+            console.error('Error in fallback authentication:', fallbackError);
+          }
+        }
+
+        // Dacă autentificarea de rezervă nu este activată sau a eșuat, încercăm autentificarea normală
+        // Adăugăm un timeout explicit pentru autentificare - mărim la 30 secunde
+        const timeoutPromise = new Promise<{data: null, error: Error}>((_, reject) => {
+          setTimeout(() => {
+            console.log('Authentication timeout reached after 30 seconds');
+            reject(new Error('Authentication timeout after 30 seconds. Please check your internet connection and try again.'));
+          }, 30000); // 30 secunde
+        });
+
+        // Promisiunea pentru autentificare
+        const authPromise = supabase.auth.signInWithPassword({
+          email,
+          password,
+          options: {
+            // Adăugăm opțiuni suplimentare pentru autentificare
+            captchaToken: null,
+          }
+        });
+
+        console.log('Auth request sent, waiting for response...');
+
+        // Folosim Promise.race pentru a implementa timeout
+        const result = await Promise.race([
+          authPromise,
+          timeoutPromise
+        ]);
+
+        console.log('Auth response received:', {
+          success: !!result.data?.session,
+          error: result.error ? 'Error present' : 'No error'
+        });
+
+        return handleResponse(result.data, result.error as unknown as PostgrestError);
       } catch (error) {
+        console.error('Auth error caught:', error);
         return {
           data: null,
           error: formatError(error),
@@ -201,6 +274,17 @@ export const supabaseService = {
 
     async signOut() {
       try {
+        // Dacă autentificarea de rezervă este activată, ștergem sesiunea de rezervă
+        if (USE_FALLBACK_AUTH) {
+          try {
+            await fallbackAuth.signOut();
+            console.log('Fallback session cleared');
+          } catch (fallbackError) {
+            console.error('Error clearing fallback session:', fallbackError);
+          }
+        }
+
+        // Încercăm să deconectăm utilizatorul de la Supabase
         const { error } = await supabase.auth.signOut();
         return handleResponse(null, error as unknown as PostgrestError);
       } catch (error) {
@@ -214,6 +298,27 @@ export const supabaseService = {
 
     async getSession() {
       try {
+        // Dacă autentificarea de rezervă este activată, încercăm să recuperăm sesiunea din localStorage
+        if (USE_FALLBACK_AUTH) {
+          try {
+            const fallbackResult = await fallbackAuth.getSession();
+
+            if (fallbackResult.status === 'success' && fallbackResult.data?.session) {
+              console.log('Using fallback session');
+              return {
+                data: {
+                  session: fallbackResult.data.session
+                },
+                error: null,
+                status: 'success'
+              };
+            }
+          } catch (fallbackError) {
+            console.error('Error getting fallback session:', fallbackError);
+          }
+        }
+
+        // Dacă nu există sesiune de rezervă, încercăm să recuperăm sesiunea de la Supabase
         const { data, error } = await supabase.auth.getSession();
         return handleResponse(data, error as unknown as PostgrestError);
       } catch (error) {
@@ -227,6 +332,29 @@ export const supabaseService = {
 
     async getUser() {
       try {
+        // Dacă autentificarea de rezervă este activată, încercăm să recuperăm utilizatorul din sesiunea de rezervă
+        if (USE_FALLBACK_AUTH) {
+          try {
+            const sessionStr = localStorage.getItem('fallback_session');
+
+            if (sessionStr) {
+              const session = JSON.parse(sessionStr);
+
+              if (session && session.user) {
+                console.log('Using fallback user');
+                return {
+                  data: session.user,
+                  error: null,
+                  status: 'success'
+                };
+              }
+            }
+          } catch (fallbackError) {
+            console.error('Error getting fallback user:', fallbackError);
+          }
+        }
+
+        // Dacă nu există utilizator de rezervă, încercăm să recuperăm utilizatorul de la Supabase
         const { data, error } = await supabase.auth.getUser();
         return handleResponse(data.user, error as unknown as PostgrestError);
       } catch (error) {

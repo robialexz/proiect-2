@@ -55,27 +55,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }, 20000); // 20 secunde timeout
 
-    // Get initial session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+    // Get initial session using the improved service
+    supabaseService.auth.getSession().then(async (response) => {
+      console.log("Initial session check result:", {
+        success: !!response.data?.session,
+        error: response.error ? response.error.message : null
+      });
 
-      if (session?.user) {
-        try {
-          await fetchUserProfile(session.user.id);
-        } catch (error) {
-          console.error("Error fetching user profile:", error);
-          // Setăm un profil implicit în caz de eroare
-          setUserProfile({
-            displayName: session.user.email?.split("@")[0] || "User",
-            email: session.user.email || "",
-          });
+      if (response.data?.session) {
+        setSession(response.data.session);
+
+        // Get user from session
+        const userResponse = await supabaseService.auth.getUser();
+
+        if (userResponse.data) {
+          console.log("User found in session");
+          setUser(userResponse.data);
+
+          try {
+            await fetchUserProfile(userResponse.data.id);
+          } catch (error) {
+            console.error("Error fetching user profile:", error);
+            // Setăm un profil implicit în caz de eroare
+            setUserProfile({
+              displayName: userResponse.data.email?.split("@")[0] || "User",
+              email: userResponse.data.email || "",
+            });
+          }
         }
+      } else {
+        console.log("No active session found");
+        setLoading(false);
       }
-
-      setLoading(false);
     }).catch(error => {
-      console.error("Error getting session:", error);
+      console.error("Error checking initial session:", error);
       setLoading(false);
     });
 
@@ -179,7 +192,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       console.log("AuthContext: Calling supabaseService.auth.signIn");
 
-      // Folosim serviciul îmbunătățit pentru autentificare
+      // Folosim serviciul îmbunătățit pentru autentificare cu timeout îmbunătățit
       const response = await supabaseService.auth.signIn(email, password);
 
       console.log("AuthContext: signIn result:", {
@@ -190,34 +203,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (response.status === 'error') {
         console.error("AuthContext: Sign in error:", response.error.message);
+        throw new Error(response.error.message);
       } else if (response.data?.session) {
         console.log("AuthContext: Sign in successful, session established");
         // Immediately update the session and user state
         setSession(response.data.session);
         setUser(response.data.user);
+      } else {
+        console.error("AuthContext: No session returned from authentication");
+        throw new Error('No session returned from authentication');
+      }
 
-        // Try to fetch the user profile
-        if (response.data.user) {
-          try {
-            await fetchUserProfile(response.data.user.id);
-          } catch (profileError) {
-            console.error("AuthContext: Error fetching profile after login:", profileError);
-            // Set default profile
-            setUserProfile({
-              displayName: response.data.user.email?.split("@")[0] || "User",
-              email: response.data.user.email || "",
-            });
-          }
+      // Try to fetch the user profile
+      if (response && response.data && response.data.user) {
+        try {
+          await fetchUserProfile(response.data.user.id);
+        } catch (profileError) {
+          console.error("AuthContext: Error fetching profile after login:", profileError);
+          // Set default profile
+          setUserProfile({
+            displayName: response.data.user.email?.split("@")[0] || "User",
+            email: response.data.user.email || "",
+          });
         }
       }
 
-      return { data: response.data?.session, error: response.error };
+      return { data: response?.data?.session, error: response?.error };
     } catch (err) {
-      console.error("AuthContext: Supabase connection error:", err);
+      console.error("AuthContext: Authentication error:", err);
+      // Forțăm resetarea stării de încărcare în caz de eroare
+      setLoading(false);
       return {
         data: null,
         error: new Error(
-          "Connection error. Please check your internet connection.",
+          err instanceof Error ? err.message : "Authentication failed. Please try again.",
         ),
       };
     }

@@ -6,22 +6,62 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Wifi, WifiOff } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import connectionService from "@/lib/connection-service";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<'checking' | 'online' | 'offline'>('checking');
   const { signIn } = useAuth();
   const navigate = useNavigate();
+
+  // Verificăm conexiunea la internet și la Supabase
+  React.useEffect(() => {
+    const checkConnections = async () => {
+      setConnectionStatus('checking');
+
+      // Verificăm mai întâi conexiunea la internet
+      const hasInternet = await connectionService.checkInternetConnection();
+
+      if (!hasInternet) {
+        setConnectionStatus('offline');
+        return;
+      }
+
+      // Apoi verificăm conexiunea la Supabase
+      const hasSupabaseConnection = await connectionService.checkConnection();
+
+      setConnectionStatus(hasSupabaseConnection ? 'online' : 'offline');
+    };
+
+    checkConnections();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log("Login form submitted.");
     setError(null);
+
+    // Verificăm din nou conexiunea înainte de a încerca autentificarea
+    if (connectionStatus === 'offline') {
+      setError("You appear to be offline. Please check your internet connection and try again.");
+      return;
+    }
+
     setLoading(true);
+
+    // Adăugăm un timeout pentru întreaga operațiune de login - mărim la 40 secunde
+    const loginTimeout = setTimeout(() => {
+      if (loading) {
+        setLoading(false);
+        setError("Login timeout after 40 seconds. Please check your internet connection and try again later.");
+        console.error("Login timeout reached after 40 seconds");
+      }
+    }, 40000); // 40 secunde timeout
 
     try {
       console.log("Calling signIn function with email:", email);
@@ -30,6 +70,9 @@ const LoginPage = () => {
         success: !!sessionData,
         error: signInError ? signInError.message : null
       });
+
+      // Curățăm timeout-ul deoarece am primit un răspuns
+      clearTimeout(loginTimeout);
 
       if (signInError) {
         console.log("signIn returned an error, throwing...");
@@ -42,9 +85,25 @@ const LoginPage = () => {
         navigate("/overview");
       }, 500);
     } catch (err: any) {
+      // Curățăm timeout-ul în caz de eroare
+      clearTimeout(loginTimeout);
+
       console.log("Caught error during login:", err);
-      const errorMessage =
-        err.message || "Invalid email or password. Please try again.";
+      // Gestionăm mai bine mesajele de eroare
+      let errorMessage = "An error occurred during login. Please try again.";
+
+      if (err instanceof Error) {
+        if (err.message.includes('timeout')) {
+          errorMessage = "Login timed out. Please check your internet connection and try again.";
+        } else if (err.message.includes('Invalid login')) {
+          errorMessage = "Invalid email or password. Please try again.";
+        } else if (err.message.includes('network')) {
+          errorMessage = "Network error. Please check your internet connection.";
+        } else {
+          errorMessage = err.message;
+        }
+      }
+
       setError(errorMessage);
       console.error("Login error:", err);
     } finally {
@@ -60,6 +119,30 @@ const LoginPage = () => {
         transition={{ duration: 0.5 }}
         className="max-w-md w-full"
       >
+        {/* Indicator de stare a conexiunii */}
+        {connectionStatus === 'checking' && (
+          <div className="flex items-center justify-center space-x-2 text-amber-400 mb-4">
+            <Wifi className="animate-pulse h-5 w-5" />
+            <span className="text-sm">Verificare conexiune...</span>
+          </div>
+        )}
+
+        {connectionStatus === 'offline' && (
+          <Alert variant="destructive" className="mb-4">
+            <WifiOff className="h-4 w-4 mr-2" />
+            <AlertDescription>
+              Nu există conexiune la internet sau la server. Vă rugăm să verificați conexiunea și să încercați din nou.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {connectionStatus === 'online' && (
+          <div className="flex items-center justify-center space-x-2 text-green-400 mb-4">
+            <Wifi className="h-5 w-5" />
+            <span className="text-sm">Conexiune stabilită</span>
+          </div>
+        )}
+
         <div className="text-center mb-8">
           <Link to="/" className="inline-block">
             <div className="flex items-center justify-center gap-2 mb-6">
