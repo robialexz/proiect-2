@@ -3,23 +3,24 @@ import { Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { RoleProvider } from "./contexts/RoleContext";
 
-// Import layout component
-const AppLayout = lazy(() => import("./components/layout/AppLayout"));
+// Import layout component - preload pentru performanță mai bună
+import AppLayout from "./components/layout/AppLayout";
 
-// Lazy load pages for better performance
-const HomePage = lazy(() => import("./pages/HomePage"));
+// Import pages that need to be available immediately for better performance
+import HomePage from "./pages/HomePage";
+import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/RegisterPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
+import OverviewPage from "./pages/OverviewPage";
+import InventoryManagementPage from "./pages/InventoryManagementPage";
+
+// Lazy load less frequently used pages
 const AboutPage = lazy(() => import("./pages/AboutPage"));
 const TermsPage = lazy(() => import("./pages/TermsPage"));
 const PricingPage = lazy(() => import("./pages/PricingPage"));
 const ContactPage = lazy(() => import("./pages/ContactPage"));
-const LoginPage = lazy(() => import("./pages/LoginPage"));
-const RegisterPage = lazy(() => import("./pages/RegisterPage"));
-const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage"));
-const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
 const DashboardPage = lazy(() => import("./pages/DashboardPage"));
-const OverviewPage = lazy(() => import("./pages/OverviewPage"));
-// Import pages that need to be available immediately
-import InventoryManagementPage from "./pages/InventoryManagementPage";
 
 // Lazy load additional project management pages
 const ProjectsPage = lazy(() => import("./pages/ProjectsPage"));
@@ -41,7 +42,7 @@ function App() {
         <Suspense
           fallback={
             <div className="flex items-center justify-center h-screen bg-slate-900 text-white">
-              Loading...
+              <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
             </div>
           }
         >

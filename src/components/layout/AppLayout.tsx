@@ -16,14 +16,10 @@ const AppLayout: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isPageLoading, setIsPageLoading] = useState(true);
 
-  // Simulăm încărcarea paginii - optimizat pentru performanță
+  // Optimizare: Eliminăm întârzierea artificială pentru încărcarea paginii
   useEffect(() => {
-    setIsPageLoading(true);
-    const timer = setTimeout(() => {
-      setIsPageLoading(false);
-    }, 100); // Reduced from 300ms to 100ms for faster transitions
-
-    return () => clearTimeout(timer);
+    // Setarea isPageLoading la false imediat, fără întârziere
+    setIsPageLoading(false);
   }, [location.pathname]);
 
   // Afișăm un mesaj de bun venit la prima încărcare
@@ -92,35 +88,18 @@ const AppLayout: React.FC = () => {
         {/* Navbar */}
         <Navbar onMenuToggle={toggleMobileMenu} />
 
-        {/* Main content */}
+        {/* Main content - optimizat pentru performanță */}
         <main className="flex-1 overflow-auto p-4">
-          <AnimatePresence mode="wait">
-            {isPageLoading ? (
-              <motion.div
-                key="loading"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="flex items-center justify-center h-full"
-              >
-                <div className="flex flex-col items-center">
-                  <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-                  <p className="mt-4 text-slate-400">Se încarcă...</p>
-                </div>
-              </motion.div>
-            ) : (
-              <motion.div
-                key={location.pathname}
-                variants={pageTransition}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
-                className="h-full"
-              >
-                <Outlet />
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {/* Eliminăm AnimatePresence pentru a reduce complexitatea render-ului */}
+          <motion.div
+            key={location.pathname}
+            variants={pageTransition}
+            initial="hidden"
+            animate="visible"
+            className="h-full"
+          >
+            <Outlet />
+          </motion.div>
         </main>
       </div>
     </div>

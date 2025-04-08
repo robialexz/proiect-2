@@ -3,13 +3,15 @@ import ReactDOM from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 import { BrowserRouter } from "react-router-dom";
-import "./i18n"; // Import the i18n configuration
+// Importăm i18n doar când este necesar pentru a reduce timpul de încărcare inițial
+// import "./i18n";
 import { Toaster } from "./components/ui/toaster";
 import NotificationProvider from "./components/ui/notification";
 import { ThemeProvider } from "./contexts/ThemeContext";
 
-import { TempoDevtools } from "tempo-devtools";
-TempoDevtools.init();
+// Dezactivăm temporar TempoDevtools pentru a îmbunătăți performanța
+// import { TempoDevtools } from "tempo-devtools";
+// TempoDevtools.init();
 
 const basename = import.meta.env.BASE_URL;
 

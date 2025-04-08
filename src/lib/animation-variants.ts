@@ -1,43 +1,43 @@
 import { Variants } from 'framer-motion';
 
-// Animații pentru intrare/ieșire
+// Animații pentru intrare/ieșire - optimizate pentru performanță
 export const fadeIn: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: { duration: 0.3 }
+    transition: { duration: 0.15 } // Redus la jumătate pentru performanță
   },
   exit: {
     opacity: 0,
-    transition: { duration: 0.2 }
+    transition: { duration: 0.1 } // Redus la jumătate pentru performanță
   }
 };
 
 export const fadeInUp: Variants = {
-  hidden: { opacity: 0, y: 20 },
+  hidden: { opacity: 0, y: 10 }, // Redus de la 20px la 10px
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.4 }
+    transition: { duration: 0.2 } // Redus la jumătate pentru performanță
   },
   exit: {
     opacity: 0,
-    y: 20,
-    transition: { duration: 0.2 }
+    y: 10, // Redus de la 20px la 10px
+    transition: { duration: 0.1 } // Redus la jumătate pentru performanță
   }
 };
 
 export const fadeInDown: Variants = {
-  hidden: { opacity: 0, y: -20 },
+  hidden: { opacity: 0, y: -10 }, // Redus de la 20px la 10px
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.4 }
+    transition: { duration: 0.2 } // Redus la jumătate pentru performanță
   },
   exit: {
     opacity: 0,
-    y: -20,
-    transition: { duration: 0.2 }
+    y: -10, // Redus de la 20px la 10px
+    transition: { duration: 0.1 } // Redus la jumătate pentru performanță
   }
 };
 
