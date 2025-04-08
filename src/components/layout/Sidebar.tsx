@@ -28,6 +28,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronDown,
+  BookOpen,
   LogOut,
   HelpCircle,
 } from "lucide-react";
