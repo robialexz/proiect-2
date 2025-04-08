@@ -182,8 +182,8 @@ export const getColumns = ({
             {" "}
             {/* Ensure data-col-id is here */}
             <DropdownMenu>
-              {/* Removed asChild from DropdownMenuTrigger */}
-              <DropdownMenuTrigger>
+              {/* Added asChild to DropdownMenuTrigger */}
+              <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="h-8 w-8 p-0">
                   <span className="sr-only">
                     {t("inventory.actions.openMenu", "Open menu")}

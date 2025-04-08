@@ -368,7 +368,7 @@ const TeamsPage: React.FC = () => {
                             {t("teams.teamLabel", "Team")}
                           </Badge>
                           <DropdownMenu>
-                            <DropdownMenuTrigger>
+                            <DropdownMenuTrigger asChild>
                               <Button
                                 variant="ghost"
                                 size="icon"

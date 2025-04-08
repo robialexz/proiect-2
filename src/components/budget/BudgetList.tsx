@@ -133,8 +133,10 @@ const BudgetList: React.FC<BudgetListProps> = ({
                     {budget.status}
                   </Badge>
                   <DropdownMenu>
-                    <DropdownMenuTrigger className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-8 w-8 p-0">
-                      <MoreHorizontal className="h-4 w-4" />
+                    <DropdownMenuTrigger asChild>
+                      <div className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-8 w-8 p-0 cursor-pointer">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </div>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent
                       align="end"
