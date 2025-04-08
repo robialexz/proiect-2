@@ -135,36 +135,56 @@ const InventoryManagementPage: React.FC = () => {
 
   // --- Data Fetching ---
   const fetchMaterials = useCallback(async () => {
-    if (!selectedProjectId) {
-      setInventoryData([]);
-      setLoadingData(false);
-      return;
-    }
+    // Setăm starea de încărcare
     setLoadingData(true);
     setFetchError(null);
+
     try {
-      let query = supabase.from("materials").select("*");
-
-      // Only apply the filter if selectedProjectId is not null
-      if (selectedProjectId) {
-        query = query.eq("project_id", selectedProjectId);
-      } else {
-        // When no project is selected, either show all materials or none
-        // Option 1: Show all materials
-        // No additional filter needed
-
-        // Option 2: Show no materials (uncomment the line below)
-        // return setInventoryData([]);
+      // Verificăm dacă avem un proiect selectat
+      if (!selectedProjectId) {
+        console.log("No project selected, clearing materials data");
+        setInventoryData([]);
+        setLoadingData(false);
+        return;
       }
 
+      // Folosim un cache key pentru a stoca datele în localStorage
+      const cacheKey = `materials_${selectedProjectId}`;
+      const cachedData = localStorage.getItem(cacheKey);
+
+      // Dacă avem date în cache, le folosim pentru afișarea inițială
+      if (cachedData) {
+        const parsedData = JSON.parse(cachedData);
+        setInventoryData(parsedData);
+        // Continuăm cu încărcarea datelor noi în fundal
+      }
+
+      // Construim query-ul pentru a obține materialele
+      let query = supabase.from("materials")
+        .select("id, name, dimension, unit, quantity, manufacturer, category, image_url, suplimentar, project_id, cost_per_unit, supplier_id, last_order_date, min_stock_level, max_stock_level, location, notes")
+        .eq("project_id", selectedProjectId);
+
+      // Executăm query-ul
       const { data, error } = await query;
+
+      // Verificăm dacă avem erori
       if (error) throw error;
-      if (data) setInventoryData(data as MaterialWithProject[]);
+
+      // Actualizăm starea și cache-ul
+      if (data) {
+        setInventoryData(data as MaterialWithProject[]);
+        localStorage.setItem(cacheKey, JSON.stringify(data));
+
+        // Setăm un timeout pentru expirarea cache-ului (30 minute)
+        const expireTime = Date.now() + 30 * 60 * 1000;
+        localStorage.setItem(`${cacheKey}_expiry`, expireTime.toString());
+      }
     } catch (error: unknown) {
       console.error("Error fetching materials:", error);
       let msg = error instanceof Error ? error.message : "Unknown fetch error.";
       setFetchError(t("inventory.errors.fetchFailed", { message: msg }));
     } finally {
+      // Asigurăm-ne că starea de încărcare este setată la false
       setLoadingData(false);
     }
   }, [selectedProjectId, t]);
@@ -172,20 +192,47 @@ const InventoryManagementPage: React.FC = () => {
   const fetchProjects = useCallback(async () => {
     setLoadingProjects(true);
     try {
+      // Folosim un cache key pentru a stoca datele în localStorage
+      const cacheKey = 'projects_data';
+      const cachedData = localStorage.getItem(cacheKey);
+
+      // Dacă avem date în cache, le folosim pentru afișarea inițială
+      if (cachedData) {
+        const parsedData = JSON.parse(cachedData);
+        setProjects(parsedData);
+
+        // Dacă nu avem un proiect selectat, selectăm primul din listă
+        if (!selectedProjectId && parsedData.length > 0) {
+          setSelectedProjectId(parsedData[0].id);
+        }
+        // Continuăm cu încărcarea datelor noi în fundal
+      }
+
+      // Executăm query-ul pentru a obține proiectele
       const { data, error } = await supabase
         .from("projects")
-        .select("*")
+        .select("id, name, created_at")
         .order("created_at");
+
       if (error) throw error;
+
       if (data) {
+        // Actualizăm starea și cache-ul
         setProjects(data);
-        if (!selectedProjectId && data.length > 0)
+        localStorage.setItem(cacheKey, JSON.stringify(data));
+
+        // Setăm un timeout pentru expirarea cache-ului (30 minute)
+        const expireTime = Date.now() + 30 * 60 * 1000;
+        localStorage.setItem(`${cacheKey}_expiry`, expireTime.toString());
+
+        // Dacă nu avem un proiect selectat, selectăm primul din listă
+        if (!selectedProjectId && data.length > 0) {
           setSelectedProjectId(data[0].id);
-        else if (
-          selectedProjectId &&
-          !data.some((p) => p.id === selectedProjectId)
-        )
+        }
+        // Dacă proiectul selectat nu există în lista de proiecte, selectăm primul proiect
+        else if (selectedProjectId && !data.some((p) => p.id === selectedProjectId)) {
           setSelectedProjectId(data.length > 0 ? data[0].id : null);
+        }
       } else {
         setProjects([]);
         setSelectedProjectId(null);
@@ -771,19 +818,56 @@ const InventoryManagementPage: React.FC = () => {
   };
 
   // --- Use Effects ---
+  // Effect pentru încărcarea proiectelor la inițializare
   useEffect(() => {
-    fetchProjects();
-  }, [fetchProjects]);
+    if (!authLoading && !roleLoading) {
+      console.log("Loading projects...");
+      fetchProjects();
+    }
+  }, [authLoading, roleLoading, fetchProjects]);
+
+  // Effect pentru încărcarea materialelor când se schimbă proiectul selectat
   useEffect(() => {
     if (user && selectedProjectId) {
+      console.log(`Loading materials for project ${selectedProjectId}...`);
       fetchMaterials();
       // Update URL with project ID
       setSearchParams({ project: selectedProjectId });
     } else if (!authLoading) {
+      console.log("No project selected or user not authenticated, clearing materials");
       setInventoryData([]);
       setLoadingData(false);
     }
-  }, [user, authLoading, fetchMaterials, selectedProjectId]);
+  }, [user, authLoading, fetchMaterials, selectedProjectId, setSearchParams]);
+
+  // Effect pentru verificarea și curățarea cache-ului expirat
+  useEffect(() => {
+    // Funcție pentru curățarea cache-ului expirat
+    const clearExpiredCache = () => {
+      const now = Date.now();
+      const keysToCheck = ['projects_data_expiry'];
+
+      // Adăugăm cheile pentru materialele din fiecare proiect
+      projects.forEach(project => {
+        keysToCheck.push(`materials_${project.id}_expiry`);
+      });
+
+      // Verificăm și curățăm cache-ul expirat
+      keysToCheck.forEach(expiryKey => {
+        const expireTime = localStorage.getItem(expiryKey);
+        if (expireTime && parseInt(expireTime) < now) {
+          // Extrăgem cheia de date din cheia de expirare
+          const dataKey = expiryKey.replace('_expiry', '');
+          localStorage.removeItem(dataKey);
+          localStorage.removeItem(expiryKey);
+          console.log(`Cleared expired cache for ${dataKey}`);
+        }
+      });
+    };
+
+    // Curățăm cache-ul expirat la încărcarea paginii
+    clearExpiredCache();
+  }, [projects]);
   useEffect(() => {
     if (materialToAdjustSuplimentar) setIsAdjustModalOpen(true);
     else {
@@ -831,8 +915,25 @@ const InventoryManagementPage: React.FC = () => {
   // --- Loading & Auth ---
   if (authLoading || roleLoading || (loadingProjects && user)) {
     return (
-      <div className="flex items-center justify-center h-screen bg-slate-900">
-        <div className="text-white">{t("common.loading")}</div>
+      <div className="flex items-center justify-center h-screen bg-slate-900 text-white">
+        <div className="flex flex-col items-center">
+          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+          <p className="mt-4 text-slate-400">
+            {t("common.loading", "Loading...")}
+            {loadingProjects ? "(Loading projects)" : ""}
+          </p>
+          {/* Adăugăm un buton pentru a reîncerca în caz de blocare */}
+          <Button
+            variant="outline"
+            className="mt-4"
+            onClick={() => {
+              console.log("Manual refresh triggered");
+              fetchProjects();
+            }}
+          >
+            {t("common.retry", "Retry")}
+          </Button>
+        </div>
       </div>
     );
   }
