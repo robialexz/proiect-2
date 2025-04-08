@@ -853,9 +853,10 @@ const InventoryManagementPage: React.FC = () => {
   useEffect(() => {
     if (!authLoading && !roleLoading) {
       console.log("Loading projects...");
-      fetchProjects();
+      // Folosim refetchProjects în loc de fetchProjects
+      refetchProjects();
     }
-  }, [authLoading, roleLoading, fetchProjects]);
+  }, [authLoading, roleLoading, refetchProjects]);
 
   // Effect pentru încărcarea materialelor când se schimbă proiectul selectat
   useEffect(() => {
@@ -959,7 +960,7 @@ const InventoryManagementPage: React.FC = () => {
             className="mt-4"
             onClick={() => {
               console.log("Manual refresh triggered");
-              fetchProjects();
+              refetchProjects();
             }}
           >
             {t("common.retry", "Retry")}
