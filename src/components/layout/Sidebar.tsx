@@ -36,6 +36,7 @@ import { useTranslation } from "react-i18next";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useNotification } from "@/components/ui/notification";
 import { fadeInLeft, fadeInRight } from "@/lib/animation-variants";
+import { useAdvancedRole } from "@/contexts/AdvancedRoleContext";
 
 interface NavItem {
   title: string;
@@ -58,6 +59,10 @@ const Sidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { addNotification } = useNotification();
+  const { hasPermission } = useAdvancedRole();
+
+  // Verificăm dacă utilizatorul are permisiunea de a administra rolurile
+  const isAdmin = hasPermission('assign_role');
   const [collapsed, setCollapsed] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
     dashboard: true,
