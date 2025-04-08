@@ -75,11 +75,12 @@ const Sidebar = () => {
           icon: <Home size={20} />,
           href: "/dashboard",
         },
-        {
-          title: t("sidebar.overview"),
-          icon: <BarChart size={20} />,
-          href: "/overview",
-        },
+        // Eliminăm "sidebar overview" care nu ar trebui să existe
+        // {
+        //   title: t("sidebar.overview"),
+        //   icon: <BarChart size={20} />,
+        //   href: "/overview",
+        // },
       ],
     },
     {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, memo, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Outlet, useLocation, Navigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Navbar from './Navbar';
@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNotification } from '@/components/ui/notification';
 import { useMemoizedCallback } from '@/lib/performance';
 import ConnectionStatus from '@/components/ui/connection-status';
+import { routePreloader } from '@/lib/route-preloader';
 
 const AppLayout: React.FC = () => {
   const location = useLocation();
@@ -16,21 +17,35 @@ const AppLayout: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isPageLoading, setIsPageLoading] = useState(true);
 
-  // Optimizare: Eliminăm întârzierea artificială pentru încărcarea paginii
+  // Optimizare: Preîncărcăm rutele adiacente și eliminăm întârzierea artificială
   useEffect(() => {
     // Setarea isPageLoading la false imediat, fără întârziere
     setIsPageLoading(false);
+
+    // Preîncărcăm rutele adiacente pentru a îmbunătăți performanța la navigare
+    routePreloader.preloadAdjacentRoutes(location.pathname);
   }, [location.pathname]);
 
-  // Afișăm un mesaj de bun venit la prima încărcare
+  // Afișăm un mesaj de bun venit doar la prima încărcare, nu la fiecare schimbare de pagină
   useEffect(() => {
-    if (user && !loading) {
+    // Folosim localStorage pentru a verifica dacă mesajul a fost deja afișat în această sesiune
+    const welcomeShown = localStorage.getItem('welcomeMessageShown');
+
+    if (user && !loading && !welcomeShown) {
       addNotification({
         type: 'success',
         title: 'Bun venit!',
         message: `Salut, ${user.email?.split('@')[0] || 'utilizator'}! Bine ai revenit în aplicație.`,
         duration: 5000,
       });
+
+      // Marcăm mesajul ca afișat pentru această sesiune
+      localStorage.setItem('welcomeMessageShown', 'true');
+
+      // Resetăm flag-ul după 30 de minute pentru a permite afișarea unui nou mesaj în viitor
+      setTimeout(() => {
+        localStorage.removeItem('welcomeMessageShown');
+      }, 30 * 60 * 1000); // 30 minute
     }
   }, [user, loading, addNotification]);
 

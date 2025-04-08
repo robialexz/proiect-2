@@ -8,10 +8,15 @@ import "./i18n";
 import { Toaster } from "./components/ui/toaster";
 import NotificationProvider from "./components/ui/notification";
 import { ThemeProvider } from "./contexts/ThemeContext";
+// Preîncărcăm rutele frecvent accesate pentru performanță mai bună
+import { routePreloader } from "./lib/route-preloader";
 
 // Dezactivăm temporar TempoDevtools pentru a îmbunătăți performanța
 // import { TempoDevtools } from "tempo-devtools";
 // TempoDevtools.init();
+
+// Preîncărcăm rutele frecvent accesate la pornirea aplicației
+routePreloader.preloadFrequentRoutes();
 
 const basename = import.meta.env.BASE_URL;
 
