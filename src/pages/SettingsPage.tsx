@@ -14,15 +14,15 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { 
-  User, 
-  Settings, 
-  Bell, 
-  Shield, 
-  Palette, 
-  Globe, 
-  Moon, 
-  Sun, 
+import {
+  User,
+  Settings,
+  Bell,
+  Shield,
+  Palette,
+  Globe,
+  Moon,
+  Sun,
   Monitor,
   Save,
   RefreshCw
@@ -44,7 +44,7 @@ const SettingsPage: React.FC = () => {
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [pushNotifications, setPushNotifications] = useState(false);
   const [autoSave, setAutoSave] = useState(true);
-  
+
   // State for saving status
   const [isSaving, setIsSaving] = useState(false);
 
@@ -52,24 +52,37 @@ const SettingsPage: React.FC = () => {
   const handleSaveProfile = async () => {
     setIsSaving(true);
     try {
-      // In a real app, you would update the profile in the database
-      // For now, we'll just simulate a delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Update the profile in the context
-      if (updateUserProfile) {
-        await updateUserProfile({
-          displayName,
-          email,
+      // Verificăm dacă numele de afișare s-a schimbat
+      const hasChanges = displayName !== userProfile?.displayName || email !== userProfile?.email;
+
+      if (hasChanges) {
+        // In a real app, you would update the profile in the database
+        // For now, we'll just simulate a delay
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // Update the profile in the context
+        if (updateUserProfile) {
+          await updateUserProfile({
+            displayName,
+            email,
+          });
+        }
+
+        addNotification({
+          type: 'success',
+          title: t('settings.profileSaved'),
+          message: t('settings.profileSavedMessage'),
+          duration: 3000,
+        });
+      } else {
+        // Dacă nu s-a schimbat nimic, afișăm un mesaj informativ
+        addNotification({
+          type: 'info',
+          title: 'Nicio modificare',
+          message: 'Nu au fost detectate modificări în profil.',
+          duration: 3000,
         });
       }
-      
-      addNotification({
-        type: 'success',
-        title: t('settings.profileSaved'),
-        message: t('settings.profileSavedMessage'),
-        duration: 3000,
-      });
     } catch (error) {
       console.error('Error saving profile:', error);
       addNotification({
@@ -89,10 +102,10 @@ const SettingsPage: React.FC = () => {
     try {
       // Update the theme
       setTheme(selectedTheme);
-      
+
       // Update the language
       i18n.changeLanguage(language);
-      
+
       addNotification({
         type: 'success',
         title: t('settings.appearanceSaved'),
@@ -220,8 +233,8 @@ const SettingsPage: React.FC = () => {
               </CardContent>
               <CardFooter className="flex justify-between">
                 <Button variant="outline">{t('common.cancel')}</Button>
-                <Button 
-                  onClick={handleSaveProfile} 
+                <Button
+                  onClick={handleSaveProfile}
                   disabled={isSaving}
                   className="flex items-center gap-2"
                 >
@@ -316,8 +329,8 @@ const SettingsPage: React.FC = () => {
               </CardContent>
               <CardFooter className="flex justify-between">
                 <Button variant="outline">{t('common.cancel')}</Button>
-                <Button 
-                  onClick={handleSaveAppearance} 
+                <Button
+                  onClick={handleSaveAppearance}
                   disabled={isSaving}
                   className="flex items-center gap-2"
                 >
@@ -389,8 +402,8 @@ const SettingsPage: React.FC = () => {
               </CardContent>
               <CardFooter className="flex justify-between">
                 <Button variant="outline">{t('common.cancel')}</Button>
-                <Button 
-                  onClick={handleSaveNotifications} 
+                <Button
+                  onClick={handleSaveNotifications}
                   disabled={isSaving}
                   className="flex items-center gap-2"
                 >
@@ -447,8 +460,8 @@ const SettingsPage: React.FC = () => {
                 </CardContent>
                 <CardFooter className="flex justify-between">
                   <Button variant="outline">{t('common.cancel')}</Button>
-                  <Button 
-                    onClick={handleSaveNotifications} 
+                  <Button
+                    onClick={handleSaveNotifications}
                     disabled={isSaving}
                     className="flex items-center gap-2"
                   >

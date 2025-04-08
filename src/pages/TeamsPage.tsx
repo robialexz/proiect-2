@@ -77,14 +77,33 @@ const TeamsPage: React.FC = () => {
   const fetchTeams = async () => {
     try {
       setIsLoading(true);
+
+      // Folosim un cache key pentru a stoca datele în localStorage
+      const cacheKey = 'teams_data';
+      const cachedData = localStorage.getItem(cacheKey);
+
+      // Dacă avem date în cache, le folosim pentru afișarea inițială
+      if (cachedData) {
+        const parsedData = JSON.parse(cachedData);
+        setTeams(parsedData);
+        // Continuăm cu încărcarea datelor noi în fundal
+      }
+
+      // Optimizăm query-ul pentru a reduce timpul de încărcare
       const { data, error } = await supabase
         .from("teams")
-        .select("*")
+        .select("id, name, description, created_at, created_by") // Selectăm doar coloanele necesare
         .order("created_at", { ascending: false });
 
       if (error) throw error;
 
+      // Actualizăm starea și cache-ul
       setTeams(data || []);
+      localStorage.setItem(cacheKey, JSON.stringify(data));
+
+      // Setăm un timeout pentru expirarea cache-ului (30 minute)
+      const expireTime = Date.now() + 30 * 60 * 1000;
+      localStorage.setItem(`${cacheKey}_expiry`, expireTime.toString());
     } catch (error: any) {
       console.error("Error fetching teams:", error);
       toast({
@@ -192,7 +211,7 @@ const TeamsPage: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-slate-900 text-white">
-      
+
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
         <header className="sticky top-0 z-10 bg-slate-900 border-b border-slate-800 px-6 py-4 shrink-0">

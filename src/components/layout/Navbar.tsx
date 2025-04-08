@@ -197,8 +197,8 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuToggle }) => {
             >
               <Avatar className="h-7 w-7">
                 <AvatarImage
-                  src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${userProfile?.displayName || "user"}`}
-                  alt={userProfile?.displayName || "User"}
+                  src={`https://api.dicebear.com/7.x/micah/svg?seed=${userProfile?.displayName || user?.email?.split('@')[0] || "user"}`}
+                  alt={userProfile?.displayName || user?.email?.split('@')[0] || "User"}
                 />
                 <AvatarFallback className={getRoleColor()}>
                   {userProfile?.displayName?.charAt(0) || user?.email?.charAt(0).toUpperCase() || "U"}
@@ -220,18 +220,20 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuToggle }) => {
               </div>
             </div>
             <DropdownMenuItem
-              className="cursor-pointer hover:bg-slate-700"
+              className="cursor-pointer hover:bg-slate-700 flex items-center"
               onClick={() => navigate("/profile")}
             >
               <User className="mr-2 h-4 w-4" />
               <span>Profil</span>
+              <span className="ml-auto text-xs text-slate-500 bg-slate-700 px-1.5 py-0.5 rounded">P</span>
             </DropdownMenuItem>
             <DropdownMenuItem
-              className="cursor-pointer hover:bg-slate-700"
+              className="cursor-pointer hover:bg-slate-700 flex items-center"
               onClick={() => navigate("/settings")}
             >
               <Settings className="mr-2 h-4 w-4" />
               <span>Setări</span>
+              <span className="ml-auto text-xs text-slate-500 bg-slate-700 px-1.5 py-0.5 rounded">S</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator className="bg-slate-700" />
             <DropdownMenuItem
