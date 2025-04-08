@@ -2,6 +2,8 @@ import { Suspense, lazy } from "react";
 import { Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { RoleProvider } from "./contexts/RoleContext";
+import { AdvancedRoleProvider } from "./contexts/AdvancedRoleContext";
+import { OfflineProvider } from "./contexts/OfflineContext";
 
 // Import layout component - preload pentru performanță mai bună
 import AppLayout from "./components/layout/AppLayout";
@@ -35,18 +37,21 @@ const AddMaterialPage = lazy(() => import("./pages/AddMaterialPage"));
 const UploadExcelPage = lazy(() => import("./pages/UploadExcelPage"));
 const SchedulePage = lazy(() => import("./pages/SchedulePage"));
 const DocumentsPage = lazy(() => import("./pages/DocumentsPage"));
+const RoleManagementPage = lazy(() => import("./pages/RoleManagementPage"));
 
 function App() {
   return (
     <AuthProvider>
       <RoleProvider>
-        <Suspense
-          fallback={
-            <div className="flex items-center justify-center h-screen bg-slate-900 text-white">
-              <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-            </div>
-          }
-        >
+        <AdvancedRoleProvider>
+          <OfflineProvider>
+          <Suspense
+            fallback={
+              <div className="flex items-center justify-center h-screen bg-slate-900 text-white">
+                <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            }
+          >
           <Routes>
             {/* Public routes */}
             <Route path="/" element={<HomePage />} />
@@ -76,13 +81,16 @@ function App() {
               <Route path="upload-excel" element={<UploadExcelPage />} />
               <Route path="schedule" element={<SchedulePage />} />
               <Route path="documents" element={<DocumentsPage />} />
+              <Route path="role-management" element={<RoleManagementPage />} />
             </Route>
             {/* Add tempobook route to prevent catchall from capturing it */}
             {import.meta.env.VITE_TEMPO === "true" && (
               <Route path="/tempobook/*" />
             )}
           </Routes>
-        </Suspense>
+          </Suspense>
+          </OfflineProvider>
+        </AdvancedRoleProvider>
       </RoleProvider>
     </AuthProvider>
   );

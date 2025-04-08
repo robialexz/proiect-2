@@ -18,6 +18,7 @@ import {
   FileSpreadsheet,
   Briefcase,
   Building,
+  Shield,
   DollarSign,
   BarChart,
   FileText,
@@ -364,6 +365,32 @@ const Sidebar = () => {
       {/* Footer */}
       <div className="p-4 border-t border-slate-800">
         <div className="space-y-2">
+          {/* Adăugăm link către pagina de administrare a rolurilor - vizibil doar pentru administratori */}
+          {isAdmin && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className={cn(
+                      "w-full text-slate-400 hover:text-white hover:bg-slate-800 justify-start",
+                      collapsed && "justify-center"
+                    )}
+                    onClick={() => navigate("/role-management")}
+                  >
+                    <Shield size={20} />
+                    {!collapsed && <span className="ml-3">{t("sidebar.roleManagement", "Role Management")}</span>}
+                  </Button>
+                </TooltipTrigger>
+                {collapsed && (
+                  <TooltipContent side="right">
+                    <p>{t("sidebar.roleManagement", "Role Management")}</p>
+                  </TooltipContent>
+                )}
+              </Tooltip>
+            </TooltipProvider>
+          )}
+
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>

@@ -10,6 +10,7 @@ import { useNotification } from '@/components/ui/notification';
 import { useMemoizedCallback } from '@/lib/performance';
 import ConnectionStatus from '@/components/ui/connection-status';
 import { routePreloader } from '@/lib/route-preloader';
+import { OfflineIndicator } from '@/components/ui/offline-indicator';
 
 const AppLayout: React.FC = () => {
   const location = useLocation();
@@ -118,6 +119,9 @@ const AppLayout: React.FC = () => {
             <Outlet />
           </motion.div>
         </main>
+
+        {/* Indicator de stare offline */}
+        <OfflineIndicator />
       </div>
     </div>
   );
