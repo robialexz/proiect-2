@@ -29,6 +29,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
+import { useRole } from "@/contexts/RoleContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useNotification } from "@/components/ui/notification";
 import { fadeIn, fadeInDown } from "@/lib/animation-variants";
@@ -44,6 +45,7 @@ interface NavbarProps {
 const Navbar: React.FC<NavbarProps> = ({ onMenuToggle }) => {
   const { t } = useTranslation();
   const { user, userProfile, signOut } = useAuth();
+  const { userRole, getRoleColor } = useRole();
   const navigate = useNavigate();
   const location = useLocation();
   const { addNotification } = useNotification();
@@ -198,12 +200,12 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuToggle }) => {
                   src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${userProfile?.displayName || "user"}`}
                   alt={userProfile?.displayName || "User"}
                 />
-                <AvatarFallback>
-                  {userProfile?.displayName?.charAt(0) || "U"}
+                <AvatarFallback className={getRoleColor()}>
+                  {userProfile?.displayName?.charAt(0) || user?.email?.charAt(0).toUpperCase() || "U"}
                 </AvatarFallback>
               </Avatar>
-              <span className="hidden md:inline-block text-sm font-medium max-w-[100px] truncate">
-                {userProfile?.displayName || "Utilizator"}
+              <span className={`hidden md:inline-block text-sm font-medium max-w-[100px] truncate ${getRoleColor()}`}>
+                {userProfile?.displayName || user?.email?.split('@')[0] || "Utilizator"}
               </span>
               <ChevronDown className="h-4 w-4 text-slate-400" />
             </Button>
@@ -211,7 +213,7 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuToggle }) => {
           <DropdownMenuContent align="end" className="w-56 bg-slate-800 border-slate-700">
             <div className="flex items-center justify-start p-2 border-b border-slate-700">
               <div className="flex flex-col space-y-1 leading-none">
-                <p className="font-medium">{userProfile?.displayName || "Utilizator"}</p>
+                <p className={`font-medium ${getRoleColor()}`}>{userProfile?.displayName || user?.email?.split('@')[0] || "Utilizator"}</p>
                 <p className="text-sm text-slate-400 truncate">
                   {userProfile?.email || user?.email || ""}
                 </p>

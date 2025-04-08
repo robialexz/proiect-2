@@ -5,6 +5,7 @@ import Sidebar from './Sidebar';
 import Navbar from './Navbar';
 import { pageTransition } from '@/lib/animation-variants';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRole } from '@/contexts/RoleContext';
 import { useNotification } from '@/components/ui/notification';
 import { useMemoizedCallback } from '@/lib/performance';
 import ConnectionStatus from '@/components/ui/connection-status';
@@ -13,6 +14,7 @@ import { routePreloader } from '@/lib/route-preloader';
 const AppLayout: React.FC = () => {
   const location = useLocation();
   const { user, loading } = useAuth();
+  const { userRole, getWelcomeMessage } = useRole();
   const { addNotification } = useNotification();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isPageLoading, setIsPageLoading] = useState(true);
@@ -35,7 +37,7 @@ const AppLayout: React.FC = () => {
       addNotification({
         type: 'success',
         title: 'Bun venit!',
-        message: `Salut, ${user.email?.split('@')[0] || 'utilizator'}! Bine ai revenit în aplicație.`,
+        message: getWelcomeMessage(),
         duration: 5000,
       });
 

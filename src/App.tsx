@@ -30,6 +30,7 @@ const BudgetPage = lazy(() => import("./pages/BudgetPage"));
 const ReportsPage = lazy(() => import("./pages/ReportsPage"));
 const ResourcesPage = lazy(() => import("./pages/ResourcesPage"));
 const ProfilePage = lazy(() => import("./pages/ProfilePage"));
+const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 const AddMaterialPage = lazy(() => import("./pages/AddMaterialPage"));
 const UploadExcelPage = lazy(() => import("./pages/UploadExcelPage"));
 const SchedulePage = lazy(() => import("./pages/SchedulePage"));
@@ -70,6 +71,7 @@ function App() {
               <Route path="reports" element={<ReportsPage />} />
               <Route path="resources" element={<ResourcesPage />} />
               <Route path="profile" element={<ProfilePage />} />
+              <Route path="settings" element={<SettingsPage />} />
               <Route path="add-material" element={<AddMaterialPage />} />
               <Route path="upload-excel" element={<UploadExcelPage />} />
               <Route path="schedule" element={<SchedulePage />} />
