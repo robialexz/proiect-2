@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-import { Helmet } from 'react-helmet-async';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRole } from '@/contexts/RoleContext';
@@ -152,11 +151,13 @@ const SettingsPage: React.FC = () => {
     }
   };
 
+  // Setăm titlul paginii folosind useEffect în loc de Helmet
+  useEffect(() => {
+    document.title = `${t('settings.pageTitle')} | App`;
+  }, [t]);
+
   return (
     <>
-      <Helmet>
-        <title>{t('settings.pageTitle')} | App</title>
-      </Helmet>
 
       <div className="container mx-auto py-6 max-w-6xl">
         <div className="flex justify-between items-center mb-6">
