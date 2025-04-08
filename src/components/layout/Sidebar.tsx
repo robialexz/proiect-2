@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, memo, useMemo, useCallback } from "react";
+import { useMemoizedCallback, useMemoizedValue } from "@/lib/performance";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -63,8 +64,8 @@ const Sidebar = () => {
     reports: true,
   });
 
-  // Definim grupurile de navigare
-  const navGroups: NavGroup[] = [
+  // Definim grupurile de navigare - optimizat cu memoizare
+  const navGroups: NavGroup[] = useMemo(() => [
     {
       title: t("sidebar.dashboardGroup"),
       icon: <LayoutDashboard size={20} />,
@@ -142,21 +143,21 @@ const Sidebar = () => {
         },
       ],
     },
-  ];
+  ], [t]);
 
-  // Verificăm dacă un item este activ
-  const isActive = (href: string) => location.pathname === href;
+  // Verificăm dacă un item este activ - optimizat cu memoizare
+  const isActive = useMemoizedCallback((href: string) => location.pathname === href, [location.pathname]);
 
-  // Gestionăm expandarea/colapsarea grupurilor
-  const toggleGroup = (groupTitle: string) => {
+  // Gestionăm expandarea/colapsarea grupurilor - optimizat cu memoizare
+  const toggleGroup = useMemoizedCallback((groupTitle: string) => {
     setExpandedGroups((prev) => ({
       ...prev,
       [groupTitle]: !prev[groupTitle],
     }));
-  };
+  }, []);
 
-  // Gestionăm deconectarea
-  const handleSignOut = async () => {
+  // Gestionăm deconectarea - optimizat cu memoizare
+  const handleSignOut = useMemoizedCallback(async () => {
     await signOut();
     addNotification({
       type: "success",
@@ -165,7 +166,7 @@ const Sidebar = () => {
       duration: 3000,
     });
     navigate("/login");
-  };
+  }, [signOut, addNotification, navigate]);
 
   // Când se schimbă ruta, expandăm automat grupul corespunzător
   useEffect(() => {
@@ -443,4 +444,5 @@ const Sidebar = () => {
   );
 };
 
-export default Sidebar;
+// Folosim memo pentru a preveni re-renderizări inutile
+export default memo(Sidebar);

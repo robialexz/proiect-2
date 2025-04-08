@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import Sidebar from "@/components/layout/Sidebar";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -120,7 +119,7 @@ const ResourcesPage: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-slate-900 text-white">
-      <Sidebar />
+      
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
         <header className="sticky top-0 z-10 bg-slate-900 border-b border-slate-800 px-6 py-4 shrink-0">
@@ -191,4 +190,5 @@ const ResourcesPage: React.FC = () => {
 };
 
 export default ResourcesPage;
+
 

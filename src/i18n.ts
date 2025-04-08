@@ -230,6 +230,15 @@ const resources = {
         reports: "Rapoarte",
         resources: "Resurse",
         settings: "Setări",
+        profile: "Profil",
+        logout: "Deconectare",
+        help: "Ajutor",
+        schedule: "Program",
+        documents: "Documente",
+        viewProfile: "Vizualizare profil",
+        dashboardGroup: "Panou de Control",
+        managementGroup: "Management",
+        reportsGroup: "Rapoarte & Resurse",
       },
       common: {
         save: "Salvează",
@@ -244,6 +253,7 @@ const resources = {
         loading: "Se încarcă...",
         noResults: "Niciun rezultat.",
       },
+      teams: roTeams,
       inventory: {
         pageTitle: "Management Inventar",
         uploadExcel: "Încarcă Excel",
@@ -607,39 +617,7 @@ const resources = {
       teams: enTeams,
     },
   },
-  ro: {
-    translation: {
-      // Add Romanian translations here
-      language: "Limbă",
-      languages: {
-        en: "Engleză",
-        ro: "Română",
-        fr: "Franceză",
-        de: "Germană",
-      },
-      sidebar: {
-        home: "Prezentare generală",
-        dashboard: "Panou de control",
-        projects: "Proiecte",
-        inventory: "Gestionare inventar",
-        teams: "Echipe",
-        suppliers: "Furnizori",
-        budget: "Buget",
-        reports: "Rapoarte",
-        resources: "Resurse",
-        settings: "Setări",
-      },
-      common: {
-        loading: "Se încarcă...",
-        back: "Înapoi",
-        cancel: "Anulează",
-        save: "Salvează",
-        create: "Creează",
-        refresh: "Reîmprospătează"
-      },
-      teams: roTeams,
-    },
-  },
+
 };
 
 i18n
@@ -653,6 +631,7 @@ i18n
     fallbackLng: "ro", // Set Romanian as fallback language
     interpolation: {
       escapeValue: false, // not needed for react as it escapes by default
+      skipOnVariables: true, // Skip interpolation when variables are undefined (performance boost)
     },
     resources: resources,
     detection: {
@@ -665,6 +644,20 @@ i18n
     },
     // Force Romanian language
     lng: "ro",
+    // Performance optimizations
+    load: 'languageOnly', // Only load language, not country specific (e.g. 'en' instead of 'en-US')
+    ns: ['translation'], // Only use the 'translation' namespace
+    defaultNS: 'translation',
+    keySeparator: '.', // Use dot notation for keys
+    nsSeparator: ':', // Use colon for namespace separation
+    returnEmptyString: false, // Don't return empty strings for missing translations
+    returnNull: false, // Don't return null for missing translations
+    react: {
+      useSuspense: false, // Disable Suspense for i18next
+      bindI18n: 'languageChanged loaded', // Only trigger re-render on language change and loaded
+      bindI18nStore: '', // Don't trigger re-render on store changes
+      transEmptyNodeValue: '', // Empty value for empty nodes
+    }
   });
 
 export default i18n;

@@ -40,10 +40,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Adăugăm un timeout pentru a evita blocarea la "se încarcă..."
+    // Adăugăm un timeout pentru a evita blocarea la "se încarcă..." - redus pentru performanță mai bună
     const timeoutId = setTimeout(() => {
       if (loading) {
-        console.log("Auth loading timeout reached, forcing loading to false");
+        console.log("Auth loading timeout reached after 5 seconds, forcing loading to false");
         setLoading(false);
         // Setăm un profil implicit în caz de timeout
         if (user && !userProfile) {
@@ -53,11 +53,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           });
         }
       }
-    }, 20000); // 20 secunde timeout
+    }, 5000); // Redus de la 20 secunde la 5 secunde
 
+    console.log("AuthContext: Checking for existing session...");
     // Get initial session using the improved service
     supabaseService.auth.getSession().then(async (response) => {
-      console.log("Initial session check result:", {
+      console.log("AuthContext: Initial session check result:", {
         success: !!response.data?.session,
         error: response.error ? response.error.message : null
       });

@@ -29,9 +29,13 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import { useNotification } from "@/components/ui/notification";
 import { fadeIn, fadeInDown } from "@/lib/animation-variants";
 import { useTranslation } from "react-i18next"; // Import useTranslation
+import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { GlobalSearch } from "@/components/ui/global-search";
+import { NotificationCenter } from "@/components/ui/notification-center";
 
 interface NavbarProps {
   onMenuToggle: () => void;
@@ -45,7 +49,7 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuToggle }) => {
   const { addNotification } = useNotification();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [isDarkMode, setIsDarkMode] = useState(true);
+  const { theme, toggleTheme } = useTheme();
   const [notifications, setNotifications] = useState([
     {
       id: "1",
@@ -66,9 +70,9 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuToggle }) => {
   // Obținem titlul paginii curente
   const getPageTitle = () => {
     const path = location.pathname.split("/")[1];
-    
+
     if (!path) return "Acasă";
-    
+
     // Transformăm path în titlu (ex: "inventory-management" -> "Inventory Management")
     return path
       .split("-")
@@ -79,19 +83,19 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuToggle }) => {
   // Gestionăm căutarea
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!searchQuery.trim()) return;
-    
+
     addNotification({
       type: "info",
       title: "Căutare",
       message: `Ai căutat: "${searchQuery}"`,
       duration: 3000,
     });
-    
+
     // Aici ar trebui să implementăm logica reală de căutare
     console.log("Searching for:", searchQuery);
-    
+
     // Resetăm căutarea
     setSearchQuery("");
     setIsSearchOpen(false);
@@ -110,13 +114,12 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuToggle }) => {
   };
 
   // Gestionăm schimbarea temei
-  const toggleDarkMode = () => {
-    setIsDarkMode(!isDarkMode);
-    // Aici ar trebui să implementăm logica reală de schimbare a temei
+  const handleThemeToggle = () => {
+    toggleTheme();
     addNotification({
       type: "info",
       title: "Temă schimbată",
-      message: isDarkMode ? "Temă deschisă activată" : "Temă întunecată activată",
+      message: theme === 'dark' ? "Temă deschisă activată" : "Temă întunecată activată",
       duration: 3000,
     });
   };
@@ -148,7 +151,7 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuToggle }) => {
         >
           <Menu className="h-5 w-5" />
         </Button>
-        
+
         <h1 className="text-xl font-semibold hidden md:block">
           {getPageTitle()}
         </h1>
@@ -157,58 +160,11 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuToggle }) => {
       {/* Right section */}
       <div className="flex items-center space-x-2">
         {/* Search */}
-        <AnimatePresence>
-          {isSearchOpen ? (
-            <motion.form
-              initial={{ width: 40, opacity: 0 }}
-              animate={{ width: 200, opacity: 1 }}
-              exit={{ width: 40, opacity: 0 }}
-              className="relative"
-              onSubmit={handleSearch}
-            >
-              <Input
-                type="search"
-                placeholder="Caută..."
-                className="pr-8 bg-slate-700 border-slate-600"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                autoFocus
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="absolute right-0 top-0 h-full"
-                onClick={() => setIsSearchOpen(false)}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </motion.form>
-          ) : (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsSearchOpen(true)}
-              aria-label="Search"
-            >
-              <Search className="h-5 w-5" />
-            </Button>
-          )}
-        </AnimatePresence>
+        {/* Global Search */}
+        <GlobalSearch />
 
         {/* Theme toggle */}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={toggleDarkMode}
-          aria-label={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
-        >
-          {isDarkMode ? (
-            <Sun className="h-5 w-5" />
-          ) : (
-            <Moon className="h-5 w-5" />
-          )}
-        </Button>
+        <ThemeToggle />
 
         {/* Help */}
         <Button
@@ -228,64 +184,7 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuToggle }) => {
         </Button>
 
         {/* Notifications */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="relative">
-              <Bell className="h-5 w-5" />
-              {unreadCount > 0 && (
-                <Badge
-                  className="absolute -top-1 -right-1 px-1.5 py-0.5 min-w-[18px] h-[18px] flex items-center justify-center bg-primary text-[10px]"
-                  variant="default"
-                >
-                  {unreadCount}
-                </Badge>
-              )}
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-80 bg-slate-800 border-slate-700">
-            <div className="flex items-center justify-between p-2 border-b border-slate-700">
-              <h3 className="font-medium">Notificări</h3>
-              {unreadCount > 0 && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 text-xs"
-                  onClick={markAllNotificationsAsRead}
-                >
-                  Marchează toate ca citite
-                </Button>
-              )}
-            </div>
-            <div className="max-h-[300px] overflow-y-auto">
-              {notifications.length > 0 ? (
-                notifications.map((notification) => (
-                  <div
-                    key={notification.id}
-                    className={cn(
-                      "p-3 border-b border-slate-700 last:border-0 hover:bg-slate-700/50 cursor-pointer",
-                      !notification.read && "bg-slate-700/30"
-                    )}
-                  >
-                    <div className="flex justify-between items-start">
-                      <h4 className="font-medium text-sm">{notification.title}</h4>
-                      <span className="text-xs text-slate-400">{notification.time}</span>
-                    </div>
-                    <p className="text-xs text-slate-300 mt-1">{notification.message}</p>
-                  </div>
-                ))
-              ) : (
-                <div className="p-4 text-center text-slate-400">
-                  Nu ai notificări
-                </div>
-              )}
-            </div>
-            <div className="p-2 border-t border-slate-700">
-              <Button variant="outline" size="sm" className="w-full">
-                Vezi toate notificările
-              </Button>
-            </div>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <NotificationCenter />
 
         {/* User menu */}
         <DropdownMenu>

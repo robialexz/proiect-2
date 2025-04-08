@@ -3,7 +3,6 @@ import { Navigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
-import Sidebar from "@/components/layout/Sidebar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -381,7 +380,7 @@ const ProfilePage: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-slate-900 text-white">
-      <Sidebar />
+      
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="sticky top-0 z-10 bg-slate-900 border-b border-slate-800 px-6 py-4 shrink-0">
           <div className="flex items-center justify-between">
@@ -996,4 +995,5 @@ const ProfilePage: React.FC = () => {
 };
 
 export default ProfilePage;
+
 

@@ -3,11 +3,11 @@ import { Variants } from 'framer-motion';
 // Animații pentru intrare/ieșire
 export const fadeIn: Variants = {
   hidden: { opacity: 0 },
-  visible: { 
+  visible: {
     opacity: 1,
     transition: { duration: 0.3 }
   },
-  exit: { 
+  exit: {
     opacity: 0,
     transition: { duration: 0.2 }
   }
@@ -15,13 +15,13 @@ export const fadeIn: Variants = {
 
 export const fadeInUp: Variants = {
   hidden: { opacity: 0, y: 20 },
-  visible: { 
-    opacity: 1, 
+  visible: {
+    opacity: 1,
     y: 0,
     transition: { duration: 0.4 }
   },
-  exit: { 
-    opacity: 0, 
+  exit: {
+    opacity: 0,
     y: 20,
     transition: { duration: 0.2 }
   }
@@ -29,13 +29,13 @@ export const fadeInUp: Variants = {
 
 export const fadeInDown: Variants = {
   hidden: { opacity: 0, y: -20 },
-  visible: { 
-    opacity: 1, 
+  visible: {
+    opacity: 1,
     y: 0,
     transition: { duration: 0.4 }
   },
-  exit: { 
-    opacity: 0, 
+  exit: {
+    opacity: 0,
     y: -20,
     transition: { duration: 0.2 }
   }
@@ -43,13 +43,13 @@ export const fadeInDown: Variants = {
 
 export const fadeInLeft: Variants = {
   hidden: { opacity: 0, x: -20 },
-  visible: { 
-    opacity: 1, 
+  visible: {
+    opacity: 1,
     x: 0,
     transition: { duration: 0.4 }
   },
-  exit: { 
-    opacity: 0, 
+  exit: {
+    opacity: 0,
     x: -20,
     transition: { duration: 0.2 }
   }
@@ -57,13 +57,13 @@ export const fadeInLeft: Variants = {
 
 export const fadeInRight: Variants = {
   hidden: { opacity: 0, x: 20 },
-  visible: { 
-    opacity: 1, 
+  visible: {
+    opacity: 1,
     x: 0,
     transition: { duration: 0.4 }
   },
-  exit: { 
-    opacity: 0, 
+  exit: {
+    opacity: 0,
     x: 20,
     transition: { duration: 0.2 }
   }
@@ -71,13 +71,13 @@ export const fadeInRight: Variants = {
 
 export const scaleIn: Variants = {
   hidden: { opacity: 0, scale: 0.9 },
-  visible: { 
-    opacity: 1, 
+  visible: {
+    opacity: 1,
     scale: 1,
     transition: { duration: 0.3 }
   },
-  exit: { 
-    opacity: 0, 
+  exit: {
+    opacity: 0,
     scale: 0.9,
     transition: { duration: 0.2 }
   }
@@ -85,15 +85,15 @@ export const scaleIn: Variants = {
 
 export const scaleInUp: Variants = {
   hidden: { opacity: 0, scale: 0.9, y: 20 },
-  visible: { 
-    opacity: 1, 
-    scale: 1, 
+  visible: {
+    opacity: 1,
+    scale: 1,
     y: 0,
     transition: { duration: 0.4 }
   },
-  exit: { 
-    opacity: 0, 
-    scale: 0.9, 
+  exit: {
+    opacity: 0,
+    scale: 0.9,
     y: 20,
     transition: { duration: 0.2 }
   }
@@ -113,8 +113,8 @@ export const staggerContainer: Variants = {
 
 export const staggerItem: Variants = {
   hidden: { opacity: 0, y: 10 },
-  visible: { 
-    opacity: 1, 
+  visible: {
+    opacity: 1,
     y: 0,
     transition: { duration: 0.3 }
   }
@@ -138,31 +138,31 @@ export const buttonTap = {
   transition: { duration: 0.1 }
 };
 
-// Animații pentru pagini
+// Animații pentru pagini - optimizate pentru performanță
 export const pageTransition: Variants = {
   hidden: { opacity: 0 },
-  visible: { 
+  visible: {
     opacity: 1,
-    transition: { 
-      duration: 0.5,
+    transition: {
+      duration: 0.2, // Reduced from 0.5
       when: "beforeChildren",
-      staggerChildren: 0.1
+      staggerChildren: 0.05 // Reduced from 0.1
     }
   },
-  exit: { 
+  exit: {
     opacity: 0,
-    transition: { duration: 0.3 }
+    transition: { duration: 0.1 } // Reduced from 0.3
   }
 };
 
 // Animații pentru modals
 export const modalBackdrop: Variants = {
   hidden: { opacity: 0 },
-  visible: { 
+  visible: {
     opacity: 1,
     transition: { duration: 0.2 }
   },
-  exit: { 
+  exit: {
     opacity: 0,
     transition: { duration: 0.2, delay: 0.1 }
   }
@@ -170,15 +170,15 @@ export const modalBackdrop: Variants = {
 
 export const modalContent: Variants = {
   hidden: { opacity: 0, scale: 0.95, y: 10 },
-  visible: { 
-    opacity: 1, 
-    scale: 1, 
+  visible: {
+    opacity: 1,
+    scale: 1,
     y: 0,
     transition: { duration: 0.3 }
   },
-  exit: { 
-    opacity: 0, 
-    scale: 0.95, 
+  exit: {
+    opacity: 0,
+    scale: 0.95,
     y: 10,
     transition: { duration: 0.2 }
   }
@@ -213,13 +213,13 @@ export const spin: Variants = {
 // Animații pentru notificări
 export const notificationSlideIn: Variants = {
   hidden: { opacity: 0, x: 20 },
-  visible: { 
-    opacity: 1, 
+  visible: {
+    opacity: 1,
     x: 0,
     transition: { duration: 0.3, type: "spring", stiffness: 500, damping: 30 }
   },
-  exit: { 
-    opacity: 0, 
+  exit: {
+    opacity: 0,
     x: 20,
     transition: { duration: 0.2 }
   }
@@ -228,13 +228,13 @@ export const notificationSlideIn: Variants = {
 // Animații pentru acordeoane
 export const accordionContent: Variants = {
   hidden: { opacity: 0, height: 0 },
-  visible: { 
-    opacity: 1, 
+  visible: {
+    opacity: 1,
     height: "auto",
     transition: { duration: 0.3 }
   },
-  exit: { 
-    opacity: 0, 
+  exit: {
+    opacity: 0,
     height: 0,
     transition: { duration: 0.2 }
   }

@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
-import Sidebar from "@/components/layout/Sidebar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRole } from "@/contexts/RoleContext";
 import { Navigate, useSearchParams } from "react-router-dom";
@@ -31,6 +30,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Upload, PlusCircle, Search, FolderPlus, Package, Truck } from "lucide-react";
 import { DataTable } from "@/components/inventory/data-table";
+import OptimizedDataTable from "@/components/inventory/optimized-data-table";
 import { getColumns, type Material } from "@/components/inventory/columns";
 import * as XLSX from "xlsx";
 import { useTranslation } from "react-i18next";
@@ -853,7 +853,7 @@ const InventoryManagementPage: React.FC = () => {
   // --- Render ---
   return (
     <div className="flex h-screen bg-slate-900 text-white">
-      <Sidebar />
+
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
         <header className="sticky top-0 z-10 bg-slate-900 border-b border-slate-800 px-6 py-4 shrink-0">
@@ -1296,7 +1296,7 @@ const InventoryManagementPage: React.FC = () => {
                       </div>
                     )}
                     {selectedProjectId ? (
-                      <DataTable
+                      <OptimizedDataTable
                         columns={columns}
                         data={inventoryData}
                         setMaterialToRequestSuplimentar={
@@ -1921,3 +1921,4 @@ const InventoryManagementPage: React.FC = () => {
 };
 
 export default InventoryManagementPage;
+

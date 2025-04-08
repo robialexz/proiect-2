@@ -1,9 +1,14 @@
 import { supabase } from './supabase';
 import { PostgrestError } from '@supabase/supabase-js';
 import fallbackAuth from "./fallback-auth";
+import connectionService from './connection-service';
+import { cacheService } from './cache-service';
 
 // Flag pentru a activa autentificarea de rezervă
 const USE_FALLBACK_AUTH = true; // Setați la false pentru a dezactiva autentificarea de rezervă
+
+// Flag pentru a activa cache-ul offline
+const USE_OFFLINE_CACHE = true; // Setați la false pentru a dezactiva cache-ul offline
 
 // Tipuri pentru gestionarea erorilor
 export interface SupabaseErrorResponse {
@@ -18,7 +23,17 @@ export interface SupabaseResponse<T> {
   data: T | null;
   error: SupabaseErrorResponse | null;
   status: 'success' | 'error';
+  fromCache?: boolean; // Indică dacă datele provin din cache
 }
+
+// Verifică conexiunea înainte de a face cereri la Supabase
+const checkConnectionBeforeRequest = async (): Promise<boolean> => {
+  // Verificăm conexiunea la internet și la Supabase
+  const { internet, supabase: hasSupabaseConnection } = await connectionService.checkConnections();
+
+  // Dacă nu există conexiune la internet sau la Supabase, returnează false
+  return internet && hasSupabaseConnection;
+};
 
 // Funcție pentru a transforma erorile PostgrestError în SupabaseErrorResponse
 const formatError = (error: PostgrestError | Error | unknown): SupabaseErrorResponse => {
@@ -181,6 +196,50 @@ export const supabaseService = {
       try {
         console.log('Starting authentication process for:', email);
 
+        // În mediul de dezvoltare, permitem autentificarea cu orice email/parolă pentru testare
+        if (import.meta.env.DEV) {
+          console.log('Development mode detected, using test credentials');
+          // Verificăm dacă email-ul conține "test" sau "demo" pentru a permite autentificarea de test
+          if (email.includes('test') || email.includes('demo') || email.includes('admin')) {
+            console.log('Using test account authentication');
+            // Simulăm un răspuns de succes pentru conturile de test
+            // Creăm o sesiune de test
+            const testUser = {
+              id: 'test-user-id',
+              email: email,
+              user_metadata: {
+                name: 'Test User'
+              }
+            };
+
+            const testSession = {
+              access_token: 'test-token-' + Date.now(), // Adaugăm timestamp pentru a face token-ul unic
+              refresh_token: 'test-refresh-token-' + Date.now(),
+              expires_at: Date.now() + 3600000, // Expiră în 1 oră
+              user: {
+                id: 'test-user-id',
+                email: email
+              }
+            };
+
+            // Salvăm sesiunea în localStorage pentru a o putea recupera mai târziu
+            // Acest lucru va permite ca utilizatorul să rămână autentificat în toate paginile aplicației
+            localStorage.setItem('supabase.auth.token', JSON.stringify({
+              currentSession: testSession,
+              expiresAt: testSession.expires_at
+            }));
+
+            return {
+              data: {
+                user: testUser,
+                session: testSession
+              },
+              error: null,
+              status: 'success'
+            };
+          }
+        }
+
         // Dacă autentificarea de rezervă este activată, o folosim
         if (USE_FALLBACK_AUTH) {
           console.log('Using fallback authentication due to Supabase connectivity issues');
@@ -298,6 +357,38 @@ export const supabaseService = {
 
     async getSession() {
       try {
+        // În modul de dezvoltare, verificăm dacă există o sesiune de test în localStorage
+        if (import.meta.env.DEV) {
+          try {
+            const tokenStr = localStorage.getItem('supabase.auth.token');
+
+            if (tokenStr) {
+              const tokenData = JSON.parse(tokenStr);
+
+              if (tokenData && tokenData.currentSession) {
+                // Verificăm dacă sesiunea nu a expirat
+                if (tokenData.expiresAt > Date.now()) {
+                  console.log('Using test session from localStorage');
+
+                  // Creăm un răspuns similar cu cel de la Supabase
+                  return {
+                    data: {
+                      session: tokenData.currentSession
+                    },
+                    error: null,
+                    status: 'success'
+                  };
+                } else {
+                  console.log('Test session expired, removing from localStorage');
+                  localStorage.removeItem('supabase.auth.token');
+                }
+              }
+            }
+          } catch (testSessionError) {
+            console.error('Error getting test session:', testSessionError);
+          }
+        }
+
         // Dacă autentificarea de rezervă este activată, încercăm să recuperăm sesiunea din localStorage
         if (USE_FALLBACK_AUTH) {
           try {
@@ -332,6 +423,42 @@ export const supabaseService = {
 
     async getUser() {
       try {
+        // În modul de dezvoltare, verificăm dacă există o sesiune de test în localStorage
+        if (import.meta.env.DEV) {
+          try {
+            const tokenStr = localStorage.getItem('supabase.auth.token');
+
+            if (tokenStr) {
+              const tokenData = JSON.parse(tokenStr);
+
+              if (tokenData && tokenData.currentSession && tokenData.currentSession.user) {
+                // Verificăm dacă sesiunea nu a expirat
+                if (tokenData.expiresAt > Date.now()) {
+                  console.log('Using test user from localStorage');
+
+                  // Creăm un răspuns similar cu cel de la Supabase
+                  return {
+                    data: {
+                      id: tokenData.currentSession.user.id,
+                      email: tokenData.currentSession.user.email,
+                      user_metadata: {
+                        name: 'Test User'
+                      }
+                    },
+                    error: null,
+                    status: 'success'
+                  };
+                } else {
+                  console.log('Test session expired, removing from localStorage');
+                  localStorage.removeItem('supabase.auth.token');
+                }
+              }
+            }
+          } catch (testSessionError) {
+            console.error('Error getting test user:', testSessionError);
+          }
+        }
+
         // Dacă autentificarea de rezervă este activată, încercăm să recuperăm utilizatorul din sesiunea de rezervă
         if (USE_FALLBACK_AUTH) {
           try {

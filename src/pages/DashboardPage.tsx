@@ -1,6 +1,5 @@
 import React from "react";
 import { motion } from "framer-motion";
-import Sidebar from "@/components/layout/Sidebar";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate, useNavigate } from "react-router-dom"; // Import useNavigate
 import { Button } from "@/components/ui/button";
@@ -25,7 +24,7 @@ const DashboardPage = () => {
 
   return (
     <div className="flex h-screen bg-slate-900 text-white">
-      <Sidebar />
+      
 
       <div className="flex-1 overflow-auto">
         <header className="sticky top-0 z-10 bg-slate-900 border-b border-slate-800 px-6 py-4">
@@ -199,4 +198,5 @@ const DashboardPage = () => {
 };
 
 export default DashboardPage;
+
 

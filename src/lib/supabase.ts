@@ -8,7 +8,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
   console.error("Missing Supabase environment variables");
 }
 
-// Explicitly add default options with increased timeouts and retry logic
+// Optimized client configuration for better performance
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
@@ -16,21 +16,26 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
     detectSessionInUrl: true
   },
   global: {
-    // Increase timeout to 30 seconds
+    // Reduced timeout to 15 seconds for faster error detection
     fetch: (url, options) => {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 seconds timeout
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 seconds timeout
+
+      // Create a cache key for GET requests
+      const isGetRequest = options?.method === undefined || options?.method === 'GET';
+      const cacheKey = isGetRequest ? url.toString() : null;
+
+      // Use a more balanced caching strategy
+      const headers = {
+        ...options?.headers,
+        // Allow caching for GET requests but validate with server
+        'Cache-Control': isGetRequest ? 'max-age=300, stale-while-revalidate=600' : 'no-cache'
+      };
 
       return fetch(url, {
         ...options,
         signal: controller.signal,
-        // Add cache control headers to prevent caching
-        headers: {
-          ...options?.headers,
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache',
-          'Expires': '0'
-        }
+        headers
       }).then(response => {
         clearTimeout(timeoutId);
         return response;

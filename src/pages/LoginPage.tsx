@@ -43,8 +43,14 @@ const LoginPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Login form submitted.");
+    console.log("LoginPage: Form submitted");
     setError(null);
+
+    // Verifică dacă email-ul și parola sunt completate
+    if (!email || !password) {
+      setError("Please enter both email and password.");
+      return;
+    }
 
     // Verificăm din nou conexiunea înainte de a încerca autentificarea
     if (connectionStatus === 'offline') {
@@ -54,21 +60,27 @@ const LoginPage = () => {
 
     setLoading(true);
 
-    // Adăugăm un timeout pentru întreaga operațiune de login - mărim la 40 secunde
+    // Adăugăm un timeout pentru întreaga operațiune de login - reducem la 10 secunde
     const loginTimeout = setTimeout(() => {
       if (loading) {
         setLoading(false);
-        setError("Login timeout after 40 seconds. Please check your internet connection and try again later.");
-        console.error("Login timeout reached after 40 seconds");
+        setError("Login timeout. Please check your internet connection and try again later.");
+        console.error("Login timeout reached");
       }
-    }, 40000); // 40 secunde timeout
+    }, 10000); // 10 secunde timeout
 
     try {
-      console.log("Calling signIn function with email:", email);
+      console.log("LoginPage: Calling signIn function with email:", email);
+
+      // Chiar și pentru conturile de test, folosim AuthContext pentru a asigura persistarea sesiunii
+      // Acest lucru va permite ca utilizatorul să rămână autentificat în toate paginile aplicației
+
+      // Autentificare normală pentru conturile non-test
       const { data: sessionData, error: signInError } = await signIn(email, password);
-      console.log("signIn function returned:", {
+      console.log("LoginPage: signIn function returned:", {
         success: !!sessionData,
-        error: signInError ? signInError.message : null
+        error: signInError ? signInError.message : null,
+        redirecting: signInError ? false : true
       });
 
       // Curățăm timeout-ul deoarece am primit un răspuns
@@ -79,11 +91,9 @@ const LoginPage = () => {
         throw signInError;
       }
 
-      // Adăugăm o mică întârziere pentru a permite actualizarea stării
-      console.log("signIn successful, navigating to / after short delay");
-      setTimeout(() => {
-        navigate("/overview");
-      }, 500);
+      // Navigație directă către pagina principală
+      console.log("LoginPage: Authentication successful, navigating to overview");
+      navigate("/overview");
     } catch (err: any) {
       // Curățăm timeout-ul în caz de eroare
       clearTimeout(loginTimeout);
