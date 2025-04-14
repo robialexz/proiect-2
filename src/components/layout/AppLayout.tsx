@@ -50,18 +50,29 @@ const AppLayout: React.FC = () => {
   useEffect(() => {
     // Folosim localStorage pentru a verifica dacă mesajul a fost deja afișat în această sesiune
     const welcomeShown = localStorage.getItem('welcomeMessageShown');
+    console.log('Welcome check - User:', user?.id, 'Loading:', loading, 'Shown:', welcomeShown);
 
-    if (user && !loading && !welcomeShown) {
-      // Afișăm overlay-ul de bun venit în loc de notificare
-      setShowWelcomeOverlay(true);
+    if (user && !loading) {
+      // Forțăm afișarea mesajului de bun venit în modul de dezvoltare
+      if (import.meta.env.DEV) {
+        console.log('Forcing welcome overlay in development mode');
+        setShowWelcomeOverlay(true);
+        return;
+      }
 
-      // Marcăm mesajul ca afișat pentru această sesiune
-      localStorage.setItem('welcomeMessageShown', 'true');
+      // În producție, verificăm dacă a fost deja afișat
+      if (!welcomeShown) {
+        // Afișăm overlay-ul de bun venit în loc de notificare
+        setShowWelcomeOverlay(true);
 
-      // Resetăm flag-ul după 30 de minute pentru a permite afișarea unui nou mesaj în viitor
-      setTimeout(() => {
-        localStorage.removeItem('welcomeMessageShown');
-      }, 30 * 60 * 1000); // 30 minute
+        // Marcăm mesajul ca afișat pentru această sesiune
+        localStorage.setItem('welcomeMessageShown', 'true');
+
+        // Resetăm flag-ul după 30 de minute pentru a permite afișarea unui nou mesaj în viitor
+        setTimeout(() => {
+          localStorage.removeItem('welcomeMessageShown');
+        }, 30 * 60 * 1000); // 30 minute
+      }
     }
   }, [user, loading]);
 

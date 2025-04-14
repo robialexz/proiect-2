@@ -56,6 +56,16 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
         }
       }, 2000); // 2 secunde timeout - redus pentru performanță mai bună
 
+      // Verificăm dacă este un utilizator de test
+      if (user.id && user.id.toString().startsWith('test-user-id')) {
+        console.log('Using test user role');
+        // Pentru utilizatorii de test, setăm rolul de director pentru a asigura acces complet
+        setUserRole('director');
+        clearTimeout(timeoutId);
+        setLoading(false);
+        return;
+      }
+
       // În modul de dezvoltare, putem seta roluri bazate pe email pentru testare
       if (import.meta.env.DEV) {
         const email = user.email?.toLowerCase() || '';

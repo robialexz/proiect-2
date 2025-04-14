@@ -14,23 +14,24 @@ const WelcomeOverlay: React.FC<WelcomeOverlayProps> = ({ onComplete }) => {
   const { userRole, getWelcomeMessage } = useRole();
   const [show, setShow] = useState(true);
   const [welcomeMessage, setWelcomeMessage] = useState('');
-  
+
   useEffect(() => {
     // Obținem mesajul de bun venit personalizat
     const message = getWelcomeMessage();
     setWelcomeMessage(message);
-    
-    // Ascundem overlay-ul după 3 secunde
+    console.log('Welcome message set:', message);
+
+    // Ascundem overlay-ul după 5 secunde pentru a fi mai vizibil
     const timer = setTimeout(() => {
       setShow(false);
       if (onComplete) {
         onComplete();
       }
-    }, 3000);
-    
+    }, 5000);
+
     return () => clearTimeout(timer);
   }, [getWelcomeMessage, onComplete]);
-  
+
   // Obținem ora curentă pentru a personaliza mesajul
   const getTimeBasedGreeting = () => {
     const hour = new Date().getHours();
@@ -38,91 +39,91 @@ const WelcomeOverlay: React.FC<WelcomeOverlayProps> = ({ onComplete }) => {
     if (hour < 18) return t('welcome.afternoon', 'Bună ziua');
     return t('welcome.evening', 'Bună seara');
   };
-  
+
   // Variante pentru animații
   const containerVariants = {
     hidden: { opacity: 0 },
-    visible: { 
+    visible: {
       opacity: 1,
-      transition: { 
+      transition: {
         when: "beforeChildren",
         staggerChildren: 0.2,
         duration: 0.3
       }
     },
-    exit: { 
+    exit: {
       opacity: 0,
-      transition: { 
+      transition: {
         when: "afterChildren",
         staggerChildren: 0.1,
         staggerDirection: -1,
-        duration: 0.5 
+        duration: 0.5
       }
     }
   };
-  
+
   const textVariants = {
     hidden: { y: 50, opacity: 0 },
-    visible: { 
-      y: 0, 
+    visible: {
+      y: 0,
       opacity: 1,
-      transition: { 
-        type: "spring", 
-        stiffness: 100, 
-        damping: 10 
+      transition: {
+        type: "spring",
+        stiffness: 100,
+        damping: 10
       }
     },
-    exit: { 
-      y: -50, 
+    exit: {
+      y: -50,
       opacity: 0,
-      transition: { 
-        duration: 0.2 
+      transition: {
+        duration: 0.2
       }
     }
   };
-  
+
   const nameVariants = {
     hidden: { scale: 0.8, opacity: 0 },
-    visible: { 
-      scale: 1, 
+    visible: {
+      scale: 1,
       opacity: 1,
-      transition: { 
-        type: "spring", 
-        stiffness: 200, 
+      transition: {
+        type: "spring",
+        stiffness: 200,
         damping: 10,
         delay: 0.3
       }
     },
-    exit: { 
-      scale: 1.2, 
+    exit: {
+      scale: 1.2,
       opacity: 0,
-      transition: { 
-        duration: 0.3 
+      transition: {
+        duration: 0.3
       }
     }
   };
-  
+
   const roleVariants = {
     hidden: { x: -50, opacity: 0 },
-    visible: { 
-      x: 0, 
+    visible: {
+      x: 0,
       opacity: 1,
-      transition: { 
-        type: "spring", 
-        stiffness: 100, 
+      transition: {
+        type: "spring",
+        stiffness: 100,
         damping: 10,
         delay: 0.5
       }
     },
-    exit: { 
-      x: 50, 
+    exit: {
+      x: 50,
       opacity: 0,
-      transition: { 
-        duration: 0.2 
+      transition: {
+        duration: 0.2
       }
     }
   };
-  
+
   // Elemente decorative pentru fundal
   const decorElements = Array.from({ length: 20 }, (_, i) => ({
     id: i,
@@ -132,7 +133,7 @@ const WelcomeOverlay: React.FC<WelcomeOverlayProps> = ({ onComplete }) => {
     delay: Math.random() * 0.5,
     duration: Math.random() * 5 + 5
   }));
-  
+
   return (
     <AnimatePresence>
       {show && (
@@ -155,7 +156,7 @@ const WelcomeOverlay: React.FC<WelcomeOverlayProps> = ({ onComplete }) => {
                 top: `${elem.y}%`,
               }}
               initial={{ opacity: 0, scale: 0 }}
-              animate={{ 
+              animate={{
                 opacity: [0, 0.3, 0],
                 scale: [0, 1, 0.8],
                 x: [0, Math.random() * 100 - 50],
@@ -169,7 +170,7 @@ const WelcomeOverlay: React.FC<WelcomeOverlayProps> = ({ onComplete }) => {
               }}
             />
           ))}
-          
+
           <div className="text-center px-4 relative z-10">
             <motion.div
               className="text-2xl md:text-3xl text-slate-300 mb-2"
@@ -177,14 +178,14 @@ const WelcomeOverlay: React.FC<WelcomeOverlayProps> = ({ onComplete }) => {
             >
               {getTimeBasedGreeting()}
             </motion.div>
-            
+
             <motion.div
               className="text-4xl md:text-6xl font-bold text-white mb-4"
               variants={nameVariants}
             >
               {userProfile?.displayName || 'Utilizator'}
             </motion.div>
-            
+
             <motion.div
               className="text-xl md:text-2xl text-primary"
               variants={roleVariants}

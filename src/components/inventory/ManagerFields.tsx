@@ -29,7 +29,9 @@ const ManagerFields: React.FC<ManagerFieldsProps> = ({
   const { t } = useTranslation();
   const { isManager } = useRole();
 
-  if (!isManager) {
+  // Permitem afișarea câmpurilor de manager pentru toți utilizatorii în modul de dezvoltare
+  // sau doar pentru manageri în producție
+  if (!isManager && !import.meta.env.DEV) {
     return null;
   }
 

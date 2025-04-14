@@ -237,7 +237,7 @@ export const supabaseService = {
 
         // În mediul de dezvoltare, permitem autentificarea cu orice email/parolă pentru testare
         // IMPORTANT: Acest cod nu va rula în producție pentru securitate
-        if (import.meta.env.DEV && process.env.NODE_ENV !== 'production') {
+        if (import.meta.env.DEV) {
           console.log('Development mode detected, using test credentials');
           // Verificăm dacă email-ul conține "test" sau "demo" pentru a permite autentificarea de test
           if (email.includes('test') || email.includes('demo') || email.includes('admin')) {
@@ -249,7 +249,8 @@ export const supabaseService = {
               email: email,
               user_metadata: {
                 name: 'Test User'
-              }
+              },
+              role: 'authenticated'
             };
 
             const testSession = {
@@ -258,16 +259,27 @@ export const supabaseService = {
               expires_at: Date.now() + 3600000, // Expiră în 1 oră
               user: {
                 id: testUser.id,
-                email: email
+                email: email,
+                role: 'authenticated',
+                app_metadata: {
+                  provider: 'email',
+                  providers: ['email']
+                },
+                user_metadata: {
+                  name: 'Test User'
+                },
+                aud: 'authenticated'
               }
             };
 
-            // Salvăm sesiunea în sessionStorage în loc de localStorage pentru securitate mai bună
-            // Sesiunea va fi disponibilă doar în tab-ul curent și va fi ștearsă la închiderea browser-ului
-            sessionStorage.setItem('supabase.auth.token', JSON.stringify({
+            // Salvăm sesiunea în sessionStorage și localStorage pentru compatibilitate
+            const tokenData = {
               currentSession: testSession,
               expiresAt: testSession.expires_at
-            }));
+            };
+
+            sessionStorage.setItem('supabase.auth.token', JSON.stringify(tokenData));
+            localStorage.setItem('supabase.auth.token', JSON.stringify(tokenData));
 
             return {
               data: {

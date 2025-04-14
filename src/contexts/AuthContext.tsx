@@ -64,9 +64,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     console.log("AuthContext: Checking for existing session...");
 
-    // Verificăm mai întâi dacă avem o sesiune în sessionStorage pentru securitate mai bună
-    // Folosim sessionStorage în loc de localStorage pentru a preveni atacurile XSS
-    const localSession = sessionStorage.getItem('supabase.auth.token');
+    // Verificăm mai întâi dacă avem o sesiune în localStorage sau sessionStorage
+    // În dezvoltare, verificăm ambele pentru compatibilitate
+    const localSession = localStorage.getItem('supabase.auth.token') || sessionStorage.getItem('supabase.auth.token');
     if (localSession && import.meta.env.DEV) { // Folosim doar în dezvoltare pentru securitate
       try {
         const parsedSession = JSON.parse(localSession);
@@ -184,6 +184,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const fetchUserProfile = async (userId: string) => {
     try {
+      // Verificăm dacă este un utilizator de test
+      if (userId.startsWith('test-user-id')) {
+        console.log('Using test user profile');
+        const defaultProfile = {
+          displayName: user?.email?.split('@')[0] || 'Test User',
+          email: user?.email || 'test@example.com',
+        };
+        setUserProfile(defaultProfile);
+        return;
+      }
+
       // Verificăm mai întâi dacă profilul este în cache
       const cacheKey = `user_profile_${userId}`;
       const cachedProfile = cacheService.get<{ displayName: string; email: string }>(cacheKey, { namespace: 'auth' });
@@ -208,6 +219,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           email: user?.email || '',
         };
         setUserProfile(defaultProfile);
+
+        // Salvăm profilul implicit în cache pentru a evita erori repetate
+        cacheService.set(cacheKey, defaultProfile, { namespace: 'auth', ttl: 5 * 60 * 1000 });
         return;
       }
 
@@ -228,12 +242,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.warn(
           `Profile not found for user ${userId}. It should have been created by the trigger.`,
         );
-        // Set a default profile or handle as needed
+        // Setăm un profil implicit în caz că nu există în baza de date
         const defaultProfile = {
           displayName: user?.email?.split('@')[0] || 'User',
           email: user?.email || '',
         };
         setUserProfile(defaultProfile);
+
+        // Salvăm profilul implicit în cache pentru a evita erori repetate
+        cacheService.set(cacheKey, defaultProfile, { namespace: 'auth', ttl: 5 * 60 * 1000 });
       }
     } catch (err) {
       console.error('Unexpected error fetching user profile:', err);
