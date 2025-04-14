@@ -172,14 +172,7 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuToggle }) => {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => {
-            addNotification({
-              type: "info",
-              title: "Ajutor",
-              message: "Secțiunea de ajutor va fi disponibilă în curând",
-              duration: 3000,
-            });
-          }}
+          onClick={() => navigate("/tutorial")}
           aria-label="Help"
         >
           <HelpCircle className="h-5 w-5" />

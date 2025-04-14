@@ -14,6 +14,7 @@ import ResourceForm from "@/components/resources/ResourceForm";
 import ResourceAllocations from "@/components/resources/ResourceAllocations";
 import useDataLoader from "@/hooks/useDataLoader";
 import { measurePerformance } from "@/lib/performance-optimizer";
+import supabaseService from "@/lib/supabase-service";
 
 type Resource = Database["public"]["Tables"]["resources"]["Row"];
 
@@ -40,7 +41,8 @@ const ResourcesPage: React.FC = () => {
     "*",
     { order: { column: "created_at", ascending: false } },
     "all_resources",
-    15 * 60 * 1000 // 15 minute cache
+    15 * 60 * 1000, // 15 minute cache
+    supabaseService // Folosim supabaseService pentru a evita eroarea "no api key found in request"
   );
 
   // Actualizăm starea resurselor când se schimbă datele

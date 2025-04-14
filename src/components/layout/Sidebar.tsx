@@ -150,11 +150,7 @@ const Sidebar = () => {
           icon: <FolderArchive size={20} />,
           href: "/resources",
         },
-        {
-          title: t("sidebar.tasks"),
-          icon: <CheckCircle2 size={20} />,
-          href: "/tasks",
-        },
+        // Eliminat elementul sidebar.task care nu ar trebui să existe
       ],
     },
   ], [t]);
@@ -403,7 +399,7 @@ const Sidebar = () => {
             </TooltipProvider>
           )}
 
-          {/* Link către pagina de tutorial */}
+          {/* Link către pagina de tutorial și ajutor */}
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -416,12 +412,12 @@ const Sidebar = () => {
                   onClick={() => navigate("/tutorial")}
                 >
                   <BookOpen size={20} />
-                  {!collapsed && <span className="ml-3">{t("sidebar.tutorial", "Tutorials & Help")}</span>}
+                  {!collapsed && <span className="ml-3">{t("sidebar.tutorial", "Tutoriale & Ajutor")}</span>}
                 </Button>
               </TooltipTrigger>
               {collapsed && (
                 <TooltipContent side="right">
-                  <p>{t("sidebar.tutorial", "Tutorials & Help")}</p>
+                  <p>{t("sidebar.tutorial", "Tutoriale & Ajutor")}</p>
                 </TooltipContent>
               )}
             </Tooltip>
@@ -445,36 +441,6 @@ const Sidebar = () => {
               {collapsed && (
                 <TooltipContent side="right">
                   <p>{t("sidebar.settings")}</p>
-                </TooltipContent>
-              )}
-            </Tooltip>
-          </TooltipProvider>
-
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className={cn(
-                    "w-full text-slate-400 hover:text-white hover:bg-slate-800 justify-start",
-                    collapsed && "justify-center"
-                  )}
-                  onClick={() => {
-                    addNotification({
-                      type: "info",
-                      title: "Ajutor",
-                      message: "Secțiunea de ajutor va fi disponibilă în curând",
-                      duration: 3000,
-                    });
-                  }}
-                >
-                  <HelpCircle size={20} />
-                  {!collapsed && <span className="ml-3">{t("sidebar.help")}</span>}
-                </Button>
-              </TooltipTrigger>
-              {collapsed && (
-                <TooltipContent side="right">
-                  <p>{t("sidebar.help")}</p>
                 </TooltipContent>
               )}
             </Tooltip>
