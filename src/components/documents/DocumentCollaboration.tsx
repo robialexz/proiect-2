@@ -595,3 +595,12 @@ const DocumentCollaboration: React.FC<DocumentCollaborationProps> = ({
         description: error.message,
       });
     }
+  };
+
+  return (
+    <div className="container mx-auto py-6">
+      <h1>Document Collaboration</h1>
+      {/* Restul componentei */}
+    </div>
+  );
+}
