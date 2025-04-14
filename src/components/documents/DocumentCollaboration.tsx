@@ -587,3 +587,11 @@ const DocumentCollaboration: React.FC<DocumentCollaborationProps> = ({
 
       // Update local state
       setFolders(folders.filter(folder => folder.id !== folderId));
+    } catch (error: any) {
+      console.error("Error deleting folder:", error);
+      toast({
+        variant: "destructive",
+        title: t("documents.folderDeleteError", "Error Deleting Folder"),
+        description: error.message,
+      });
+    }

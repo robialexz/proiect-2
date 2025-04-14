@@ -1,6 +1,7 @@
 /**
  * Performance monitoring utilities to help identify and fix performance issues
  */
+import React from 'react';
 
 // Track render times for components
 const renderTimes: Record<string, number[]> = {};
@@ -15,7 +16,7 @@ export function trackRenderTime(componentName: string, renderTime: number): void
     renderTimes[componentName] = [];
   }
   renderTimes[componentName].push(renderTime);
-  
+
   // Keep only the last 10 render times
   if (renderTimes[componentName].length > 10) {
     renderTimes[componentName].shift();
@@ -31,7 +32,7 @@ export function getAverageRenderTime(componentName: string): number {
   if (!renderTimes[componentName] || renderTimes[componentName].length === 0) {
     return 0;
   }
-  
+
   const sum = renderTimes[componentName].reduce((acc, time) => acc + time, 0);
   return sum / renderTimes[componentName].length;
 }
@@ -42,11 +43,11 @@ export function getAverageRenderTime(componentName: string): number {
  */
 export function getAllRenderTimes(): Record<string, number> {
   const result: Record<string, number> = {};
-  
+
   for (const componentName in renderTimes) {
     result[componentName] = getAverageRenderTime(componentName);
   }
-  
+
   return result;
 }
 
@@ -67,13 +68,13 @@ export function resetRenderTimes(): void {
 export function usePerformanceMonitor(componentName: string): void {
   if (process.env.NODE_ENV === 'development') {
     const startTime = performance.now();
-    
+
     // Use React's useEffect hook to measure render time
     React.useEffect(() => {
       const endTime = performance.now();
       const renderTime = endTime - startTime;
       trackRenderTime(componentName, renderTime);
-      
+
       // Log slow renders (over 50ms)
       if (renderTime > 50) {
         console.warn(`Slow render detected in ${componentName}: ${renderTime.toFixed(2)}ms`);
@@ -95,25 +96,25 @@ export function withPerformanceMonitoring<P extends object>(
   if (process.env.NODE_ENV !== 'development') {
     return Component as React.FC<P>;
   }
-  
+
   const MonitoredComponent: React.FC<P> = (props) => {
     const startTime = performance.now();
-    
+
     React.useEffect(() => {
       const endTime = performance.now();
       const renderTime = endTime - startTime;
       trackRenderTime(componentName, renderTime);
-      
+
       // Log slow renders (over 50ms)
       if (renderTime > 50) {
         console.warn(`Slow render detected in ${componentName}: ${renderTime.toFixed(2)}ms`);
       }
     });
-    
+
     return <Component {...props} />;
   };
-  
+
   MonitoredComponent.displayName = `Monitored(${componentName})`;
-  
+
   return MonitoredComponent;
 }
