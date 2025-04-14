@@ -5,7 +5,7 @@ import connectionService from './connection-service';
 import { errorHandler } from './error-handler';
 import { inputValidation } from './input-validation';
 import { dataLoader } from './data-loader';
-import { SupabaseTables, SupabaseRpcFunctions, GenericStringError, SupabaseTableData, SupabaseRpcParams } from '../types/supabase-tables';
+import { SupabaseTables, SupabaseRpcFunctions } from '../types/supabase-tables';
 
 // Flag pentru a activa autentificarea de rezervă - dezactivat în producție pentru securitate
 const USE_FALLBACK_AUTH = import.meta.env.DEV ? true : false; // Activat doar în dezvoltare
@@ -87,10 +87,10 @@ const handleResponse = <T>(data: T | null, error: PostgrestError | null): Supaba
 };
 
 // Funcție pentru a gestiona erorile în promisiuni
-const handlePromise = async <T>(promise: Promise<{ data: T | null; error: PostgrestError | null }>): Promise<SupabaseResponse<T>> => {
+const handlePromise = async <T>(promise: any): Promise<SupabaseResponse<T>> => {
   try {
     const { data, error } = await promise;
-    return handleResponse(data, error);
+    return handleResponse<T>(data as T | null, error);
   } catch (error) {
     return {
       data: null,
@@ -142,7 +142,8 @@ export const supabaseService = {
         // Continuăm oricum, poate avem acces public la date
       }
 
-      let query = supabase.from(table).select(columns);
+      // Folosim cast pentru a evita erorile de tipizare
+      let query = supabase.from(table as any).select(columns);
 
       // Aplicăm filtrele cu validare
       if (options?.filters) {
@@ -216,7 +217,8 @@ export const supabaseService = {
                 if (!retryResult.error) {
                   return {
                     status: 'success',
-                    data: retryResult.data
+                    data: retryResult.data as T,
+                    error: null
                   };
                 }
               }
@@ -246,7 +248,7 @@ export const supabaseService = {
           const testData = dataLoader.generateTestData(table, 10);
           return {
             status: 'success',
-            data: options?.single ? testData[0] : testData,
+            data: (options?.single ? testData[0] : testData) as T,
             error: null
           };
         }
@@ -267,7 +269,7 @@ export const supabaseService = {
         const testData = dataLoader.generateTestData(table, 10);
         return {
           status: 'success',
-          data: options?.single ? testData[0] : testData,
+          data: (options?.single ? testData[0] : testData) as T,
           error: null
         };
       }
@@ -282,7 +284,7 @@ export const supabaseService = {
 
   async insert<T>(table: SupabaseTables | string, data: Partial<T> | Partial<T>[]): Promise<SupabaseResponse<T>> {
     try {
-      return handlePromise<T>(supabase.from(table).insert(data).select());
+      return handlePromise<T>(supabase.from(table as any).insert(data as any).select());
     } catch (error) {
       return {
         data: null,
@@ -294,7 +296,7 @@ export const supabaseService = {
 
   async update<T>(table: SupabaseTables | string, data: Partial<T>, filters: Record<string, any>): Promise<SupabaseResponse<T>> {
     try {
-      let query = supabase.from(table).update(data);
+      let query = supabase.from(table as any).update(data as any);
 
       // Aplicăm filtrele
       Object.entries(filters).forEach(([key, value]) => {
@@ -315,7 +317,7 @@ export const supabaseService = {
 
   async delete<T>(table: SupabaseTables | string, filters: Record<string, any>): Promise<SupabaseResponse<T>> {
     try {
-      let query = supabase.from(table).delete();
+      let query = supabase.from(table as any).delete();
 
       // Aplicăm filtrele
       Object.entries(filters).forEach(([key, value]) => {
@@ -744,7 +746,7 @@ export const supabaseService = {
   // Funcții pentru RPC (Remote Procedure Call)
   async rpc<T>(functionName: SupabaseRpcFunctions | string, params?: Record<string, any>): Promise<SupabaseResponse<T>> {
     try {
-      return handlePromise<T>(supabase.rpc(functionName, params));
+      return handlePromise<T>(supabase.rpc(functionName as any, params));
     } catch (error) {
       return {
         data: null,
