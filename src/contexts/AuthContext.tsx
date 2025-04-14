@@ -45,22 +45,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log("AuthContext: Received force-session-refresh event");
       if (event.detail?.session) {
         console.log("AuthContext: Restoring session from event");
-        setSession(event.detail.session);
-        setUser(event.detail.session.user);
-        setLoading(false);
 
-        // Încercăm să încărcăm profilul utilizatorului
-        if (event.detail.session.user?.id) {
-          fetchUserProfile(event.detail.session.user.id).catch(error => {
-            console.error("Error fetching user profile from event:", error);
-            // Setăm un profil implicit în caz de eroare
-            const defaultProfile = {
-              displayName: event.detail.session.user.email?.split("@")[0] || "User",
-              email: event.detail.session.user.email || "",
-            };
-            setUserProfile(defaultProfile);
-          });
-        }
+        // Folosim un setTimeout pentru a ne asigura că actualizările de stare nu se întâmplă în timpul render-ului
+        setTimeout(() => {
+          setSession(event.detail.session);
+          setUser(event.detail.session.user);
+          setLoading(false);
+
+          // Încercăm să încărcăm profilul utilizatorului
+          if (event.detail.session.user?.id) {
+            fetchUserProfile(event.detail.session.user.id).catch(error => {
+              console.error("Error fetching user profile from event:", error);
+              // Setăm un profil implicit în caz de eroare
+              const defaultProfile = {
+                displayName: event.detail.session.user.email?.split("@")[0] || "User",
+                email: event.detail.session.user.email || "",
+              };
+              setUserProfile(defaultProfile);
+            });
+          }
+
+          // Notificăm AppLayout că sesiunea a fost restaurată cu succes
+          window.dispatchEvent(new CustomEvent('session-restored', {
+            detail: { success: true }
+          }));
+        }, 0);
       }
     };
 
@@ -347,7 +356,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error(response.error.message);
       } else if (response.data?.session) {
         console.log("AuthContext: Sign in successful, session established");
-        
+
         // Salvăm sesiunea în localStorage și sessionStorage pentru a asigura persistența
         // IMPORTANT: Facem acest lucru ÎNAINTE de a actualiza starea React
         try {
@@ -355,21 +364,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             currentSession: response.data.session,
             expiresAt: Date.now() + 3600 * 1000 // 1 oră valabilitate
           };
-          
+
           // Folosim direct localStorage și sessionStorage pentru a evita probleme cu storage-ul personalizat
           window.localStorage.setItem('supabase.auth.token', JSON.stringify(sessionData));
           window.sessionStorage.setItem('supabase.auth.token', JSON.stringify(sessionData));
-          
+
           console.log("Session saved to storage after login");
-          
+
           // Emitem un eveniment pentru a forța reîmprospătarea sesiunii în alte componente
-          window.dispatchEvent(new CustomEvent('force-session-refresh', { 
-            detail: { session: response.data.session } 
+          window.dispatchEvent(new CustomEvent('force-session-refresh', {
+            detail: { session: response.data.session }
           }));
         } catch (storageError) {
           console.error("Error saving session to storage after login:", storageError);
         }
-        
+
         // Apoi actualizăm starea React
         setSession(response.data.session);
         setUser(response.data.user);

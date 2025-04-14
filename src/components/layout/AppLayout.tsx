@@ -100,46 +100,89 @@ const AppLayout: React.FC = () => {
     );
   }
 
-  if (!user) {
-    console.log("AppLayout: No authenticated user found, checking local storage");
+  // Folosim un efect pentru a verifica sesiunea din localStorage și a o restaura
+  const [isRestoringSession, setIsRestoringSession] = useState(false);
 
-    // Încercăm să obținem sesiunea din localStorage sau sessionStorage
-    try {
-      const localSession = localStorage.getItem('supabase.auth.token') || sessionStorage.getItem('supabase.auth.token');
-      if (localSession) {
-        const parsedSession = JSON.parse(localSession);
-        if (parsedSession?.currentSession && parsedSession.expiresAt > Date.now()) {
-          console.log("AppLayout: Found valid session in storage, attempting to restore user");
+  // Ascultăm evenimentul de confirmare a restaurării sesiunii
+  useEffect(() => {
+    const handleSessionRestored = () => {
+      console.log("AppLayout: Received session-restored event");
+      // Resetam flag-ul după ce sesiunea a fost restaurată
+      setIsRestoringSession(false);
+    };
 
-          // Încercăm să restaurăm utilizatorul din sesiune
-          if (parsedSession.currentSession.user) {
-            // Apelăm direct funcția din AuthContext pentru a restaura sesiunea
-            // Acest lucru va forța o reîmprospătare a sesiunii în AuthContext
-            window.dispatchEvent(new CustomEvent('force-session-refresh', {
-              detail: { session: parsedSession.currentSession }
-            }));
+    // Adaugăm listener pentru eveniment
+    window.addEventListener('session-restored', handleSessionRestored);
 
-            // Afișăm un indicator de încărcare în timp ce se restaurează sesiunea
-            return (
-              <div className="flex items-center justify-center h-screen bg-slate-900 text-white">
-                <div className="flex flex-col items-center">
-                  <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-                  <p className="mt-4 text-slate-400">Se restaurează sesiunea...</p>
-                </div>
-              </div>
-            );
+    // Curățăm listener-ul la demontare
+    return () => {
+      window.removeEventListener('session-restored', handleSessionRestored);
+    };
+  }, []);
+
+  // Verificăm și restaurăm sesiunea din localStorage
+  useEffect(() => {
+    // Dacă nu avem utilizator, încercăm să restaurăm sesiunea din localStorage
+    if (!user && !isRestoringSession) {
+      console.log("AppLayout: No authenticated user found, checking local storage");
+
+      try {
+        const localSession = localStorage.getItem('supabase.auth.token') || sessionStorage.getItem('supabase.auth.token');
+        if (localSession) {
+          const parsedSession = JSON.parse(localSession);
+          if (parsedSession?.currentSession && parsedSession.expiresAt > Date.now()) {
+            console.log("AppLayout: Found valid session in storage, attempting to restore user");
+
+            // Încercăm să restaurăm utilizatorul din sesiune
+            if (parsedSession.currentSession.user) {
+              // Setăm flag-ul pentru a indica că suntem în proces de restaurare
+              setIsRestoringSession(true);
+
+              // Folosim setTimeout pentru a ne asigura că dispatchEvent nu este apelat în timpul render-ului
+              setTimeout(() => {
+                // Apelăm direct funcția din AuthContext pentru a restaura sesiunea
+                window.dispatchEvent(new CustomEvent('force-session-refresh', {
+                  detail: { session: parsedSession.currentSession }
+                }));
+              }, 0);
+
+              // Adaugăm un timeout de siguranță pentru a reseta flag-ul în caz că nu primim evenimentul de confirmare
+              setTimeout(() => {
+                if (isRestoringSession) {
+                  console.log("AppLayout: Session restoration timeout, resetting flag");
+                  setIsRestoringSession(false);
+                }
+              }, 5000); // 5 secunde timeout
+
+              return;
+            }
+          } else {
+            console.log("AppLayout: Session expired or invalid");
+            // Ștergem sesiunea expirată
+            localStorage.removeItem('supabase.auth.token');
+            sessionStorage.removeItem('supabase.auth.token');
           }
-        } else {
-          console.log("AppLayout: Session expired or invalid");
-          // Ștergem sesiunea expirată
-          localStorage.removeItem('supabase.auth.token');
-          sessionStorage.removeItem('supabase.auth.token');
         }
+      } catch (storageError) {
+        console.error("Error checking session in storage:", storageError);
       }
-    } catch (storageError) {
-      console.error("Error checking session in storage:", storageError);
     }
+  }, [user, isRestoringSession]);
 
+  // Dacă suntem în proces de restaurare a sesiunii, afișăm un indicator de încărcare
+  if (isRestoringSession) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-slate-900 text-white">
+        <div className="flex flex-col items-center">
+          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+          <p className="mt-4 text-slate-400">Se restaurează sesiunea...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Dacă nu avem utilizator și nu suntem în proces de restaurare, redirectăm către login
+  if (!user) {
     console.log("AppLayout: No valid session found, redirecting to login");
     return <Navigate to="/login" replace />;
   }
