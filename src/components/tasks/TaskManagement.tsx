@@ -72,7 +72,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
   const { t } = useTranslation();
   const { toast } = useToast();
   const { user } = useAuth();
-  
+
   const [tasks, setTasks] = useState<Task[]>([]);
   const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
@@ -80,9 +80,9 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
   const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
   const [isEditTaskOpen, setIsEditTaskOpen] = useState(false);
   const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
-  
+
   // New task form state
-  const [newTask, setNewTask] = useState<Omit<Task, 'id' | 'created_at'>>({{
+  const [newTask, setNewTask] = useState<Omit<Task, 'id' | 'created_at'>>({
     title: "",
     description: "",
     status: "todo",
@@ -91,8 +91,8 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
     assigned_to: null,
     project_id: projectId,
     tags: [],
-  }});
-  
+  });
+
   // Filters
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
@@ -192,8 +192,8 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
-        task => 
-          task.title.toLowerCase().includes(query) || 
+        task =>
+          task.title.toLowerCase().includes(query) ||
           (task.description && task.description.toLowerCase().includes(query)) ||
           (task.tags && task.tags.some(tag => tag.toLowerCase().includes(query)))
       );
@@ -230,7 +230,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
       });
 
       // Reset form and close dialog
-      setNewTask({{
+      setNewTask({
         title: "",
         description: "",
         status: "todo",
@@ -239,9 +239,9 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
         assigned_to: null,
         project_id: projectId,
         tags: [],
-      }});
+      });
       setIsAddTaskOpen(false);
-      
+
       // Reload tasks
       loadTasks();
     } catch (error: any) {
@@ -256,7 +256,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
 
   const updateTask = async () => {
     if (!taskToEdit) return;
-    
+
     if (!taskToEdit.title.trim()) {
       toast({
         variant: "destructive",
@@ -269,7 +269,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
     try {
       const { data, error } = await supabase
         .from("tasks")
-        .update({{
+        .update({
           title: taskToEdit.title,
           description: taskToEdit.description,
           status: taskToEdit.status,
@@ -277,7 +277,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
           due_date: taskToEdit.due_date,
           assigned_to: taskToEdit.assigned_to,
           tags: taskToEdit.tags,
-        }})
+        })
         .eq("id", taskToEdit.id)
         .select();
 
@@ -291,7 +291,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
       // Close dialog and reset state
       setIsEditTaskOpen(false);
       setTaskToEdit(null);
-      
+
       // Reload tasks
       loadTasks();
     } catch (error: any) {
@@ -340,7 +340,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
       if (error) throw error;
 
       // Update local state
-      setTasks(tasks.map(task => 
+      setTasks(tasks.map(task =>
         task.id === taskId ? { ...task, status: newStatus } : task
       ));
 
@@ -413,7 +413,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
         <h2 className="text-2xl font-bold">
           {t("tasks.title", "Task Management")}
         </h2>
-        
+
         <div className="flex flex-wrap gap-2">
           <Dialog open={isAddTaskOpen} onOpenChange={setIsAddTaskOpen}>
             <DialogTrigger asChild>
@@ -429,7 +429,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
                   {t("tasks.newTaskDesc", "Create a new task with details below.")}
                 </DialogDescription>
               </DialogHeader>
-              
+
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
                   <Label htmlFor="title">{t("tasks.form.title", "Title")}*</Label>
@@ -441,7 +441,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
                     className="bg-slate-700 border-slate-600"
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="description">{t("tasks.form.description", "Description")}</Label>
                   <Textarea
@@ -452,7 +452,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
                     className="bg-slate-700 border-slate-600 min-h-[100px]"
                   />
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="status">{t("tasks.form.status", "Status")}</Label>
@@ -468,7 +468,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
                       <option value="blocked">{t("tasks.status.blocked", "Blocked")}</option>
                     </select>
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="priority">{t("tasks.form.priority", "Priority")}</Label>
                     <select
@@ -484,7 +484,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
                     </select>
                   </div>
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="due_date">{t("tasks.form.dueDate", "Due Date")}</Label>
@@ -496,7 +496,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
                       className="bg-slate-700 border-slate-600"
                     />
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="assigned_to">{t("tasks.form.assignedTo", "Assigned To")}</Label>
                     <select
@@ -514,7 +514,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
                     </select>
                   </div>
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="tags">{t("tasks.form.tags", "Tags (comma separated)")}</Label>
                   <Input
@@ -529,7 +529,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
                   />
                 </div>
               </div>
-              
+
               <DialogFooter>
                 <Button variant="outline" onClick={() => setIsAddTaskOpen(false)}>
                   {t("common.cancel", "Cancel")}
@@ -540,7 +540,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
               </DialogFooter>
             </DialogContent>
           </Dialog>
-          
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline">
@@ -564,7 +564,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
                     <option value="blocked">{t("tasks.status.blocked", "Blocked")}</option>
                   </select>
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label>{t("tasks.filters.priority", "Priority")}</Label>
                   <select
@@ -579,7 +579,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
                     <option value="urgent">{t("tasks.priority.urgent", "Urgent")}</option>
                   </select>
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label>{t("tasks.filters.assignee", "Assignee")}</Label>
                   <select
@@ -597,10 +597,10 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
                     ))}
                   </select>
                 </div>
-                
-                <Button 
-                  variant="outline" 
-                  className="w-full" 
+
+                <Button
+                  variant="outline"
+                  className="w-full"
                   onClick={() => {
                     setStatusFilter("all");
                     setPriorityFilter("all");
@@ -613,7 +613,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
               </div>
             </DropdownMenuContent>
           </DropdownMenu>
-          
+
           <Input
             placeholder={t("tasks.search", "Search tasks...")}
             value={searchQuery}
@@ -622,7 +622,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
           />
         </div>
       </div>
-      
+
       {/* Task list */}
       {loading ? (
         <div className="flex justify-center items-center h-64">
@@ -638,9 +638,9 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
             }
           </p>
           {(searchQuery || statusFilter !== "all" || priorityFilter !== "all" || assigneeFilter !== "all") && (
-            <Button 
-              variant="outline" 
-              className="mt-4" 
+            <Button
+              variant="outline"
+              className="mt-4"
               onClick={() => {
                 setStatusFilter("all");
                 setPriorityFilter("all");
@@ -665,9 +665,9 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
                 <CardContent className="p-4">
                   <div className="flex justify-between items-start">
                     <div className="flex items-start gap-3 flex-1">
-                      <button 
+                      <button
                         onClick={() => updateTaskStatus(
-                          task.id, 
+                          task.id,
                           task.status === "completed" ? "todo" : "completed"
                         )}
                         className={`mt-1 flex-shrink-0 h-5 w-5 rounded-full border ${task.status === "completed" ? "bg-green-500 border-green-600" : "border-slate-500"} flex items-center justify-center hover:border-primary transition-colors`}
@@ -676,7 +676,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
                           <CheckCircle2 className="h-4 w-4 text-white" />
                         )}
                       </button>
-                      
+
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <h3 className={`font-medium ${task.status === "completed" ? "line-through text-slate-400" : ""}`}>
@@ -686,13 +686,13 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
                             {t(`tasks.priority.${task.priority}`, task.priority)}
                           </span>
                         </div>
-                        
+
                         {task.description && (
                           <p className="text-sm text-slate-400 mb-3">
                             {task.description}
                           </p>
                         )}
-                        
+
                         <div className="flex flex-wrap items-center gap-3 text-xs text-slate-400">
                           <div className="flex items-center">
                             {getStatusIcon(task.status)}
@@ -700,7 +700,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
                               {t(`tasks.status.${task.status}`, task.status)}
                             </span>
                           </div>
-                          
+
                           {task.due_date && (
                             <div className={`flex items-center ${isOverdue(task) ? "text-red-400" : ""}`}>
                               <Calendar className="h-4 w-4 mr-1" />
@@ -712,14 +712,14 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
                               )}
                             </div>
                           )}
-                          
+
                           {task.assigned_to && (
                             <div className="flex items-center">
                               <User className="h-4 w-4 mr-1" />
                               {task.assigned_to_name || t("tasks.assignedUser", "Assigned")}
                             </div>
                           )}
-                          
+
                           {task.tags && task.tags.length > 0 && (
                             <div className="flex items-center">
                               <Tag className="h-4 w-4 mr-1" />
@@ -729,7 +729,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
                         </div>
                       </div>
                     </div>
-                    
+
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -737,16 +737,16 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="bg-slate-800 border-slate-700 text-white">
-                        <DropdownMenuItem 
+                        <DropdownMenuItem
                           className="flex items-center cursor-pointer hover:bg-slate-700"
                           onClick={() => handleEditTask(task)}
                         >
                           <Edit className="h-4 w-4 mr-2" />
                           {t("tasks.actions.edit", "Edit")}
                         </DropdownMenuItem>
-                        
+
                         {task.status !== "completed" && (
-                          <DropdownMenuItem 
+                          <DropdownMenuItem
                             className="flex items-center cursor-pointer hover:bg-slate-700"
                             onClick={() => updateTaskStatus(task.id, "completed")}
                           >
@@ -754,9 +754,9 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
                             {t("tasks.actions.markComplete", "Mark Complete")}
                           </DropdownMenuItem>
                         )}
-                        
+
                         {task.status === "completed" && (
-                          <DropdownMenuItem 
+                          <DropdownMenuItem
                             className="flex items-center cursor-pointer hover:bg-slate-700"
                             onClick={() => updateTaskStatus(task.id, "todo")}
                           >
@@ -764,8 +764,8 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
                             {t("tasks.actions.markIncomplete", "Mark Incomplete")}
                           </DropdownMenuItem>
                         )}
-                        
-                        <DropdownMenuItem 
+
+                        <DropdownMenuItem
                           className="flex items-center cursor-pointer hover:bg-red-900/20 text-red-400"
                           onClick={() => deleteTask(task.id)}
                         >
@@ -781,7 +781,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
           ))}
         </div>
       )}
-      
+
       {/* Edit Task Dialog */}
       <Dialog open={isEditTaskOpen} onOpenChange={setIsEditTaskOpen}>
         <DialogContent className="bg-slate-800 border-slate-700 text-white max-w-md">
@@ -791,7 +791,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
               {t("tasks.editTaskDesc", "Update task details below.")}
             </DialogDescription>
           </DialogHeader>
-          
+
           {taskToEdit && (
             <div className="space-y-4 py-4">
               <div className="space-y-2">
@@ -804,7 +804,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
                   className="bg-slate-700 border-slate-600"
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="edit-description">{t("tasks.form.description", "Description")}</Label>
                 <Textarea
@@ -815,7 +815,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
                   className="bg-slate-700 border-slate-600 min-h-[100px]"
                 />
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="edit-status">{t("tasks.form.status", "Status")}</Label>
@@ -831,7 +831,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
                     <option value="blocked">{t("tasks.status.blocked", "Blocked")}</option>
                   </select>
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="edit-priority">{t("tasks.form.priority", "Priority")}</Label>
                   <select
@@ -847,7 +847,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
                   </select>
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="edit-due-date">{t("tasks.form.dueDate", "Due Date")}</Label>
@@ -859,7 +859,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
                     className="bg-slate-700 border-slate-600"
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="edit-assigned-to">{t("tasks.form.assignedTo", "Assigned To")}</Label>
                   <select
@@ -877,7 +877,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
                   </select>
                 </div>
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="edit-tags">{t("tasks.form.tags", "Tags (comma separated)")}</Label>
                 <Input
@@ -893,7 +893,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
               </div>
             </div>
           )}
-          
+
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditTaskOpen(false)}>
               {t("common.cancel", "Cancel")}

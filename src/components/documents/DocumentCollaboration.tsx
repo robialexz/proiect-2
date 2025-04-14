@@ -101,28 +101,28 @@ const DocumentCollaboration: React.FC<DocumentCollaborationProps> = ({
   const { t } = useTranslation();
   const { toast } = useToast();
   const { user } = useAuth();
-  
+
   const [documents, setDocuments] = useState<Document[]>([]);
   const [folders, setFolders] = useState<Folder[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [filteredDocuments, setFilteredDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
-  
+
   const [currentFolder, setCurrentFolder] = useState<string | null>(null);
   const [breadcrumbs, setBreadcrumbs] = useState<{id: string | null, name: string}[]>([]);
-  
+
   const [isAddDocumentOpen, setIsAddDocumentOpen] = useState(false);
   const [isAddFolderOpen, setIsAddFolderOpen] = useState(false);
   const [isViewDocumentOpen, setIsViewDocumentOpen] = useState(false);
   const [isEditDocumentOpen, setIsEditDocumentOpen] = useState(false);
   const [isShareDocumentOpen, setIsShareDocumentOpen] = useState(false);
-  
+
   const [documentToView, setDocumentToView] = useState<Document | null>(null);
   const [documentToEdit, setDocumentToEdit] = useState<Document | null>(null);
   const [documentToShare, setDocumentToShare] = useState<Document | null>(null);
   const [documentComments, setDocumentComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
-  
+
   // New document form state
   const [newDocument, setNewDocument] = useState({
     title: "",
@@ -131,20 +131,20 @@ const DocumentCollaboration: React.FC<DocumentCollaborationProps> = ({
     tags: [] as string[],
     status: "draft" as const,
   });
-  
+
   // New folder form state
   const [newFolder, setNewFolder] = useState({
     name: "",
   });
-  
+
   // File upload state
   const [fileToUpload, setFileToUpload] = useState<File | null>(null);
-  
+
   // Filters
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("updated_at");
-  
+
   // Load documents, folders and users when component mounts or projectId/currentFolder changes
   useEffect(() => {
     loadDocuments();
@@ -170,7 +170,7 @@ const DocumentCollaboration: React.FC<DocumentCollaborationProps> = ({
       if (projectId) {
         query = query.eq("project_id", projectId);
       }
-      
+
       // Filter by current folder
       if (currentFolder) {
         query = query.eq("folder_id", currentFolder);
@@ -213,7 +213,7 @@ const DocumentCollaboration: React.FC<DocumentCollaborationProps> = ({
       if (projectId) {
         query = query.eq("project_id", projectId);
       }
-      
+
       // Filter by current folder
       if (currentFolder) {
         query = query.eq("parent_id", currentFolder);
@@ -274,7 +274,7 @@ const DocumentCollaboration: React.FC<DocumentCollaborationProps> = ({
 
   const updateBreadcrumbs = async () => {
     const breadcrumbsArray = [{ id: null, name: t("documents.root", "Root") }];
-    
+
     if (currentFolder) {
       try {
         // Get the current folder
@@ -289,7 +289,7 @@ const DocumentCollaboration: React.FC<DocumentCollaborationProps> = ({
         if (folderData) {
           // Add current folder to breadcrumbs
           breadcrumbsArray.push({ id: folderData.id, name: folderData.name });
-          
+
           // If there's a parent folder, recursively add parents
           let parentId = folderData.parent_id;
           while (parentId) {
@@ -313,7 +313,7 @@ const DocumentCollaboration: React.FC<DocumentCollaborationProps> = ({
         console.error("Error building breadcrumbs:", error);
       }
     }
-    
+
     setBreadcrumbs(breadcrumbsArray);
   };
 
@@ -324,8 +324,8 @@ const DocumentCollaboration: React.FC<DocumentCollaborationProps> = ({
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
-        doc => 
-          doc.title.toLowerCase().includes(query) || 
+        doc =>
+          doc.title.toLowerCase().includes(query) ||
           (doc.content && doc.content.toLowerCase().includes(query)) ||
           (doc.tags && doc.tags.some(tag => tag.toLowerCase().includes(query)))
       );
@@ -353,29 +353,29 @@ const DocumentCollaboration: React.FC<DocumentCollaborationProps> = ({
       let fileUrl = null;
       let fileType = null;
       let fileSize = null;
-      
+
       // If there's a file to upload, upload it first
       if (fileToUpload) {
         const fileExt = fileToUpload.name.split('.').pop();
         const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
         const filePath = `documents/${fileName}`;
-        
+
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('documents')
           .upload(filePath, fileToUpload);
-          
+
         if (uploadError) throw uploadError;
-        
+
         // Get the public URL
         const { data: urlData } = supabase.storage
           .from('documents')
           .getPublicUrl(filePath);
-          
+
         fileUrl = urlData.publicUrl;
         fileType = fileToUpload.type;
         fileSize = fileToUpload.size;
       }
-      
+
       const { data, error } = await supabase
         .from("documents")
         .insert([{
@@ -411,7 +411,7 @@ const DocumentCollaboration: React.FC<DocumentCollaborationProps> = ({
       });
       setFileToUpload(null);
       setIsAddDocumentOpen(false);
-      
+
       // Reload documents
       loadDocuments();
     } catch (error: any) {
@@ -455,7 +455,7 @@ const DocumentCollaboration: React.FC<DocumentCollaborationProps> = ({
       // Reset form and close dialog
       setNewFolder({ name: "" });
       setIsAddFolderOpen(false);
-      
+
       // Reload folders
       loadFolders();
     } catch (error: any) {
@@ -470,7 +470,7 @@ const DocumentCollaboration: React.FC<DocumentCollaborationProps> = ({
 
   const updateDocument = async () => {
     if (!documentToEdit) return;
-    
+
     if (!documentToEdit.title.trim()) {
       toast({
         variant: "destructive",
@@ -483,7 +483,7 @@ const DocumentCollaboration: React.FC<DocumentCollaborationProps> = ({
     try {
       // Increment version number
       const newVersion = (documentToEdit.version || 0) + 1;
-      
+
       const { data, error } = await supabase
         .from("documents")
         .update({
@@ -508,7 +508,7 @@ const DocumentCollaboration: React.FC<DocumentCollaborationProps> = ({
       // Close dialog and reset state
       setIsEditDocumentOpen(false);
       setDocumentToEdit(null);
-      
+
       // Reload documents
       loadDocuments();
     } catch (error: any) {
@@ -554,16 +554,16 @@ const DocumentCollaboration: React.FC<DocumentCollaborationProps> = ({
         .from("documents")
         .select("id")
         .eq("folder_id", folderId);
-        
+
       if (docError) throw docError;
-      
+
       const { data: folderData, error: folderError } = await supabase
         .from("document_folders")
         .select("id")
         .eq("parent_id", folderId);
-        
+
       if (folderError) throw folderError;
-      
+
       if ((docData && docData.length > 0) || (folderData && folderData.length > 0)) {
         toast({
           variant: "destructive",
@@ -586,4 +586,4 @@ const DocumentCollaboration: React.FC<DocumentCollaborationProps> = ({
       });
 
       // Update local state
-      setFolders(folders.filter(folder => folder.i
+      setFolders(folders.filter(folder => folder.id !== folderId));
