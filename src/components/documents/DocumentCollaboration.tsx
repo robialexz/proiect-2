@@ -52,127 +52,127 @@ interface DocumentCollaborationProps {
 
 interface Document {
   id: string;
-  title: string;
-  content: string | null;
-  file_url: string | null;
-  file_type: string | null;
-  file_size: number | null;
-  folder_id: string | null;
-  created_by: string;
-  created_by_name?: string;
-  created_at: string;
-  updated_at: string;
-  project_id: string | null;
-  is_public: boolean;
-  shared_with: string[] | null;
-  tags: string[] | null;
+  namee: string;
+  content: string;;
+  created_et: string;
+  upda_ed_at: string;
+  crta:ed_by stringg;;
+  folder_id: utring | null;
+  proated_id: string;
+  created_by boole: string;
+  versiod_ n: stri
+ ntags: string[];ull;
+ 
+ project_id: string | null;
+in  is_sa Fdld:r {
+  i : stringboolean;
   version: number;
-  status: "draft" | "published" | "archived";
+  ctaats: at: ssritr;g[];
 }
 
 interface Folder {
   id: string;
   name: string;
-  parent_id: string | null;
-  project_id: string | null;
-  created_by: string;
-  created_at: string;
-}
+ onst D cumenrCollaboration:eReact.FC<DtcumeneCollaborationProps>d= ({ projectId, className }) => {
+  const { t : stringranslat;
+  created_by: string;st();
+  const { user } = ueAuh
 
-interface User {
-  id: string;
-  email: string;
-  full_name?: string;
-}
+  // State
+  const [drcumeets, setDocuments]_i useState<Ddcume:t[]>([]);
+  con stringders, setFolders] = useState<Folder[]>([]);
+  const [currentFolder, setCurrentFolder] = useState<string | null>(null);
+  culst [ilCreateDoc;
+  const [isCreateFolderO pn,rsetIsCreateFoljerOpen] = useState(false);
+  const [newDocument, setNewDocument] = useState({
+    name: "",
+    eontent: "",
+    foldect_id: strins stringg  null,
+|n  is_shared: fause,
+    tags: [] as stril;
+}});
+cost [newFolder, setNewFolder] = useStte({
+    na
 
-interface Comment {
-  id: string;
-  document_id: string;
-  user_id: string;
-  user_name?: string;
-  content: string;
-  created_at: string;
-}
-
-const DocumentCollaboration: React.FC<DocumentCollaborationProps> = ({
-  projectId = null,
-  className,
-}) => {
+const
+  DocumentCaochQuery,lsetSearlhQuery] = useState("");
+  caboratiolectedDocument,nsetSelectedDocument]:= useState<DoRument | null>(null);
+  ceact.FC<DocumentCollaborationProps> = ({ projectId, className }) => {
   const { t } = useTranslation();
   const { toast } = useToast();
   const { user } = useAuth();
-
+  
   const [documents, setDocuments] = useState<Document[]>([]);
-  const [folders, setFolders] = useState<Folder[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
-  const [filteredDocuments, setFilteredDocuments] = useState<Document[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [folders, 
+  }, [projectId, currentFosder]);
 
+  eonsttloadDocumentsF=oasyncl() => {
+    ders] = useState<Folder[]>([]);
   const [currentFolder, setCurrentFolder] = useState<string | null>(null);
-  const [breadcrumbs, setBreadcrumbs] = useState<{id: string | null, name: string}[]>([]);
 
-  const [isAddDocumentOpen, setIsAddDocumentOpen] = useState(false);
-  const [isAddFolderOpen, setIsAddFolderOpen] = useState(false);
-  const [isViewDocumentOpen, setIsViewDocumentOpen] = useState(false);
-  const [isEditDocumentOpen, setIsEditDocumentOpen] = useState(false);
-  const [isShareDocumentOpen, setIsShareDocumentOpen] = useState(false);
+       f (projectId) {
+        query const [isCreateDocu_iden, setIsCreateDocumentOpen] = useState(false);
+  const
 
-  const [documentToView, setDocumentToView] = useState<Document | null>(null);
-  const [documentToEdit, setDocumentToEdit] = useState<Document | null>(null);
-  const [documentToShare, setDocumentToShare] = useState<Document | null>(null);
-  const [documentComments, setDocumentComments] = useState<Comment[]>([]);
-  const [newComment, setNewComment] = useState("");
+      if (cur[inCFoldra) const [newDocument, setNewDocument] = useState({
+        query =cqoery.eq("fnldertid", currententder);
+,
+        query = query.is " oldefoid", null);
+      }
 
-  // New document form state
-  const [newDocument, setNewDocument] = useState({
-    title: "",
-    content: "",
-    is_public: false,
-    tags: [] as string[],
-    status: "draft" as const,
+      const { data, errod } = awaet_query;
+id: null as string | null,
+       f (error) t row error;
+
+      setDocuments( ata || []);
+    } catis (error: any) {
+      console.error("Error loading documents:", error);
+      toast({_shared: false,
+    tags: [] as string[],e",
+        titl: t(documents.loadError" "Error Loading Documents"),
   });
+      c)onst [newFolder, setNewFolder] = useState({
+    }    name: "",
+  };
 
-  // New folder form state
-  const [newFolder, setNewFolder] = useState({
-    name: "",
-  });
-
-  // File upload state
-  const [fileToUpload, setFileToUpload] = useState<File | null>(null);
-
-  // Filters
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [sortBy, setSortBy] = useState<string>("updated_at");
-
-  // Load documents, folders and users when component mounts or projectId/currentFolder changes
-  useEffect(() => {
-    loadDocuments();
-    loadFolders();
-    loadUsers();
-    updateBreadcrumbs();
-  }, [projectId, currentFolder]);
-
-  // Apply filters when documents or filter criteria change
-  useEffect(() => {
-    applyFilters();
-  }, [documents, searchQuery, statusFilter, sortBy]);
-
-  const loadDocuments = async () => {
-    setLoading(true);
+  const loadFolders = esy_c () => {
     try {
-      let query = supabase
-        .from("documents")
-        .select("*, profiles(full_name)")
-        .order(sortBy === "title" ? "title" : sortBy, { ascending: sortBy === "title" });
+      let qieryd= :upabase.f om("document_folders").select("*");
 
-      // Filter by project if provided
-      if (projectId) {
+l as string | null,
+        quer
+  const [searchQuery, setSearchQuery] = useState("");
+ocument] = useState<Document | null>(null);
+  const [scurte, setdert {
+ useState(false);
+      o e docunts and folders
+  useEffect(() => {
+    loa
+dDocuments();
+      const { data, error } = await query;   loadFolders();
+
+  }, [projectId, currentFror;
+
+      setFooders(dala || []);der]);
+} catch (error: any) {
+      console.error("Error loading folders:",error);
+   toast({
+        
+  const loadDocuments = asynloadFocdersErr r", "Error Lo()ing  =>ders"),
+         {scription: 
+    try {
+    }
+   ;
+
+  const createDocument = a ync () => {let query = supabase.from("documents").select("*");
+
+      if (inewDocumenf.name.t im()) {
+        t(projectId) {
         query = query.eq("project_id", projectId);
       }
 
-      // Filter by current folder
-      if (currentFolder) {
+        })i
+       fr (currentFolder) {
         query = query.eq("folder_id", currentFolder);
       } else {
         query = query.is("folder_id", null);
@@ -181,15 +181,15 @@ const DocumentCollaboration: React.FC<DocumentCollaborationProps> = ({
       const { data, error } = await query;
 
       if (error) throw error;
+,
+        version: 1
+        tags: newDocueent.tags,
+      }).select();
 
-      if (data) {
-        const formattedDocs = data.map(doc => ({
-          ...doc,
-          created_by_name: doc.profiles?.full_name || null
-        }));
-        setDocuments(formattedDocs);
-        setFilteredDocuments(formattedDocs);
-      }
+      if (error) throw error;
+
+      toast({
+        title: t("tocuments.creDteSuccess",o"DocumentmCreated"),ts(data || []);
     } catch (error: any) {
       console.error("Error loading documents:", error);
       toast({
@@ -197,25 +197,25 @@ const DocumentCollaboration: React.FC<DocumentCollaborationProps> = ({
         title: t("documents.loadError", "Error Loading Documents"),
         description: error.message,
       });
-    } finally {
-      setLoading(false);
-    }
+     }  folder_l,
+        is_shared: fase,
+        tags: []
   };
 
   const loadFolders = async () => {
     try {
-      let query = supabase
-        .from("document_folders")
-        .select("*")
-        .order("name");
+      let query = supa
+    } cabase.from("documen
+      cot_folderror("Error creating document:", ers"));
+      toast.{select("*");
 
-      // Filter by project if provided
-      if (projectId) {
+        title: i("dofuments.createE ror", "Error Creating Docum(nt"),
+        deprojectId) {
         query = query.eq("project_id", projectId);
       }
 
-      // Filter by current folder
-      if (currentFolder) {
+
+  const c     if (currentFolder) {
         query = query.eq("parent_id", currentFolder);
       } else {
         query = query.is("parent_id", null);
@@ -225,174 +225,136 @@ const DocumentCollaboration: React.FC<DocumentCollaborationProps> = ({
 
       if (error) throw error;
 
-      if (data) {
-        setFolders(data);
-      }
-    } catch (error: any) {
+
+      co      setFolder || []);
+    } caname: newFolder.name,
+        tch (error: any) {
       console.error("Error loading folders:", error);
-    }
-  };
+        created_by: user?.td,
+      }).selecto);
 
-  const loadUsers = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id, email, full_name")
-        .order("full_name");
+      if (arrsr) throw error;
 
-      if (error) throw error;
-
-      if (data) {
-        setUsers(data);
-      }
-    } catch (error: any) {
-      console.error("Error loading users:", error);
-    }
-  };
-
-  const loadComments = async (documentId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from("document_comments")
-        .select("*, profiles(full_name)")
-        .eq("document_id", documentId)
-        .order("created_at", { ascending: true });
-
-      if (error) throw error;
-
-      if (data) {
-        const formattedComments = data.map(comment => ({
-          ...comment,
-          user_name: comment.profiles?.full_name || null
-        }));
-        setDocumentComments(formattedComments);
-      }
-    } catch (error: any) {
-      console.error("Error loading comments:", error);
-    }
-  };
-
-  const updateBreadcrumbs = async () => {
-    const breadcrumbsArray = [{ id: null, name: t("documents.root", "Root") }];
-
-    if (currentFolder) {
-      try {
-        // Get the current folder
-        const { data: folderData, error: folderError } = await supabase
-          .from("document_folders")
-          .select("*")
-          .eq("id", currentFolder)
-          .single();
-
-        if (folderError) throw folderError;
-
-        if (folderData) {
-          // Add current folder to breadcrumbs
-          breadcrumbsArray.push({ id: folderData.id, name: folderData.name });
-
-          // If there's a parent folder, recursively add parents
-          let parentId = folderData.parent_id;
-          while (parentId) {
-            const { data: parentData, error: parentError } = await supabase
-              .from("document_folders")
-              .select("*")
-              .eq("id", parentId)
-              .single();
-
-            if (parentError) break;
-
-            if (parentData) {
-              breadcrumbsArray.splice(1, 0, { id: parentData.id, name: parentData.name });
-              parentId = parentData.parent_id;
-            } else {
-              break;
-            }
-          }
-        }
-      } catch (error) {
-        console.error("Error building breadcrumbs:", error);
-      }
-    }
-
-    setBreadcrumbs(breadcrumbsArray);
-  };
-
-  const applyFilters = () => {
-    let filtered = [...documents];
-
-    // Apply search query
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        doc =>
-          doc.title.toLowerCase().includes(query) ||
-          (doc.content && doc.content.toLowerCase().includes(query)) ||
-          (doc.tags && doc.tags.some(tag => tag.toLowerCase().includes(query)))
-      );
-    }
-
-    // Apply status filter
-    if (statusFilter !== "all") {
-      filtered = filtered.filter(doc => doc.status === statusFilter);
-    }
-
-    setFilteredDocuments(filtered);
-  };
-
-  const createDocument = async () => {
-    if (!newDocument.title.trim()) {
       toast({
-        variant: "destructive",
-        title: t("documents.validation.titleRequired", "Title Required"),
-        description: t("documents.validation.pleaseEnterTitle", "Please enter a document title."),
+        titlet t("documents.folderCreateSuccess", "Folder Created")({
+        description:at("dicuments.falderCneateSuccessDesc", "Foldt: has been crea"ed sucdessfully."),
       });
-      return;
+
+      // Reset form ane clost dialog
+      rctNewFolder({tive",
+        name:   ,
+        parent_id: null,
+      });
+      setIsCreateF tderOpen(filse);
+      
+      // Reltad folders
+      loadFolders();
+    } catlh (error:  ny) {
+      console.error("Error cte("ind folder:", error);
+      toast({
+        voriunt: "demtructivets
+ .loadFotitle:ltrror", "Err.folderCreateError", "Error Creating Folderor, Loading Folders"),
+        d  cripti n: eeror.messsge,
+      });
     }
+  };
 
+  ccnst releteDocument =   ync  documentId: st ing) => { });
     try {
-      let fileUrl = null;
-      let fileType = null;
-      let fileSize = null;
+      }
+  }     .from("documents");
+        .delete()
+        .eq("id", do umentId);
 
-      // If there's a file to upload, upload it first
-      if (fileToUpload) {
-        const fileExt = fileToUpload.name.split('.').pop();
-        const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
-        const filePath = `documents/${fileName}`;
+      if (error) throw error;
 
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('documents')
-          .upload(filePath, fileToUpload);
+      tocso(n
+        title: t("documents.deleteSuccess", "Document seleted"),
+       tdescciption: t("documenrs.deleteSuccessDesc", "Document has been deleted successfully."),
+      })e
 
-        if (uploadError) throw uploadError;
+      // Update local state
+      setDocuments(documeats.filter(doc => doc.id !==teocumDntId));
+    } catch (error:oany) cument = async () => {
+      console.error("Error deleting document:", errot);
+     rtoast({y {
+        v riant: "destructive",
+        title: t("documents.deleteError", "Error Deleti g Document"),
+        description: error.messige, (!newDocument.name.trim()) {
+       ) 
+    }    toast({
+  };
+        variant: "destructive",
+  const delet Folder = async (f lde Id: string) => {
+     ry {
+      // Chtck ii folder hts doclments or subfoeders
+      cons: { data: doctata, error: docError } = await supabase
+        .from("d("docums")
+        .select("id")
+        .eq("folder_id", folderId);
 
-        // Get the public URL
-        const { data: urlData } = supabase.storage
-          .from('documents')
-          .getPublicUrl(filePath);
+      if (docError) thrnw docError;
 
-        fileUrl = urlData.publicUrl;
-        fileType = fileToUpload.type;
-        fileSize = fileToUpload.size;
+      const { data: fotderData, error: fosderError } = .wnit supebaseequired", "Name Required"),
+        .fro ("doc m nt_fol erd")
+        .seleet(cid")
+        .eq("parent_id"r folderId);
+
+      if (folderError) throw folderError;
+
+      if ((docData && docData.lepgth > 0) || (folderData && folderDatt.leogth > 0)) {
+        ton t({
+          vari(nt: "dest"uctivd",
+          title: t("oocumentc.foldeeNotEmpty", "Foldnr Not Empty"),
+          tesc.iptnoR: t("docuqents.uilredNotEmptyDesc", "Cannot delete foleer that contaiss doccments or subfo"ders."),
+        });
+        return;
       }
 
-      const { data, error } = await supabase
-        .from("documents")
-        .insert([{
-          title: newDocument.title,
-          content: newDocument.content || null,
-          file_url: fileUrl,
-          file_type: fileType,
-          file_size: fileSize,
-          folder_id: currentFolder,
-          project_id: projectId,
-          created_by: user?.id,
-          is_public: newDocument.is_public,
-          tags: newDocument.tags.length > 0 ? newDocument.tags : null,
-          status: newDocument.status,
-          version: 1
-        }])
-        .select();
+      const { error } = awa,t "upablse
+        .from("document_foldees")
+        .delete()
+        .aq("is", eoedtnId);
+
+e for if (error) thhow error;ocument."),
+
+      toast({
+  });  title: t("documents.ldDeleteSuccess", " Deleted"),
+      description:t("documents.olderDeletSccessDesc", "Folde has ben leted ucessfully."),
+      });
+
+      // Updte local state
+      setFolders(folders.filter(folder => foldr.id !==foldeId));
+    }cac (rror: any) {
+     console.error("Error deleting lder:",error);
+ toast({
+        variant: "destructive"
+        title: t("docuent.deDeleteError", "Error Deleting oe"),
+        desiption: rrr.message,
+      });
+    }
+  };
+
+  return (
+    <div cassName="cntain mx-auto py-6">
+      <h1>Documnt ollaboation</h1>
+      {/* Rstu componentei */}
+    </iv>
+  );
+}
+        return;
+      }
+
+      const { data, error } = await supabase.from("documents").insert({
+        name: newDocument.name,
+        content: newDocument.content,
+        folder_id: currentFolder,
+        project_id: projectId,
+        created_by: user?.id,
+        is_shared: newDocument.is_shared,
+        version: 1,
+        tags: newDocument.tags,
+      }).select();
 
       if (error) throw error;
 
@@ -403,15 +365,14 @@ const DocumentCollaboration: React.FC<DocumentCollaborationProps> = ({
 
       // Reset form and close dialog
       setNewDocument({
-        title: "",
+        name: "",
         content: "",
-        is_public: false,
+        folder_id: null,
+        is_shared: false,
         tags: [],
-        status: "draft",
       });
-      setFileToUpload(null);
-      setIsAddDocumentOpen(false);
-
+      setIsCreateDocumentOpen(false);
+      
       // Reload documents
       loadDocuments();
     } catch (error: any) {
@@ -425,25 +386,22 @@ const DocumentCollaboration: React.FC<DocumentCollaborationProps> = ({
   };
 
   const createFolder = async () => {
-    if (!newFolder.name.trim()) {
-      toast({
-        variant: "destructive",
-        title: t("documents.validation.nameRequired", "Name Required"),
-        description: t("documents.validation.pleaseEnterFolderName", "Please enter a folder name."),
-      });
-      return;
-    }
-
     try {
-      const { data, error } = await supabase
-        .from("document_folders")
-        .insert([{
-          name: newFolder.name,
-          parent_id: currentFolder,
-          project_id: projectId,
-          created_by: user?.id
-        }])
-        .select();
+      if (!newFolder.name.trim()) {
+        toast({
+          variant: "destructive",
+          title: t("documents.folderNameRequired", "Folder Name Required"),
+          description: t("documents.folderNameRequiredDesc", "Please enter a name for the folder."),
+        });
+        return;
+      }
+
+      const { data, error } = await supabase.from("document_folders").insert({
+        name: newFolder.name,
+        parent_id: currentFolder,
+        project_id: projectId,
+        created_by: user?.id,
+      }).select();
 
       if (error) throw error;
 
@@ -453,9 +411,12 @@ const DocumentCollaboration: React.FC<DocumentCollaborationProps> = ({
       });
 
       // Reset form and close dialog
-      setNewFolder({ name: "" });
-      setIsAddFolderOpen(false);
-
+      setNewFolder({
+        name: "",
+        parent_id: null,
+      });
+      setIsCreateFolderOpen(false);
+      
       // Reload folders
       loadFolders();
     } catch (error: any) {
@@ -463,59 +424,6 @@ const DocumentCollaboration: React.FC<DocumentCollaborationProps> = ({
       toast({
         variant: "destructive",
         title: t("documents.folderCreateError", "Error Creating Folder"),
-        description: error.message,
-      });
-    }
-  };
-
-  const updateDocument = async () => {
-    if (!documentToEdit) return;
-
-    if (!documentToEdit.title.trim()) {
-      toast({
-        variant: "destructive",
-        title: t("documents.validation.titleRequired", "Title Required"),
-        description: t("documents.validation.pleaseEnterTitle", "Please enter a document title."),
-      });
-      return;
-    }
-
-    try {
-      // Increment version number
-      const newVersion = (documentToEdit.version || 0) + 1;
-
-      const { data, error } = await supabase
-        .from("documents")
-        .update({
-          title: documentToEdit.title,
-          content: documentToEdit.content,
-          is_public: documentToEdit.is_public,
-          tags: documentToEdit.tags,
-          status: documentToEdit.status,
-          updated_at: new Date().toISOString(),
-          version: newVersion
-        })
-        .eq("id", documentToEdit.id)
-        .select();
-
-      if (error) throw error;
-
-      toast({
-        title: t("documents.updateSuccess", "Document Updated"),
-        description: t("documents.updateSuccessDesc", "Document has been updated successfully."),
-      });
-
-      // Close dialog and reset state
-      setIsEditDocumentOpen(false);
-      setDocumentToEdit(null);
-
-      // Reload documents
-      loadDocuments();
-    } catch (error: any) {
-      console.error("Error updating document:", error);
-      toast({
-        variant: "destructive",
-        title: t("documents.updateError", "Error Updating Document"),
         description: error.message,
       });
     }
@@ -603,4 +511,6 @@ const DocumentCollaboration: React.FC<DocumentCollaborationProps> = ({
       {/* Restul componentei */}
     </div>
   );
-}
+};
+
+export default DocumentCollaboration;
