@@ -2,10 +2,10 @@ import { supabase } from './supabase';
 import { PostgrestError } from '@supabase/supabase-js';
 import fallbackAuth from "./fallback-auth";
 import connectionService from './connection-service';
-import { cacheService } from './cache-service';
-import { errorHandler, ErrorType } from './error-handler';
+import { errorHandler } from './error-handler';
 import { inputValidation } from './input-validation';
 import { dataLoader } from './data-loader';
+import { SupabaseTables, SupabaseRpcFunctions, GenericStringError, SupabaseTableData, SupabaseRpcParams } from '../types/supabase-tables';
 
 // Flag pentru a activa autentificarea de rezervă - dezactivat în producție pentru securitate
 const USE_FALLBACK_AUTH = import.meta.env.DEV ? true : false; // Activat doar în dezvoltare
@@ -103,7 +103,7 @@ const handlePromise = async <T>(promise: Promise<{ data: T | null; error: Postgr
 // Serviciu pentru interacțiuni cu Supabase
 export const supabaseService = {
   // Funcții generice CRUD
-  async select<T>(table: string, columns: string = '*', options?: {
+  async select<T>(table: SupabaseTables | string, columns: string = '*', options?: {
     filters?: Record<string, any>;
     order?: { column: string; ascending?: boolean };
     limit?: number;
@@ -132,7 +132,8 @@ export const supabaseService = {
               error: {
                 message: 'Authentication required',
                 code: '401'
-              }
+              },
+              data: null
             };
           }
         }
@@ -279,7 +280,7 @@ export const supabaseService = {
     }
   },
 
-  async insert<T>(table: string, data: Partial<T> | Partial<T>[]): Promise<SupabaseResponse<T>> {
+  async insert<T>(table: SupabaseTables | string, data: Partial<T> | Partial<T>[]): Promise<SupabaseResponse<T>> {
     try {
       return handlePromise<T>(supabase.from(table).insert(data).select());
     } catch (error) {
@@ -291,7 +292,7 @@ export const supabaseService = {
     }
   },
 
-  async update<T>(table: string, data: Partial<T>, filters: Record<string, any>): Promise<SupabaseResponse<T>> {
+  async update<T>(table: SupabaseTables | string, data: Partial<T>, filters: Record<string, any>): Promise<SupabaseResponse<T>> {
     try {
       let query = supabase.from(table).update(data);
 
@@ -312,7 +313,7 @@ export const supabaseService = {
     }
   },
 
-  async delete<T>(table: string, filters: Record<string, any>): Promise<SupabaseResponse<T>> {
+  async delete<T>(table: SupabaseTables | string, filters: Record<string, any>): Promise<SupabaseResponse<T>> {
     try {
       let query = supabase.from(table).delete();
 
@@ -385,10 +386,10 @@ export const supabaseService = {
             // Folosim direct window.localStorage și window.sessionStorage pentru a evita probleme
             window.sessionStorage.setItem('supabase.auth.token', JSON.stringify(tokenData));
             window.localStorage.setItem('supabase.auth.token', JSON.stringify(tokenData));
-            
+
             // Emitem un eveniment pentru a notifica alte componente despre sesiunea nouă
-            window.dispatchEvent(new CustomEvent('supabase-session-update', { 
-              detail: { session: testSession } 
+            window.dispatchEvent(new CustomEvent('supabase-session-update', {
+              detail: { session: testSession }
             }));
 
             return {
@@ -415,19 +416,19 @@ export const supabaseService = {
 
               // Salvăm sesiunea în localStorage pentru a o putea recupera mai târziu
               localStorage.setItem('fallback_session', JSON.stringify(fallbackResult.data.session));
-              
+
               // Salvăm și în formatul Supabase pentru compatibilitate
               const tokenData = {
                 currentSession: fallbackResult.data.session,
                 expiresAt: Date.now() + 3600000 // 1 oră valabilitate
               };
-              
+
               window.localStorage.setItem('supabase.auth.token', JSON.stringify(tokenData));
               window.sessionStorage.setItem('supabase.auth.token', JSON.stringify(tokenData));
-              
+
               // Emitem un eveniment pentru a notifica alte componente despre sesiunea nouă
-              window.dispatchEvent(new CustomEvent('supabase-session-update', { 
-                detail: { session: fallbackResult.data.session } 
+              window.dispatchEvent(new CustomEvent('supabase-session-update', {
+                detail: { session: fallbackResult.data.session }
               }));
 
               return {
@@ -482,7 +483,7 @@ export const supabaseService = {
           success: !!result.data?.session,
           error: result.error ? 'Error present' : 'No error'
         });
-        
+
         // Dacă autentificarea a reușit, salvăm sesiunea manual pentru a ne asigura că este disponibilă
         if (result.data?.session) {
           try {
@@ -490,16 +491,16 @@ export const supabaseService = {
               currentSession: result.data.session,
               expiresAt: Date.now() + 3600000 // 1 oră valabilitate
             };
-            
+
             // Folosim direct window.localStorage și window.sessionStorage pentru a evita probleme
             window.localStorage.setItem('supabase.auth.token', JSON.stringify(tokenData));
             window.sessionStorage.setItem('supabase.auth.token', JSON.stringify(tokenData));
-            
+
             // Emitem un eveniment pentru a notifica alte componente despre sesiunea nouă
-            window.dispatchEvent(new CustomEvent('supabase-session-update', { 
-              detail: { session: result.data.session } 
+            window.dispatchEvent(new CustomEvent('supabase-session-update', {
+              detail: { session: result.data.session }
             }));
-            
+
             console.log('Session saved manually after successful authentication');
           } catch (storageError) {
             console.error('Error saving session to storage:', storageError);
@@ -741,7 +742,7 @@ export const supabaseService = {
   },
 
   // Funcții pentru RPC (Remote Procedure Call)
-  async rpc<T>(functionName: string, params?: Record<string, any>): Promise<SupabaseResponse<T>> {
+  async rpc<T>(functionName: SupabaseRpcFunctions | string, params?: Record<string, any>): Promise<SupabaseResponse<T>> {
     try {
       return handlePromise<T>(supabase.rpc(functionName, params));
     } catch (error) {
