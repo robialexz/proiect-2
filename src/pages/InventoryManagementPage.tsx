@@ -155,6 +155,25 @@ const InventoryManagementPage: React.FC = () => {
         return;
       }
 
+      // Verificăm dacă avem date în cache pentru afișarea rapidă
+      const localCacheKey = `materials_local_${selectedProjectId}`;
+      const cachedData = localStorage.getItem(localCacheKey);
+
+      // Folosim datele din cache pentru afișarea inițială pentru a îmbunătăți timpul de răspuns
+      if (cachedData) {
+        try {
+          const parsedData = JSON.parse(cachedData);
+          if (Array.isArray(parsedData) && parsedData.length > 0) {
+            console.log(`Using cached data for project ${selectedProjectId} (${parsedData.length} items)`);
+            setInventoryData(parsedData);
+            // Continuăm cu încărcarea datelor noi în fundal
+          }
+        } catch (cacheError) {
+          console.error("Error parsing cached materials data:", cacheError);
+          localStorage.removeItem(localCacheKey);
+        }
+      }
+
       // Folosim dataLoader pentru încărcarea optimizată a datelor
       const cacheKey = `materials_${selectedProjectId}`;
 
@@ -170,6 +189,13 @@ const InventoryManagementPage: React.FC = () => {
 
         // Actualizăm starea
         setInventoryData(data);
+
+        // Salvăm datele în localStorage pentru acces rapid ulterior
+        localStorage.setItem(localCacheKey, JSON.stringify(data));
+
+        // Setăm un timeout pentru expirarea cache-ului local (15 minute)
+        const expiryTime = Date.now() + 15 * 60 * 1000;
+        localStorage.setItem(`${localCacheKey}_expiry`, expiryTime.toString());
       } catch (loaderError) {
         console.error("Error using dataLoader:", loaderError);
 
@@ -190,18 +216,34 @@ const InventoryManagementPage: React.FC = () => {
         // Actualizăm starea
         if (data) {
           setInventoryData(data as MaterialWithProject[]);
+
+          // Salvăm datele în localStorage pentru acces rapid ulterior
+          localStorage.setItem(localCacheKey, JSON.stringify(data));
+
+          // Setăm un timeout pentru expirarea cache-ului local (15 minute)
+          const expiryTime = Date.now() + 15 * 60 * 1000;
+          localStorage.setItem(`${localCacheKey}_expiry`, expiryTime.toString());
         }
       }
     } catch (error: unknown) {
       console.error("Error fetching materials:", error);
       let msg = error instanceof Error ? error.message : "Unknown fetch error.";
       setFetchError(t("inventory.errors.fetchFailed", { message: msg }));
+
+      // Afișăm o notificare doar dacă nu avem date în cache
+      if (inventoryData.length === 0) {
+        toast({
+          variant: "destructive",
+          title: t("inventory.fetchError", "Error loading inventory"),
+          description: msg,
+        });
+      }
     } finally {
       // Asigurăm-ne că starea de încărcare este setată la false
       setLoadingData(false);
       endMeasurement();
     }
-  }, [selectedProjectId, t]);
+  }, [selectedProjectId, t, inventoryData.length, toast]);
 
   // Folosim hook-ul useDataLoader pentru încărcarea proiectelor
   const {
