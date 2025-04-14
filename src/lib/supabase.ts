@@ -66,8 +66,24 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
       const headers = {
         ...options?.headers,
         // Allow caching for GET requests but validate with server
-        'Cache-Control': isGetRequest ? 'max-age=300, stale-while-revalidate=600' : 'no-cache'
+        'Cache-Control': isGetRequest ? 'max-age=300, stale-while-revalidate=600' : 'no-cache',
+        // Asigurăm că API key-ul este inclus în toate cererile
+        'apikey': supabaseAnonKey,
+        'Authorization': `Bearer ${supabaseAnonKey}`
       };
+
+      // Verificăm dacă avem un token de sesiune și îl adăugăm la cerere
+      try {
+        const localSession = localStorage.getItem('supabase.auth.token') || sessionStorage.getItem('supabase.auth.token');
+        if (localSession) {
+          const parsedSession = JSON.parse(localSession);
+          if (parsedSession?.currentSession?.access_token) {
+            headers['Authorization'] = `Bearer ${parsedSession.currentSession.access_token}`;
+          }
+        }
+      } catch (e) {
+        console.warn('Error adding session token to request:', e);
+      }
 
       return fetch(url, {
         ...options,

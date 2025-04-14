@@ -114,6 +114,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (response.data?.session) {
         setSession(response.data.session);
 
+        // Salvăm sesiunea în localStorage și sessionStorage pentru a asigura persistența
+        try {
+          const sessionData = {
+            currentSession: response.data.session,
+            expiresAt: Date.now() + 3600 * 1000 // 1 oră valabilitate
+          };
+          localStorage.setItem('supabase.auth.token', JSON.stringify(sessionData));
+          sessionStorage.setItem('supabase.auth.token', JSON.stringify(sessionData));
+          console.log("Session saved to storage");
+        } catch (storageError) {
+          console.error("Error saving session to storage:", storageError);
+        }
+
         // Get user from session
         const userResponse = await supabaseService.auth.getUser();
 
@@ -142,7 +155,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Dacă nu avem o sesiune activă pe server, dar avem una locală, încercăm să o revalidăm
         if (user && !session) {
           console.log("Attempting to revalidate local session");
-          // Aici am putea încerca să revalidăm sesiunea locală dacă este necesar
+          try {
+            // Încercăm să reîmprospătăm sesiunea
+            const { data: refreshData } = await supabase.auth.refreshSession();
+
+            if (refreshData?.session) {
+              console.log("Session refreshed successfully");
+              setSession(refreshData.session);
+
+              // Salvăm sesiunea reîmprospătată
+              const sessionData = {
+                currentSession: refreshData.session,
+                expiresAt: Date.now() + 3600 * 1000 // 1 oră valabilitate
+              };
+              localStorage.setItem('supabase.auth.token', JSON.stringify(sessionData));
+              sessionStorage.setItem('supabase.auth.token', JSON.stringify(sessionData));
+            }
+          } catch (refreshError) {
+            console.error("Error refreshing session:", refreshError);
+          }
         }
         setLoading(false);
       }
@@ -285,6 +316,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Immediately update the session and user state
         setSession(response.data.session);
         setUser(response.data.user);
+
+        // Salvăm sesiunea în localStorage și sessionStorage pentru a asigura persistența
+        try {
+          const sessionData = {
+            currentSession: response.data.session,
+            expiresAt: Date.now() + 3600 * 1000 // 1 oră valabilitate
+          };
+          localStorage.setItem('supabase.auth.token', JSON.stringify(sessionData));
+          sessionStorage.setItem('supabase.auth.token', JSON.stringify(sessionData));
+          console.log("Session saved to storage after login");
+        } catch (storageError) {
+          console.error("Error saving session to storage after login:", storageError);
+        }
       } else {
         console.error("AuthContext: No session returned from authentication");
         throw new Error('No session returned from authentication');
@@ -399,8 +443,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error('Error signing out:', response.error);
     }
 
+    // Ștergem sesiunea din localStorage și sessionStorage
+    try {
+      localStorage.removeItem('supabase.auth.token');
+      sessionStorage.removeItem('supabase.auth.token');
+      console.log("Session removed from storage after logout");
+    } catch (storageError) {
+      console.error("Error removing session from storage:", storageError);
+    }
+
     // Curățăm cache-ul pentru autentificare
     cacheService.clearNamespace('auth');
+
+    // Resetăm starea
+    setSession(null);
+    setUser(null);
+    setUserProfile(null);
   };
 
   const value = {

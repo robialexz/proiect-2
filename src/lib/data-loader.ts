@@ -66,9 +66,49 @@ export async function loadData<T>(
       const { data: sessionData } = await supabase.auth.getSession();
 
       // Dacă nu avem o sesiune validă și suntem în modul de dezvoltare, generam date de test
-      if (!sessionData?.session && import.meta.env.DEV) {
-        console.log(`[DataLoader] No valid session, using test data for ${key}`);
-        return generateTestData<T>(table, 10);
+      if (!sessionData?.session) {
+        console.warn(`[DataLoader] No valid session for ${key}`);
+
+        // Încercăm să obținem sesiunea din localStorage sau sessionStorage
+        try {
+          const localSession = localStorage.getItem('supabase.auth.token') || sessionStorage.getItem('supabase.auth.token');
+          if (localSession) {
+            const parsedSession = JSON.parse(localSession);
+            if (parsedSession?.currentSession?.access_token) {
+              console.log(`[DataLoader] Found local session, using it for ${key}`);
+              // Adaugăm manual token-ul la header-ul de autorizare pentru Supabase
+              const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+              const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+              // Configurăm un header personalizat pentru cerere
+              const customHeaders = {
+                'apikey': supabaseAnonKey,
+                'Authorization': `Bearer ${parsedSession.currentSession.access_token}`
+              };
+
+              // Folosim fetch direct cu header-urile personalizate
+              console.log(`[DataLoader] Making direct fetch with custom headers for ${key}`);
+              const directResponse = await fetch(`${supabaseUrl}/rest/v1/${table}?select=${encodeURIComponent(columns)}`, {
+                method: 'GET',
+                headers: customHeaders
+              });
+
+              if (directResponse.ok) {
+                const data = await directResponse.json();
+                console.log(`[DataLoader] Direct fetch successful for ${key}`);
+                return data as T[];
+              }
+            }
+          }
+        } catch (localSessionError) {
+          console.error(`[DataLoader] Error using local session:`, localSessionError);
+        }
+
+        // Dacă suntem în modul de dezvoltare, generam date de test
+        if (import.meta.env.DEV) {
+          console.log(`[DataLoader] No valid session, using test data for ${key}`);
+          return generateTestData<T>(table, 10);
+        }
       }
     } catch (sessionError) {
       console.warn(`[DataLoader] Error checking session:`, sessionError);
