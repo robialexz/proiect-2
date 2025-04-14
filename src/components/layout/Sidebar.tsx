@@ -105,9 +105,20 @@ const Sidebar = () => {
         {
           title: t("sidebar.inventory"),
           icon: <Package size={20} />,
-          href: "/inventory-management",
-          badge: 12,
-          badgeColor: "bg-green-500",
+          items: [
+            {
+              title: t("sidebar.projectInventory", "Project Inventory"),
+              icon: <Package size={20} />,
+              href: "/inventory-management",
+              badge: 12,
+              badgeColor: "bg-green-500",
+            },
+            {
+              title: t("sidebar.companyInventory", "Company Inventory"),
+              icon: <Package size={20} />,
+              href: "/company-inventory",
+            },
+          ],
         },
         {
           title: t("sidebar.suppliers"),

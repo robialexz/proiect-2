@@ -25,6 +25,14 @@ export async function callEdgeFunction<T = any, P = any>(
     }).then(({ data, error }) => {
       if (error) {
         console.error(`Error calling ${functionName}:`, error);
+
+        // Verificăm dacă eroarea este legată de lipsa API key-ului și o gestionăm silențios
+        if (error.message && error.message.includes('API key')) {
+          console.warn(`API key error in ${functionName}, using fallback method`);
+          // Returnăm o eroare specială pentru a indica necesitatea folosirii fallback-ului
+          return { data: null, error: new Error('FALLBACK_NEEDED') };
+        }
+
         return { data: null, error: new Error(error.message) };
       }
       return { data, error: null };
@@ -49,6 +57,7 @@ export async function requestSuplimentar(materialId: string, quantity: number) {
 
     // Dacă avem eroare, încercam direct cu Supabase
     if (result.error) {
+      // Verificăm dacă este o eroare specială sau orice altă eroare
       console.warn('Falling back to direct Supabase call for requestSuplimentar');
       const { data, error } = await supabase
         .from('materials')
@@ -125,6 +134,7 @@ export async function adjustSuplimentar(materialId: string, adjustment: number) 
 
     // Dacă avem eroare, încercam direct cu Supabase
     if (result.error) {
+      // Verificăm dacă este o eroare specială sau orice altă eroare
       console.warn('Falling back to direct Supabase call for adjustSuplimentar');
 
       // Mai întâi obținem materialul pentru a calcula noua valoare
@@ -171,6 +181,7 @@ export async function deleteMaterial(materialId: string) {
 
     // Dacă avem eroare, încercam direct cu Supabase
     if (result.error) {
+      // Verificăm dacă este o eroare specială sau orice altă eroare
       console.warn('Falling back to direct Supabase call for deleteMaterial');
       const { data, error } = await supabase
         .from('materials')

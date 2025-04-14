@@ -16,6 +16,7 @@ import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import OverviewPage from "./pages/OverviewPage";
 import InventoryManagementPage from "./pages/InventoryManagementPage";
+import CompanyInventoryPage from "./pages/CompanyInventoryPage";
 
 // Lazy load less frequently used pages
 const AboutPage = lazy(() => import("./pages/AboutPage"));
@@ -71,6 +72,7 @@ function App() {
               <Route path="dashboard" element={<DashboardPage />} />
               <Route path="overview" element={<OverviewPage />} />
               <Route path="inventory-management" element={<InventoryManagementPage />} />
+              <Route path="company-inventory" element={<CompanyInventoryPage />} />
               <Route path="projects" element={<ProjectsPage />} />
               <Route path="suppliers" element={<SuppliersPage />} />
               <Route path="teams" element={<TeamsPage />} />

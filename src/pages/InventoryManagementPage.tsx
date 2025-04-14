@@ -1144,7 +1144,20 @@ const InventoryManagementPage: React.FC = () => {
             transition={{ duration: 0.5 }}
             className="space-y-6"
           >
-            {/* Action Bar */}
+            {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <h1 className="text-2xl font-bold tracking-tight">
+              {t("inventory.projectInventory", "Project Inventory")}
+            </h1>
+            <Button
+              onClick={() => window.location.href = "/company-inventory"}
+              variant="outline"
+            >
+              {t("inventory.goToCompanyInventory", "Go to Company Inventory")}
+            </Button>
+          </div>
+
+          {/* Action Bar */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="flex flex-wrap gap-2">
                 <input
