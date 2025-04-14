@@ -62,7 +62,7 @@ export const fallbackAuth = {
         password: password || 'password'
       };
 
-      // Creăm o sesiune simulată extinsă
+      // Creăm o sesiune simulată extinsă compatibilă cu Supabase
       const session: any = {
         access_token: `fake-token-${Math.random().toString(36).substring(2)}`,
         refresh_token: `fake-refresh-${Math.random().toString(36).substring(2)}`,
@@ -81,7 +81,20 @@ export const fallbackAuth = {
           },
           aud: 'authenticated',
           created_at: new Date().toISOString(),
-          identities: []
+          identities: [],
+          // Adaugăm toate proprietățile necesare pentru compatibilitate
+          phone: '',
+          confirmed_at: new Date().toISOString(),
+          last_sign_in_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          recovery_sent_at: null,
+          email_confirmed_at: new Date().toISOString(),
+          banned_until: null,
+          confirmation_sent_at: new Date().toISOString(),
+          factors: null,
+          invited_at: null,
+          is_super_admin: false,
+          phone_confirmed_at: null
         }
       };
 

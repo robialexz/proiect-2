@@ -109,16 +109,31 @@ const AppLayout: React.FC = () => {
       if (localSession) {
         const parsedSession = JSON.parse(localSession);
         if (parsedSession?.currentSession && parsedSession.expiresAt > Date.now()) {
-          console.log("AppLayout: Found valid session in storage, not redirecting");
-          // Nu redirectăm, lăsăm AuthContext să încerce să reîmprospăteze sesiunea
-          return (
-            <div className="flex items-center justify-center h-screen bg-slate-900 text-white">
-              <div className="flex flex-col items-center">
-                <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-                <p className="mt-4 text-slate-400">Se încarcă sesiunea...</p>
+          console.log("AppLayout: Found valid session in storage, attempting to restore user");
+
+          // Încercăm să restaurăm utilizatorul din sesiune
+          if (parsedSession.currentSession.user) {
+            // Apelăm direct funcția din AuthContext pentru a restaura sesiunea
+            // Acest lucru va forța o reîmprospătare a sesiunii în AuthContext
+            window.dispatchEvent(new CustomEvent('force-session-refresh', {
+              detail: { session: parsedSession.currentSession }
+            }));
+
+            // Afișăm un indicator de încărcare în timp ce se restaurează sesiunea
+            return (
+              <div className="flex items-center justify-center h-screen bg-slate-900 text-white">
+                <div className="flex flex-col items-center">
+                  <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                  <p className="mt-4 text-slate-400">Se restaurează sesiunea...</p>
+                </div>
               </div>
-            </div>
-          );
+            );
+          }
+        } else {
+          console.log("AppLayout: Session expired or invalid");
+          // Ștergem sesiunea expirată
+          localStorage.removeItem('supabase.auth.token');
+          sessionStorage.removeItem('supabase.auth.token');
         }
       }
     } catch (storageError) {

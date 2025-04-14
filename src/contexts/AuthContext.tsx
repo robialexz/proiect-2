@@ -39,6 +39,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   } | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Ascultăm evenimentul de forțare a reîmprospătării sesiunii
+  useEffect(() => {
+    const handleForceSessionRefresh = (event: any) => {
+      console.log("AuthContext: Received force-session-refresh event");
+      if (event.detail?.session) {
+        console.log("AuthContext: Restoring session from event");
+        setSession(event.detail.session);
+        setUser(event.detail.session.user);
+        setLoading(false);
+
+        // Încercăm să încărcăm profilul utilizatorului
+        if (event.detail.session.user?.id) {
+          fetchUserProfile(event.detail.session.user.id).catch(error => {
+            console.error("Error fetching user profile from event:", error);
+            // Setăm un profil implicit în caz de eroare
+            const defaultProfile = {
+              displayName: event.detail.session.user.email?.split("@")[0] || "User",
+              email: event.detail.session.user.email || "",
+            };
+            setUserProfile(defaultProfile);
+          });
+        }
+      }
+    };
+
+    // Adaugăm listener pentru eveniment
+    window.addEventListener('force-session-refresh', handleForceSessionRefresh);
+
+    // Curățăm listener-ul la demontare
+    return () => {
+      window.removeEventListener('force-session-refresh', handleForceSessionRefresh);
+    };
+  }, []);
+
   useEffect(() => {
     // Adăugăm un timeout pentru a evita blocarea la "se încarcă..." - redus drastic pentru performanță mai bună
     const timeoutId = setTimeout(() => {
