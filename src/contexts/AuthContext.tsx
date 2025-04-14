@@ -65,9 +65,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     console.log("AuthContext: Checking for existing session...");
 
     // Verificăm mai întâi dacă avem o sesiune în localStorage sau sessionStorage
-    // În dezvoltare, verificăm ambele pentru compatibilitate
+    // Verificăm ambele pentru compatibilitate
     const localSession = localStorage.getItem('supabase.auth.token') || sessionStorage.getItem('supabase.auth.token');
-    if (localSession && import.meta.env.DEV) { // Folosim doar în dezvoltare pentru securitate
+    if (localSession) { // Folosim în orice mediu pentru a asigura persistența sesiunii
       try {
         const parsedSession = JSON.parse(localSession);
         if (parsedSession?.currentSession?.user) {

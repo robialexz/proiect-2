@@ -49,13 +49,74 @@ export const fallbackAuth = {
    */
   async signIn(email: string, password: string): Promise<FallbackResponse<{ session: FallbackSession, user: any }>> {
     console.log('Using fallback authentication for:', email);
-    
+
+    // În modul de dezvoltare, acceptăm orice credențiale pentru testare
+    if (import.meta.env.DEV) {
+      console.log('Development mode: accepting any credentials for testing');
+
+      // Creăm un utilizator de test
+      const testUser = {
+        id: 'test-user-id-m9hfydqf',
+        email: email || 'test@example.com',
+        role: 'authenticated',
+        password: password || 'password'
+      };
+
+      // Creăm o sesiune simulată extinsă
+      const session: any = {
+        access_token: `fake-token-${Math.random().toString(36).substring(2)}`,
+        refresh_token: `fake-refresh-${Math.random().toString(36).substring(2)}`,
+        expires_at: Date.now() + 3600 * 1000, // Expiră în 1 oră
+        expires_in: 3600,
+        token_type: 'bearer',
+        user: {
+          id: testUser.id,
+          email: testUser.email,
+          role: testUser.role,
+          app_metadata: {
+            provider: 'email',
+          },
+          user_metadata: {
+            name: 'Test User',
+          },
+          aud: 'authenticated',
+          created_at: new Date().toISOString(),
+          identities: []
+        }
+      };
+
+      // Salvăm sesiunea în localStorage pentru persistență
+      try {
+        const sessionData = {
+          currentSession: session,
+          expiresAt: session.expires_at
+        };
+        localStorage.setItem('supabase.auth.token', JSON.stringify(sessionData));
+        sessionStorage.setItem('supabase.auth.token', JSON.stringify(sessionData));
+        console.log('Test session saved to storage');
+      } catch (storageError) {
+        console.error('Error saving test session to storage:', storageError);
+      }
+
+      console.log('Fallback auth: Development authentication successful');
+
+      return {
+        data: {
+          session,
+          user: session.user
+        },
+        error: null,
+        status: 'success'
+      };
+    }
+
+    // În producție, verificăm credențialele
     // Simulăm o întârziere pentru a face autentificarea să pară reală
     await new Promise(resolve => setTimeout(resolve, 1000));
-    
+
     // Căutăm utilizatorul în lista de utilizatori de test
     const user = testUsers.find(u => u.email === email);
-    
+
     if (!user || user.password !== password) {
       console.log('Fallback auth: Invalid credentials');
       return {
@@ -64,7 +125,7 @@ export const fallbackAuth = {
         status: 'error'
       };
     }
-    
+
     // Creăm o sesiune simulată
     const session: FallbackSession = {
       access_token: `fake-token-${Math.random().toString(36).substring(2)}`,
@@ -76,9 +137,9 @@ export const fallbackAuth = {
         role: user.role
       }
     };
-    
+
     console.log('Fallback auth: Authentication successful');
-    
+
     return {
       data: {
         session,
@@ -92,7 +153,7 @@ export const fallbackAuth = {
       status: 'success'
     };
   },
-  
+
   /**
    * Verifică dacă există o sesiune activă
    * @returns Răspuns simulat cu sesiune sau null
@@ -100,7 +161,7 @@ export const fallbackAuth = {
   async getSession(): Promise<FallbackResponse<{ session: FallbackSession }>> {
     // Verificăm dacă există o sesiune în localStorage
     const sessionStr = localStorage.getItem('fallback_session');
-    
+
     if (!sessionStr) {
       return {
         data: null,
@@ -108,10 +169,10 @@ export const fallbackAuth = {
         status: 'success'
       };
     }
-    
+
     try {
       const session = JSON.parse(sessionStr) as FallbackSession;
-      
+
       // Verificăm dacă sesiunea a expirat
       if (session.expires_at < Date.now()) {
         localStorage.removeItem('fallback_session');
@@ -121,7 +182,7 @@ export const fallbackAuth = {
           status: 'success'
         };
       }
-      
+
       return {
         data: { session },
         error: null,
@@ -136,21 +197,21 @@ export const fallbackAuth = {
       };
     }
   },
-  
+
   /**
    * Deconectare
    * @returns Răspuns simulat
    */
   async signOut(): Promise<FallbackResponse<null>> {
     localStorage.removeItem('fallback_session');
-    
+
     return {
       data: null,
       error: null,
       status: 'success'
     };
   },
-  
+
   /**
    * Obține profilul utilizatorului
    * @param userId ID-ul utilizatorului
@@ -158,7 +219,7 @@ export const fallbackAuth = {
    */
   async getUserProfile(userId: string): Promise<FallbackResponse<any>> {
     const user = testUsers.find(u => u.id === userId);
-    
+
     if (!user) {
       return {
         data: null,
@@ -166,7 +227,7 @@ export const fallbackAuth = {
         status: 'error'
       };
     }
-    
+
     return {
       data: {
         id: user.id,

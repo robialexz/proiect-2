@@ -101,7 +101,31 @@ const AppLayout: React.FC = () => {
   }
 
   if (!user) {
-    console.log("AppLayout: No authenticated user found, redirecting to login");
+    console.log("AppLayout: No authenticated user found, checking local storage");
+
+    // Încercăm să obținem sesiunea din localStorage sau sessionStorage
+    try {
+      const localSession = localStorage.getItem('supabase.auth.token') || sessionStorage.getItem('supabase.auth.token');
+      if (localSession) {
+        const parsedSession = JSON.parse(localSession);
+        if (parsedSession?.currentSession && parsedSession.expiresAt > Date.now()) {
+          console.log("AppLayout: Found valid session in storage, not redirecting");
+          // Nu redirectăm, lăsăm AuthContext să încerce să reîmprospăteze sesiunea
+          return (
+            <div className="flex items-center justify-center h-screen bg-slate-900 text-white">
+              <div className="flex flex-col items-center">
+                <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                <p className="mt-4 text-slate-400">Se încarcă sesiunea...</p>
+              </div>
+            </div>
+          );
+        }
+      }
+    } catch (storageError) {
+      console.error("Error checking session in storage:", storageError);
+    }
+
+    console.log("AppLayout: No valid session found, redirecting to login");
     return <Navigate to="/login" replace />;
   }
 
