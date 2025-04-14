@@ -13,7 +13,44 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: true
+    detectSessionInUrl: true,
+    storageKey: 'supabase.auth.token',
+    storage: {
+      getItem: (key) => {
+        // Încercăm să obținem sesiunea din localStorage sau sessionStorage
+        const localData = localStorage.getItem(key);
+        const sessionData = sessionStorage.getItem(key);
+        const data = localData || sessionData;
+
+        if (data) {
+          // Verificăm dacă sesiunea a expirat
+          try {
+            const parsed = JSON.parse(data);
+            if (parsed.expiresAt && parsed.expiresAt < Date.now()) {
+              console.log('Session expired, removing from storage');
+              localStorage.removeItem(key);
+              sessionStorage.removeItem(key);
+              return null;
+            }
+          } catch (e) {
+            console.error('Error parsing session data:', e);
+          }
+        }
+
+        return data;
+      },
+      setItem: (key, value) => {
+        // Salvăm sesiunea în ambele storage-uri pentru compatibilitate
+        localStorage.setItem(key, value);
+        sessionStorage.setItem(key, value);
+        return;
+      },
+      removeItem: (key) => {
+        localStorage.removeItem(key);
+        sessionStorage.removeItem(key);
+        return;
+      }
+    }
   },
   global: {
     // Reduced timeout to 15 seconds for faster error detection

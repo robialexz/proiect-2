@@ -60,16 +60,64 @@ export async function loadData<T>(
 
     // Încărcăm datele din Supabase
     console.log(`[DataLoader] Fetching data for ${key}`);
+
+    try {
+      // Încercăm să obținem sesiunea curentă pentru a verifica autentificarea
+      const { data: sessionData } = await supabase.auth.getSession();
+
+      // Dacă nu avem o sesiune validă și suntem în modul de dezvoltare, generam date de test
+      if (!sessionData?.session && import.meta.env.DEV) {
+        console.log(`[DataLoader] No valid session, using test data for ${key}`);
+        return generateTestData<T>(table, 10);
+      }
+    } catch (sessionError) {
+      console.warn(`[DataLoader] Error checking session:`, sessionError);
+      // Continuăm oricum, poate avem acces public la date
+    }
+
     const response = await supabaseService.select(table, columns, options);
 
     if (response.status === 'error') {
       console.error(`[DataLoader] Error fetching data for ${key}:`, response.error);
+
+      // Verificăm dacă eroarea este de autentificare (401)
+      if (response.error?.code === '401' || response.error?.message?.includes('JWT')) {
+        console.warn(`[DataLoader] Authentication error for ${key}, trying to refresh session`);
+
+        try {
+          // Încercăm să reîmprospătăm sesiunea
+          const { data: refreshData } = await supabase.auth.refreshSession();
+
+          if (refreshData?.session) {
+            console.log(`[DataLoader] Session refreshed, retrying fetch for ${key}`);
+            // Reîncercam cererea după reîmprospătarea sesiunii
+            const retryResponse = await supabaseService.select(table, columns, options);
+            if (retryResponse.status === 'success') {
+              return retryResponse.data as T[] || [];
+            }
+          } else if (import.meta.env.DEV) {
+            // În modul de dezvoltare, generam date de test dacă reîmprospătarea eșuează
+            console.log(`[DataLoader] Session refresh failed, using test data for ${key}`);
+            return generateTestData<T>(table, 10);
+          }
+        } catch (refreshError) {
+          console.error(`[DataLoader] Error refreshing session:`, refreshError);
+        }
+      }
+
       // Verificăm dacă avem date offline ca fallback în caz de eroare
       const offlineData = offlineService.getOfflineData<T[]>(key);
       if (offlineData) {
         console.log(`[DataLoader] Using offline data as fallback after error for ${key}`);
         return offlineData;
       }
+
+      // În modul de dezvoltare, generam date de test ca ultim fallback
+      if (import.meta.env.DEV) {
+        console.log(`[DataLoader] Using generated test data as last resort for ${key}`);
+        return generateTestData<T>(table, 10);
+      }
+
       throw new Error(response.error?.message || 'Unknown error');
     }
 
@@ -169,10 +217,110 @@ export function invalidateAllCache(): void {
   console.log('[DataLoader] All data cache invalidated');
 }
 
+/**
+ * Generează date de test pentru un anumit tabel
+ * @param table Numele tabelului
+ * @param count Numărul de înregistrări de generat
+ * @returns Array de date de test
+ */
+function generateTestData<T>(table: string, count: number = 10): T[] {
+  console.log(`Generating ${count} test records for ${table}`);
+
+  const result: any[] = [];
+
+  for (let i = 0; i < count; i++) {
+    const id = `test-${i}-${Date.now()}`;
+
+    // Generăm date specifice pentru fiecare tip de tabel
+    switch (table) {
+      case 'projects':
+        result.push({
+          id,
+          name: `Test Project ${i + 1}`,
+          description: `This is a test project generated for development purposes #${i + 1}`,
+          status: ['planning', 'in_progress', 'completed', 'on_hold'][i % 4],
+          created_at: new Date(Date.now() - i * 86400000).toISOString(),
+          updated_at: new Date().toISOString(),
+          budget: Math.floor(Math.random() * 100000),
+          client_name: `Test Client ${i % 5 + 1}`,
+          priority: ['low', 'medium', 'high'][i % 3],
+        });
+        break;
+
+      case 'materials':
+        result.push({
+          id,
+          name: `Test Material ${i + 1}`,
+          dimension: `${Math.floor(Math.random() * 100)}x${Math.floor(Math.random() * 100)}`,
+          unit: ['buc', 'kg', 'm', 'm2', 'm3'][i % 5],
+          quantity: Math.floor(Math.random() * 1000),
+          manufacturer: `Manufacturer ${i % 8 + 1}`,
+          category: ['Construction', 'Electrical', 'Plumbing', 'Finishing', 'Tools'][i % 5],
+          image_url: null,
+          suplimentar: i % 3 === 0 ? Math.floor(Math.random() * 50) : 0,
+          project_id: i < 5 ? `test-${i % 3}` : null,
+          project_name: i < 5 ? `Test Project ${i % 3 + 1}` : null,
+          created_at: new Date(Date.now() - i * 86400000).toISOString(),
+          updated_at: new Date().toISOString(),
+        });
+        break;
+
+      case 'resources':
+        result.push({
+          id,
+          name: `Test Resource ${i + 1}`,
+          type: ['Equipment', 'Vehicle', 'Tool', 'Space'][i % 4],
+          description: `Test resource description #${i + 1}`,
+          status: ['available', 'in_use', 'maintenance', 'reserved'][i % 4],
+          location: `Location ${i % 5 + 1}`,
+          created_at: new Date(Date.now() - i * 86400000).toISOString(),
+          updated_at: new Date().toISOString(),
+        });
+        break;
+
+      case 'teams':
+        result.push({
+          id,
+          name: `Test Team ${i + 1}`,
+          description: `This is test team #${i + 1}`,
+          created_at: new Date(Date.now() - i * 86400000).toISOString(),
+          updated_at: new Date().toISOString(),
+        });
+        break;
+
+      case 'suppliers':
+        result.push({
+          id,
+          name: `Test Supplier ${i + 1}`,
+          contact_person: `Contact Person ${i + 1}`,
+          email: `supplier${i + 1}@example.com`,
+          phone: `07${Math.floor(Math.random() * 100000000)}`,
+          address: `Test Address ${i + 1}`,
+          created_at: new Date(Date.now() - i * 86400000).toISOString(),
+          updated_at: new Date().toISOString(),
+        });
+        break;
+
+      default:
+        // Date generice pentru orice alt tabel
+        result.push({
+          id,
+          name: `Test Item ${i + 1}`,
+          description: `Test description for ${table} #${i + 1}`,
+          created_at: new Date(Date.now() - i * 86400000).toISOString(),
+          updated_at: new Date().toISOString(),
+        });
+    }
+  }
+
+  return result as T[];
+}
+
 // Exportăm toate funcțiile într-un singur obiect
 export const dataLoader = {
   loadData,
   preloadData,
   invalidateCache,
-  invalidateAllCache
+  invalidateAllCache,
+  generateTestData
 };

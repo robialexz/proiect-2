@@ -5,6 +5,7 @@ import connectionService from './connection-service';
 import { cacheService } from './cache-service';
 import { errorHandler, ErrorType } from './error-handler';
 import { inputValidation } from './input-validation';
+import { dataLoader } from './data-loader';
 
 // Flag pentru a activa autentificarea de rezervă - dezactivat în producție pentru securitate
 const USE_FALLBACK_AUTH = import.meta.env.DEV ? true : false; // Activat doar în dezvoltare
@@ -118,6 +119,28 @@ export const supabaseService = {
         throw new Error('Invalid columns');
       }
 
+      // Verificăm dacă avem o sesiune validă
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        if (!sessionData?.session) {
+          console.warn(`No valid session when selecting from ${table}`);
+
+          // În modul de dezvoltare, putem continua fără sesiune pentru tabele publice
+          if (!import.meta.env.DEV && !['public_data', 'settings'].includes(table)) {
+            return {
+              status: 'error',
+              error: {
+                message: 'Authentication required',
+                code: '401'
+              }
+            };
+          }
+        }
+      } catch (sessionError) {
+        console.warn(`Error checking session for ${table}:`, sessionError);
+        // Continuăm oricum, poate avem acces public la date
+      }
+
       let query = supabase.from(table).select(columns);
 
       // Aplicăm filtrele cu validare
@@ -158,14 +181,95 @@ export const supabaseService = {
         query = query.limit(options.limit);
       }
 
-      // Returnăm un singur rezultat sau o listă
-      if (options?.single) {
-        return handlePromise<T>(query.single());
+      // Executăm interogarea cu timeout
+      const timeoutPromise = new Promise<any>((_, reject) => {
+        setTimeout(() => reject(new Error('Query timeout')), 10000); // 10 secunde timeout
+      });
+
+      const queryPromise = options?.single ? query.single() : query;
+
+      try {
+        // Folosim Promise.race pentru a implementa timeout
+        const result = await Promise.race([queryPromise, timeoutPromise]);
+
+        // Verificăm dacă avem eroare
+        if (result.error) {
+          console.error(`Error selecting from ${table}:`, result.error);
+
+          // Verificăm dacă eroarea este legată de autentificare
+          if (result.error.message?.includes('JWT') ||
+              result.error.message?.includes('auth') ||
+              result.error.code === '401') {
+            console.warn(`Authentication error for ${table}, trying to refresh session`);
+
+            try {
+              // Încercăm să reîmprospătăm sesiunea
+              const { data: refreshData } = await supabase.auth.refreshSession();
+
+              if (refreshData?.session) {
+                console.log(`Session refreshed, retrying fetch for ${table}`);
+                // Reîncercam după reîmprospătarea sesiunii
+                const retryQuery = options?.single ? query.single() : query;
+                const retryResult = await retryQuery;
+
+                if (!retryResult.error) {
+                  return {
+                    status: 'success',
+                    data: retryResult.data
+                  };
+                }
+              }
+            } catch (refreshError) {
+              console.error(`Error refreshing session:`, refreshError);
+            }
+          }
+
+          return {
+            status: 'error',
+            error: result.error,
+            data: null
+          };
+        }
+
+        return {
+          status: 'success',
+          data: result.data,
+          error: null
+        };
+      } catch (queryError) {
+        console.error(`Query error or timeout for ${table}:`, queryError);
+
+        // În modul de dezvoltare, generam date de test ca ultim fallback
+        if (import.meta.env.DEV) {
+          console.log(`Using generated test data as fallback for ${table}`);
+          const testData = dataLoader.generateTestData(table, 10);
+          return {
+            status: 'success',
+            data: options?.single ? testData[0] : testData,
+            error: null
+          };
+        }
+
+        return {
+          status: 'error',
+          data: null,
+          error: formatError(queryError),
+        };
       }
-      return handlePromise<T[]>(query) as unknown as Promise<SupabaseResponse<T>>;
     } catch (error) {
       // Folosim errorHandler pentru o gestionare mai bună a erorilor
       errorHandler.handleError(error, false);
+
+      // În modul de dezvoltare, generam date de test ca ultim fallback
+      if (import.meta.env.DEV) {
+        console.log(`Using generated test data after error for ${table}`);
+        const testData = dataLoader.generateTestData(table, 10);
+        return {
+          status: 'success',
+          data: options?.single ? testData[0] : testData,
+          error: null
+        };
+      }
 
       return {
         data: null,
