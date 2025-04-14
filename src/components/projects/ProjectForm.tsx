@@ -5,6 +5,7 @@ import * as z from "zod";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
 import { useTranslation } from "react-i18next";
+import { inputValidation } from "@/lib/input-validation";
 
 import {
   Dialog,
@@ -101,19 +102,37 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
 
-  // Define form schema
+  // Define form schema with improved validation for security
   const formSchema = z.object({
-    name: z.string().min(2, {
-      message: t("projects.form.validation.nameRequired", "Project name is required"),
-    }),
-    description: z.string().optional(),
+    name: z.string()
+      .min(2, { message: t("projects.form.validation.nameRequired", "Project name is required") })
+      .refine(val => inputValidation.validateText(val), {
+        message: t("projects.form.validation.invalidName", "Project name contains invalid characters")
+      }),
+    description: z.string()
+      .optional()
+      .refine(val => val === undefined || val === "" || inputValidation.validateText(val), {
+        message: t("projects.form.validation.invalidDescription", "Description contains invalid characters")
+      }),
     status: z.string().default("planning"),
     start_date: z.date().nullable(),
     end_date: z.date().nullable(),
     budget: z.coerce.number().nonnegative().default(0),
-    client_name: z.string().optional(),
-    client_contact: z.string().optional(),
-    location: z.string().optional(),
+    client_name: z.string()
+      .optional()
+      .refine(val => val === undefined || val === "" || inputValidation.validateText(val), {
+        message: t("projects.form.validation.invalidClientName", "Client name contains invalid characters")
+      }),
+    client_contact: z.string()
+      .optional()
+      .refine(val => val === undefined || val === "" || inputValidation.validateEmail(val), {
+        message: t("projects.form.validation.invalidClientContact", "Client contact must be a valid email")
+      }),
+    location: z.string()
+      .optional()
+      .refine(val => val === undefined || val === "" || inputValidation.validateText(val), {
+        message: t("projects.form.validation.invalidLocation", "Location contains invalid characters")
+      }),
     project_type: z.string().optional(),
     priority: z.string().default("medium"),
   }).refine(data => {

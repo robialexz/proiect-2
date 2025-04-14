@@ -3,9 +3,11 @@ import { PostgrestError } from '@supabase/supabase-js';
 import fallbackAuth from "./fallback-auth";
 import connectionService from './connection-service';
 import { cacheService } from './cache-service';
+import { errorHandler, ErrorType } from './error-handler';
+import { inputValidation } from './input-validation';
 
-// Flag pentru a activa autentificarea de rezervă
-const USE_FALLBACK_AUTH = true; // Setați la false pentru a dezactiva autentificarea de rezervă
+// Flag pentru a activa autentificarea de rezervă - dezactivat în producție pentru securitate
+const USE_FALLBACK_AUTH = import.meta.env.DEV ? true : false; // Activat doar în dezvoltare
 
 // Flag pentru a activa cache-ul offline
 const USE_OFFLINE_CACHE = true; // Setați la false pentru a dezactiva cache-ul offline
@@ -35,29 +37,35 @@ const checkConnectionBeforeRequest = async (): Promise<boolean> => {
   return internet && hasSupabaseConnection;
 };
 
-// Funcție pentru a transforma erorile PostgrestError în SupabaseErrorResponse
+// Funcție pentru a transforma erorile PostgrestError în SupabaseErrorResponse - îmbunătățită pentru securitate
 const formatError = (error: PostgrestError | Error | unknown): SupabaseErrorResponse => {
+  // Ascundem detaliile tehnice în producție pentru a preveni scurgerea de informații
+  const isProduction = process.env.NODE_ENV === 'production';
+
   if (error instanceof Error) {
     if ('code' in error && 'details' in error && 'hint' in error && 'message' in error) {
       // Este un PostgrestError
       const pgError = error as PostgrestError;
       return {
         message: pgError.message,
-        details: pgError.details || undefined,
-        hint: pgError.hint || undefined,
+        // Ascundem detaliile în producție
+        details: isProduction ? undefined : pgError.details || undefined,
+        hint: isProduction ? undefined : pgError.hint || undefined,
         code: pgError.code,
       };
     }
     // Este un Error standard
     return {
       message: error.message,
-      details: error.stack,
+      // Ascundem stack trace în producție
+      details: isProduction ? undefined : error.stack,
     };
   }
   // Este un tip necunoscut de eroare
   return {
     message: 'An unknown error occurred',
-    details: error ? JSON.stringify(error) : undefined,
+    // Ascundem detaliile în producție
+    details: isProduction ? undefined : (error ? JSON.stringify(error) : undefined),
   };
 };
 
@@ -101,24 +109,52 @@ export const supabaseService = {
     single?: boolean;
   }): Promise<SupabaseResponse<T>> {
     try {
+      // Validare pentru securitate
+      if (!inputValidation.validateText(table)) {
+        throw new Error('Invalid table name');
+      }
+
+      if (!inputValidation.validateText(columns)) {
+        throw new Error('Invalid columns');
+      }
+
       let query = supabase.from(table).select(columns);
 
-      // Aplicăm filtrele
+      // Aplicăm filtrele cu validare
       if (options?.filters) {
         Object.entries(options.filters).forEach(([key, value]) => {
+          // Validare pentru securitate
+          if (!inputValidation.validateText(key)) {
+            throw new Error(`Invalid filter key: ${key}`);
+          }
+
           if (value !== undefined && value !== null) {
+            // Pentru valori de tip string, validăm pentru a preveni SQL injection
+            if (typeof value === 'string' && !inputValidation.validateText(value)) {
+              throw new Error(`Invalid filter value for ${key}`);
+            }
+
             query = query.eq(key, value);
           }
         });
       }
 
-      // Aplicăm ordinea
+      // Aplicăm ordinea cu validare
       if (options?.order) {
+        // Validare pentru securitate
+        if (!inputValidation.validateText(options.order.column)) {
+          throw new Error(`Invalid order column: ${options.order.column}`);
+        }
+
         query = query.order(options.order.column, { ascending: options.order.ascending ?? false });
       }
 
       // Aplicăm limita
       if (options?.limit) {
+        if (options.limit < 0 || options.limit > 1000) {
+          throw new Error('Invalid limit value. Must be between 0 and 1000.');
+        }
+
         query = query.limit(options.limit);
       }
 
@@ -128,6 +164,9 @@ export const supabaseService = {
       }
       return handlePromise<T[]>(query) as unknown as Promise<SupabaseResponse<T>>;
     } catch (error) {
+      // Folosim errorHandler pentru o gestionare mai bună a erorilor
+      errorHandler.handleError(error, false);
+
       return {
         data: null,
         error: formatError(error),
@@ -197,7 +236,8 @@ export const supabaseService = {
         console.log('Starting authentication process for:', email);
 
         // În mediul de dezvoltare, permitem autentificarea cu orice email/parolă pentru testare
-        if (import.meta.env.DEV) {
+        // IMPORTANT: Acest cod nu va rula în producție pentru securitate
+        if (import.meta.env.DEV && process.env.NODE_ENV !== 'production') {
           console.log('Development mode detected, using test credentials');
           // Verificăm dacă email-ul conține "test" sau "demo" pentru a permite autentificarea de test
           if (email.includes('test') || email.includes('demo') || email.includes('admin')) {
@@ -205,7 +245,7 @@ export const supabaseService = {
             // Simulăm un răspuns de succes pentru conturile de test
             // Creăm o sesiune de test
             const testUser = {
-              id: 'test-user-id',
+              id: 'test-user-id-' + Date.now().toString(36),  // ID unic pentru a evita conflictele
               email: email,
               user_metadata: {
                 name: 'Test User'
@@ -213,18 +253,18 @@ export const supabaseService = {
             };
 
             const testSession = {
-              access_token: 'test-token-' + Date.now(), // Adaugăm timestamp pentru a face token-ul unic
-              refresh_token: 'test-refresh-token-' + Date.now(),
+              access_token: 'test-token-' + Date.now() + Math.random().toString(36).substring(2), // Token mai sigur
+              refresh_token: 'test-refresh-token-' + Date.now() + Math.random().toString(36).substring(2),
               expires_at: Date.now() + 3600000, // Expiră în 1 oră
               user: {
-                id: 'test-user-id',
+                id: testUser.id,
                 email: email
               }
             };
 
-            // Salvăm sesiunea în localStorage pentru a o putea recupera mai târziu
-            // Acest lucru va permite ca utilizatorul să rămână autentificat în toate paginile aplicației
-            localStorage.setItem('supabase.auth.token', JSON.stringify({
+            // Salvăm sesiunea în sessionStorage în loc de localStorage pentru securitate mai bună
+            // Sesiunea va fi disponibilă doar în tab-ul curent și va fi ștearsă la închiderea browser-ului
+            sessionStorage.setItem('supabase.auth.token', JSON.stringify({
               currentSession: testSession,
               expiresAt: testSession.expires_at
             }));
@@ -357,10 +397,11 @@ export const supabaseService = {
 
     async getSession() {
       try {
-        // În modul de dezvoltare, verificăm dacă există o sesiune de test în localStorage
-        if (import.meta.env.DEV) {
+        // În modul de dezvoltare, verificăm dacă există o sesiune de test în sessionStorage
+        if (import.meta.env.DEV && process.env.NODE_ENV !== 'production') {
           try {
-            const tokenStr = localStorage.getItem('supabase.auth.token');
+            // Folosim sessionStorage în loc de localStorage pentru securitate mai bună
+            const tokenStr = sessionStorage.getItem('supabase.auth.token');
 
             if (tokenStr) {
               const tokenData = JSON.parse(tokenStr);
@@ -368,7 +409,7 @@ export const supabaseService = {
               if (tokenData && tokenData.currentSession) {
                 // Verificăm dacă sesiunea nu a expirat
                 if (tokenData.expiresAt > Date.now()) {
-                  console.log('Using test session from localStorage');
+                  console.log('Using test session from sessionStorage');
 
                   // Creăm un răspuns similar cu cel de la Supabase
                   return {
@@ -379,8 +420,8 @@ export const supabaseService = {
                     status: 'success'
                   };
                 } else {
-                  console.log('Test session expired, removing from localStorage');
-                  localStorage.removeItem('supabase.auth.token');
+                  console.log('Test session expired, removing from sessionStorage');
+                  sessionStorage.removeItem('supabase.auth.token');
                 }
               }
             }

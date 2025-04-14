@@ -64,34 +64,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     console.log("AuthContext: Checking for existing session...");
 
-    // Verificăm mai întâi dacă avem o sesiune în localStorage
-    const localSession = localStorage.getItem('supabase.auth.token');
-    if (localSession) {
+    // Verificăm mai întâi dacă avem o sesiune în sessionStorage pentru securitate mai bună
+    // Folosim sessionStorage în loc de localStorage pentru a preveni atacurile XSS
+    const localSession = sessionStorage.getItem('supabase.auth.token');
+    if (localSession && import.meta.env.DEV) { // Folosim doar în dezvoltare pentru securitate
       try {
         const parsedSession = JSON.parse(localSession);
         if (parsedSession?.currentSession?.user) {
-          console.log("Found local session, using it");
-          const userData = parsedSession.currentSession.user;
-          setUser(userData);
-          setSession(parsedSession.currentSession);
+          // Verificăm dacă sesiunea nu a expirat
+          if (parsedSession.expiresAt && parsedSession.expiresAt > Date.now()) {
+            console.log("Found local session, using it");
+            const userData = parsedSession.currentSession.user;
+            setUser(userData);
+            setSession(parsedSession.currentSession);
 
-          // Încercăm să încărcăm profilul utilizatorului
-          if (userData.id) {
-            fetchUserProfile(userData.id).catch(error => {
-              console.error("Error fetching user profile from local session:", error);
-              // Setăm un profil implicit în caz de eroare
-              const defaultProfile = {
-                displayName: userData.email?.split("@")[0] || "User",
-                email: userData.email || "",
-              };
-              setUserProfile(defaultProfile);
-            });
+            // Încercăm să încărcăm profilul utilizatorului
+            if (userData.id) {
+              fetchUserProfile(userData.id).catch(error => {
+                console.error("Error fetching user profile from local session:", error);
+                // Setăm un profil implicit în caz de eroare
+                const defaultProfile = {
+                  displayName: userData.email?.split("@")[0] || "User",
+                  email: userData.email || "",
+                };
+                setUserProfile(defaultProfile);
+              });
+            }
+          } else {
+            console.log("Local session expired, removing it");
+            sessionStorage.removeItem('supabase.auth.token');
           }
 
           // Continuăm cu verificarea sesiunii la server pentru a o revalida
         }
       } catch (error) {
         console.error("Error parsing local session:", error);
+        // În caz de eroare, ștergem sesiunea pentru a preveni probleme
+        sessionStorage.removeItem('supabase.auth.token');
       }
     }
 
