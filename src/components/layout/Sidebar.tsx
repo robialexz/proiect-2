@@ -48,6 +48,11 @@ interface NavItem {
   badgeColor?: string;
 }
 
+interface NavItemWithItems extends Omit<NavItem, 'href'> {
+  items: NavItem[];
+  expanded?: boolean;
+}
+
 interface NavGroup {
   title: string;
   items: NavItem[];
@@ -105,20 +110,14 @@ const Sidebar = () => {
         {
           title: t("sidebar.inventory"),
           icon: <Package size={20} />,
-          items: [
-            {
-              title: t("sidebar.projectInventory", "Project Inventory"),
-              icon: <Package size={20} />,
-              href: "/inventory-management",
-              badge: 12,
-              badgeColor: "bg-green-500",
-            },
-            {
-              title: t("sidebar.companyInventory", "Company Inventory"),
-              icon: <Package size={20} />,
-              href: "/company-inventory",
-            },
-          ],
+          href: "/inventory-management",
+          badge: 12,
+          badgeColor: "bg-green-500",
+        },
+        {
+          title: t("sidebar.companyInventory", "Company Inventory"),
+          icon: <Package size={20} />,
+          href: "/company-inventory",
         },
         {
           title: t("sidebar.suppliers"),

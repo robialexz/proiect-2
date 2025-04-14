@@ -42,7 +42,7 @@ const ResourcesPage: React.FC = () => {
     { order: { column: "created_at", ascending: false } },
     "all_resources",
     15 * 60 * 1000, // 15 minute cache
-    supabaseService // Folosim supabaseService pentru a evita eroarea "no api key found in request"
+    [] // Array gol pentru dependențe
   );
 
   // Actualizăm starea resurselor când se schimbă datele

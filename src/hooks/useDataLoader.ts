@@ -62,7 +62,7 @@ export function useDataLoader<T>(
   // Încărcăm datele la montarea componentei și când se schimbă dependențele
   useEffect(() => {
     loadData(false);
-  }, [loadData, ...dependencies]);
+  }, [loadData, ...(Array.isArray(dependencies) ? dependencies : [])]);
 
   // Funcție pentru reîncărcarea manuală a datelor
   const refetch = useCallback(() => {
