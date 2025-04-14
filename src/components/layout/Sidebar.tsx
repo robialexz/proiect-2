@@ -31,6 +31,7 @@ import {
   BookOpen,
   LogOut,
   HelpCircle,
+  CheckCircle2,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation } from "react-i18next";
@@ -148,6 +149,11 @@ const Sidebar = () => {
           title: t("sidebar.resources"),
           icon: <FolderArchive size={20} />,
           href: "/resources",
+        },
+        {
+          title: t("sidebar.tasks"),
+          icon: <CheckCircle2 size={20} />,
+          href: "/tasks",
         },
       ],
     },

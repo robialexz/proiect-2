@@ -28,6 +28,8 @@ import {
   Search,
   Bell,
   ChevronRight,
+  CheckCircle2,
+  HelpCircle,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -86,27 +88,27 @@ const ModernNavbar = ({
 
   // Main buttons that will be displayed directly in the navigation bar
   const mainButtons = [
-    { 
-      name: "Prezentare", 
-      path: "/overview", 
+    {
+      name: "Prezentare",
+      path: "/overview",
       icon: <Home size={18} />,
       description: "Vizualizare generală a proiectelor și activităților"
     },
-    { 
-      name: "Panou Control", 
-      path: "/dashboard", 
+    {
+      name: "Panou Control",
+      path: "/dashboard",
       icon: <LayoutDashboard size={18} />,
       description: "Statistici și informații importante"
     },
-    { 
-      name: "Proiecte", 
-      path: "/projects", 
+    {
+      name: "Proiecte",
+      path: "/projects",
       icon: <Briefcase size={18} />,
       description: "Gestionarea proiectelor active și arhivate"
     },
-    { 
-      name: "Inventar", 
-      path: "/inventory-management", 
+    {
+      name: "Inventar",
+      path: "/inventory-management",
       icon: <Package size={18} />,
       description: "Administrarea materialelor și stocurilor"
     },
@@ -122,6 +124,7 @@ const ModernNavbar = ({
         { name: "Proiecte", path: "/projects", icon: <Briefcase size={18} /> },
         { name: "Program", path: "/schedule", icon: <Calendar size={18} /> },
         { name: "Documente", path: "/documents", icon: <Folder size={18} /> },
+        { name: "Sarcini", path: "/tasks", icon: <CheckCircle2 size={18} /> },
       ],
     },
     {
@@ -153,6 +156,15 @@ const ModernNavbar = ({
         { name: "Resurse", path: "/resources", icon: <BookOpen size={18} /> },
       ],
     },
+    {
+      id: "help",
+      name: "Ajutor & Setări",
+      icon: <HelpCircle size={18} />,
+      items: [
+        { name: "Tutorial", path: "/tutorial", icon: <HelpCircle size={18} /> },
+        { name: "Setări", path: "/settings", icon: <Settings size={18} /> },
+      ],
+    },
   ];
 
   const toggleMobileMenu = () => {
@@ -172,10 +184,10 @@ const ModernNavbar = ({
   // Animation variants
   const navbarVariants = {
     hidden: { opacity: 0, y: -20 },
-    visible: { 
-      opacity: 1, 
+    visible: {
+      opacity: 1,
       y: 0,
-      transition: { 
+      transition: {
         duration: 0.3,
         staggerChildren: 0.1,
         delayChildren: 0.2
@@ -185,8 +197,8 @@ const ModernNavbar = ({
 
   const itemVariants = {
     hidden: { opacity: 0, y: -10 },
-    visible: { 
-      opacity: 1, 
+    visible: {
+      opacity: 1,
       y: 0,
       transition: { duration: 0.3 }
     }
@@ -194,10 +206,10 @@ const ModernNavbar = ({
 
   const logoVariants = {
     hidden: { opacity: 0, scale: 0.8 },
-    visible: { 
-      opacity: 1, 
+    visible: {
+      opacity: 1,
       scale: 1,
-      transition: { 
+      transition: {
         duration: 0.5,
         type: "spring",
         stiffness: 200
@@ -207,19 +219,19 @@ const ModernNavbar = ({
 
   const mobileMenuVariants = {
     hidden: { opacity: 0, height: 0 },
-    visible: { 
-      opacity: 1, 
+    visible: {
+      opacity: 1,
       height: "auto",
-      transition: { 
+      transition: {
         duration: 0.3,
         staggerChildren: 0.05,
         delayChildren: 0.1
       }
     },
-    exit: { 
-      opacity: 0, 
+    exit: {
+      opacity: 0,
       height: 0,
-      transition: { 
+      transition: {
         duration: 0.3,
         staggerChildren: 0.05,
         staggerDirection: -1
@@ -236,28 +248,28 @@ const ModernNavbar = ({
   return (
     <>
       <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
-      <motion.nav 
+      <motion.nav
         initial="hidden"
         animate="visible"
         variants={navbarVariants}
         className={cn(
           "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
-          scrolled 
-            ? "bg-slate-900/95 backdrop-blur-md shadow-lg" 
+          scrolled
+            ? "bg-slate-900/95 backdrop-blur-md shadow-lg"
             : "bg-slate-900 border-b border-slate-800"
         )}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             {/* Logo */}
-            <motion.div 
+            <motion.div
               className="flex-shrink-0 flex items-center"
               variants={logoVariants}
             >
               <Link to="/" className="flex items-center">
                 <motion.div
-                  whileHover={{ 
-                    scale: 1.05, 
+                  whileHover={{
+                    scale: 1.05,
                     rotate: [0, -2, 2, -2, 0],
                     transition: { duration: 0.5 }
                   }}
@@ -319,7 +331,7 @@ const ModernNavbar = ({
                       >
                         {button.icon && <span>{button.icon}</span>}
                         {button.name}
-                        
+
                         {/* Tooltip */}
                         <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-48 p-2 bg-slate-800 text-xs text-slate-300 rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none z-50">
                           {button.description}
@@ -421,13 +433,13 @@ const ModernNavbar = ({
                             {userName.substring(0, 2).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
-                        <motion.div 
+                        <motion.div
                           className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-slate-900"
-                          animate={{ 
+                          animate={{
                             scale: [1, 1.2, 1],
                             opacity: [1, 0.8, 1]
                           }}
-                          transition={{ 
+                          transition={{
                             duration: 2,
                             repeat: Infinity,
                             repeatType: "loop"
@@ -586,7 +598,7 @@ const ModernNavbar = ({
                         </Link>
                       </motion.div>
                     ))}
-                    
+
                     {/* Categories */}
                     {buttonCategories.map((category, categoryIndex) => (
                       <div key={category.id}>
@@ -675,7 +687,7 @@ const ModernNavbar = ({
           )}
         </AnimatePresence>
       </motion.nav>
-      
+
       {/* Spacer to prevent content from being hidden under the navbar */}
       <div className="h-16"></div>
     </>

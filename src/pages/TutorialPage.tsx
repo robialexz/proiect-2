@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -8,6 +8,8 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import TutorialOverlay, { TutorialStep } from "@/components/tutorial/TutorialOverlay";
+import { useTutorial } from "@/components/tutorial/useTutorial";
 import {
   Package,
   FileText,
@@ -59,6 +61,46 @@ const TutorialPage = () => {
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [showTip, setShowTip] = useState(false);
 
+  // Tutorial overlay integration
+  const tutorialSteps: TutorialStep[] = [
+    {
+      target: ".sidebar-navigation",
+      title: t("tutorial.overlay.sidebar.title", "Bara laterală"),
+      content: t("tutorial.overlay.sidebar.content", "Folosiți bara laterală pentru a naviga între diferitele secțiuni ale aplicației."),
+      position: "right"
+    },
+    {
+      target: ".dashboard-overview",
+      title: t("tutorial.overlay.dashboard.title", "Panou de control"),
+      content: t("tutorial.overlay.dashboard.content", "Aici veți găsi o privire de ansamblu asupra proiectelor și activităților recente."),
+      position: "bottom"
+    },
+    {
+      target: ".inventory-management",
+      title: t("tutorial.overlay.inventory.title", "Management inventar"),
+      content: t("tutorial.overlay.inventory.content", "Gestionați materialele, stocurile și comenzile pentru proiectele dvs."),
+      position: "left"
+    },
+    {
+      target: ".user-profile",
+      title: t("tutorial.overlay.profile.title", "Profil utilizator"),
+      content: t("tutorial.overlay.profile.content", "Accesați și editați informațiile profilului dvs. și preferințele personale."),
+      position: "bottom"
+    }
+  ];
+
+  const {
+    isOpen: isTutorialOpen,
+    startTutorial,
+    closeTutorial,
+    completeTutorial,
+    resetTutorial
+  } = useTutorial({
+    tutorialId: "main-app-tutorial",
+    steps: tutorialSteps,
+    autoStart: false
+  });
+
   // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -99,7 +141,15 @@ const TutorialPage = () => {
 
   return (
     <div className="flex h-screen bg-slate-900 text-white">
-      
+      {/* Tutorial Overlay */}
+      <TutorialOverlay
+        steps={tutorialSteps}
+        isOpen={isTutorialOpen}
+        onClose={closeTutorial}
+        onComplete={completeTutorial}
+        tutorialId="main-app-tutorial"
+      />
+
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
         <header className="sticky top-0 z-10 bg-slate-900 border-b border-slate-800 px-6 py-4 shrink-0">
@@ -153,13 +203,23 @@ const TutorialPage = () => {
               </motion.div>
 
               <motion.div variants={itemVariants}>
-                <Button
-                  onClick={showRandomTip}
-                  className="bg-primary/20 hover:bg-primary/30 text-primary border border-primary/20"
-                >
-                  <Lightbulb className="h-4 w-4 mr-2" />
-                  {t("tutorial.welcome.showTip", "Arată un sfat util")}
-                </Button>
+                <div className="flex gap-3">
+                  <Button
+                    onClick={showRandomTip}
+                    className="bg-primary/20 hover:bg-primary/30 text-primary border border-primary/20"
+                  >
+                    <Lightbulb className="h-4 w-4 mr-2" />
+                    {t("tutorial.welcome.showTip", "Arată un sfat util")}
+                  </Button>
+
+                  <Button
+                    onClick={startTutorial}
+                    className="bg-primary hover:bg-primary/90 text-white"
+                  >
+                    <HelpCircle className="h-4 w-4 mr-2" />
+                    {t("tutorial.welcome.startInteractive", "Pornește ghidul interactiv")}
+                  </Button>
+                </div>
               </motion.div>
 
               <AnimatePresence>

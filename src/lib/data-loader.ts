@@ -30,54 +30,54 @@ export async function loadData<T>(
 ): Promise<T[]> {
   // Generăm cheia de cache dacă nu este specificată
   const key = cacheKey || `${table}_${columns}_${JSON.stringify(options)}`;
-  
+
   // Verificăm dacă datele sunt în cache
   const cachedData = cacheService.get<T[]>(key, {
     namespace: DATA_CACHE_NAMESPACE
   });
-  
+
   if (cachedData) {
     console.log(`[DataLoader] Using cached data for ${key}`);
     return cachedData;
   }
-  
+
   // Verificăm dacă suntem offline
   if (!offlineService.isOnline()) {
     console.log(`[DataLoader] Device is offline, checking offline data for ${key}`);
-    
+
     // Verificăm dacă avem date offline
     const offlineData = offlineService.getOfflineData<T[]>(key);
-    
+
     if (offlineData) {
       console.log(`[DataLoader] Using offline data for ${key}`);
       return offlineData;
     }
-    
+
     console.warn(`[DataLoader] No offline data available for ${key}`);
     return [];
   }
-  
+
   try {
     // Încărcăm datele din Supabase
     console.log(`[DataLoader] Fetching data for ${key}`);
     const response = await supabaseService.select(table, columns, options);
-    
+
     if (response.status === 'error') {
       console.error(`[DataLoader] Error fetching data for ${key}:`, response.error);
       throw new Error(response.error?.message || 'Unknown error');
     }
-    
+
     const data = response.data as T[];
-    
+
     // Salvăm datele în cache
     cacheService.set(key, data, {
       namespace: DATA_CACHE_NAMESPACE,
       expireIn
     });
-    
+
     // Salvăm datele pentru utilizare offline
     offlineService.storeOfflineData(key, data);
-    
+
     return data;
   } catch (error) {
     console.error(`[DataLoader] Unexpected error fetching data for ${key}:`, error);
@@ -103,21 +103,21 @@ export async function preloadData<T>(
   try {
     // Generăm cheia de cache dacă nu este specificată
     const key = cacheKey || `${table}_${columns}_${JSON.stringify(options)}`;
-    
+
     // Verificăm dacă datele sunt deja în cache
     const cachedData = cacheService.get<T[]>(key, {
       namespace: DATA_CACHE_NAMESPACE
     });
-    
+
     if (cachedData) {
       console.log(`[DataLoader] Data already preloaded for ${key}`);
       return;
     }
-    
+
     // Preîncărcăm datele
     console.log(`[DataLoader] Preloading data for ${key}`);
     await loadData<T>(table, columns, options, key, expireIn);
-    
+
     console.log(`[DataLoader] Data preloaded for ${key}`);
   } catch (error) {
     console.error('[DataLoader] Error preloading data:', error);
@@ -129,7 +129,7 @@ export async function preloadData<T>(
  * @param cacheKey Cheia pentru cache
  */
 export function invalidateCache(cacheKey: string): void {
-  cacheService.remove(cacheKey, {
+  cacheService.delete(cacheKey, {
     namespace: DATA_CACHE_NAMESPACE
   });
   console.log(`[DataLoader] Cache invalidated for ${cacheKey}`);

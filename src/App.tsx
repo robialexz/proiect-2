@@ -39,6 +39,7 @@ const SchedulePage = lazy(() => import("./pages/SchedulePage"));
 const DocumentsPage = lazy(() => import("./pages/DocumentsPage"));
 const RoleManagementPage = lazy(() => import("./pages/RoleManagementPage"));
 const TutorialPage = lazy(() => import("./pages/TutorialPage"));
+const TasksPage = lazy(() => import("./pages/TasksPage"));
 
 function App() {
   return (
@@ -84,6 +85,7 @@ function App() {
               <Route path="documents" element={<DocumentsPage />} />
               <Route path="role-management" element={<RoleManagementPage />} />
               <Route path="tutorial" element={<TutorialPage />} />
+              <Route path="tasks" element={<TasksPage />} />
             </Route>
             {/* Add tempobook route to prevent catchall from capturing it */}
             {import.meta.env.VITE_TEMPO === "true" && (

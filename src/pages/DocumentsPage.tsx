@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { useTranslation } from "react-i18next";
+import DocumentCollaboration from "@/components/documents/DocumentCollaboration";
 import {
   FileText,
   Search,
@@ -284,7 +285,7 @@ const DocumentsPage: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-slate-900 text-white">
-      
+
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
         <header className="sticky top-0 z-10 bg-slate-900 border-b border-slate-800 px-6 py-4 shrink-0">
@@ -465,6 +466,7 @@ const DocumentsPage: React.FC = () => {
                   {t("Recently Uploaded")}
                 </TabsTrigger>
                 <TabsTrigger value="shared">{t("Shared With Me")}</TabsTrigger>
+                <TabsTrigger value="collaboration">{t("Collaboration")}</TabsTrigger>
               </TabsList>
 
               <TabsContent value="all" className="mt-6">
@@ -557,6 +559,10 @@ const DocumentsPage: React.FC = () => {
                     </div>
                   </CardContent>
                 </Card>
+              </TabsContent>
+
+              <TabsContent value="collaboration" className="mt-6">
+                <DocumentCollaboration className="bg-slate-800 border-slate-700" />
               </TabsContent>
             </Tabs>
           </motion.div>
