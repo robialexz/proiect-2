@@ -8,7 +8,7 @@ import { dataLoader } from './data-loader';
 import { SupabaseTables, SupabaseRpcFunctions } from '../types/supabase-tables';
 
 // Flag pentru a activa autentificarea de rezervă - dezactivat în producție pentru securitate
-const USE_FALLBACK_AUTH = import.meta.env.DEV ? true : false; // Activat doar în dezvoltare
+const USE_FALLBACK_AUTH = import.meta.env.DEV && import.meta.env.VITE_ENABLE_TEST_ACCOUNTS === 'true';
 
 // Flag pentru a activa cache-ul offline
 const USE_OFFLINE_CACHE = true; // Setați la false pentru a dezactiva cache-ul offline
@@ -37,6 +37,8 @@ const checkConnectionBeforeRequest = async (): Promise<boolean> => {
   // Dacă nu există conexiune la internet sau la Supabase, returnează false
   return internet && hasSupabaseConnection;
 };
+
+// Folosim checkConnectionBeforeRequest în handlePromise pentru a verifica conexiunea înainte de a face cereri
 
 // Funcție pentru a transforma erorile PostgrestError în SupabaseErrorResponse - îmbunătățită pentru securitate
 const formatError = (error: PostgrestError | Error | unknown): SupabaseErrorResponse => {
@@ -344,7 +346,7 @@ export const supabaseService = {
 
         // În mediul de dezvoltare, permitem autentificarea cu orice email/parolă pentru testare
         // IMPORTANT: Acest cod nu va rula în producție pentru securitate
-        if (import.meta.env.DEV) {
+        if (USE_FALLBACK_AUTH) {
           console.log('Development mode detected, using test credentials');
           // Verificăm dacă email-ul conține "test" sau "demo" pentru a permite autentificarea de test
           if (email.includes('test') || email.includes('demo') || email.includes('admin')) {
@@ -355,28 +357,32 @@ export const supabaseService = {
               id: 'test-user-id-' + Date.now().toString(36),  // ID unic pentru a evita conflictele
               email: email,
               user_metadata: {
-                name: 'Test User'
+                name: email.split('@')[0] || 'Test User',
+                role: email.includes('admin') ? 'admin' : 'user',
+                avatar_url: `https://ui-avatars.com/api/?name=${encodeURIComponent(email.split('@')[0])}&background=random`
               },
-              role: 'authenticated'
+              app_metadata: {
+                provider: 'email',
+                providers: ['email']
+              },
+              aud: 'authenticated',
+              created_at: new Date().toISOString(),
+              role: 'authenticated',
+              updated_at: new Date().toISOString(),
+              identities: [],
+              confirmed_at: new Date().toISOString(),
+              last_sign_in_at: new Date().toISOString(),
+              phone: '',
+              factors: null
             };
 
             const testSession = {
               access_token: 'test-token-' + Date.now() + Math.random().toString(36).substring(2), // Token mai sigur
               refresh_token: 'test-refresh-token-' + Date.now() + Math.random().toString(36).substring(2),
               expires_at: Date.now() + 3600000, // Expiră în 1 oră
-              user: {
-                id: testUser.id,
-                email: email,
-                role: 'authenticated',
-                app_metadata: {
-                  provider: 'email',
-                  providers: ['email']
-                },
-                user_metadata: {
-                  name: 'Test User'
-                },
-                aud: 'authenticated'
-              }
+              expires_in: 3600,
+              token_type: 'bearer',
+              user: testUser
             };
 
             // Salvăm sesiunea în sessionStorage și localStorage pentru compatibilitate
@@ -388,6 +394,11 @@ export const supabaseService = {
             // Folosim direct window.localStorage și window.sessionStorage pentru a evita probleme
             window.sessionStorage.setItem('supabase.auth.token', JSON.stringify(tokenData));
             window.localStorage.setItem('supabase.auth.token', JSON.stringify(tokenData));
+
+            // Emitem un eveniment pentru a notifica alte componente despre schimbarea sesiunii
+            window.dispatchEvent(new CustomEvent('supabase-session-update', {
+              detail: { session: testSession }
+            }));
 
             // Emitem un eveniment pentru a notifica alte componente despre sesiunea nouă
             window.dispatchEvent(new CustomEvent('supabase-session-update', {
@@ -746,7 +757,8 @@ export const supabaseService = {
   // Funcții pentru RPC (Remote Procedure Call)
   async rpc<T>(functionName: SupabaseRpcFunctions | string, params?: Record<string, any>): Promise<SupabaseResponse<T>> {
     try {
-      return handlePromise<T>(supabase.rpc(functionName as any, params));
+      // Folosim tipul corect pentru funcția RPC
+      return handlePromise<T>(supabase.rpc(functionName as string, params));
     } catch (error) {
       return {
         data: null,

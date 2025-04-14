@@ -48,27 +48,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         // Folosim un setTimeout pentru a ne asigura că actualizările de stare nu se întâmplă în timpul render-ului
         setTimeout(() => {
-          setSession(event.detail.session);
-          setUser(event.detail.session.user);
-          setLoading(false);
+          try {
+            setSession(event.detail.session);
+            setUser(event.detail.session.user);
+            setLoading(false);
 
-          // Încercăm să încărcăm profilul utilizatorului
-          if (event.detail.session.user?.id) {
-            fetchUserProfile(event.detail.session.user.id).catch(error => {
-              console.error("Error fetching user profile from event:", error);
-              // Setăm un profil implicit în caz de eroare
-              const defaultProfile = {
-                displayName: event.detail.session.user.email?.split("@")[0] || "User",
-                email: event.detail.session.user.email || "",
+            // Salvăm sesiunea în localStorage și sessionStorage pentru a asigura persistența
+            try {
+              const sessionData = {
+                currentSession: event.detail.session,
+                expiresAt: Date.now() + 3600 * 1000 // 1 oră valabilitate
               };
-              setUserProfile(defaultProfile);
-            });
-          }
+              localStorage.setItem('supabase.auth.token', JSON.stringify(sessionData));
+              sessionStorage.setItem('supabase.auth.token', JSON.stringify(sessionData));
+              console.log("Session saved to storage from event");
+            } catch (storageError) {
+              console.error("Error saving session to storage from event:", storageError);
+            }
 
-          // Notificăm AppLayout că sesiunea a fost restaurată cu succes
-          window.dispatchEvent(new CustomEvent('session-restored', {
-            detail: { success: true }
-          }));
+            // Încercăm să încărcăm profilul utilizatorului
+            if (event.detail.session.user?.id) {
+              fetchUserProfile(event.detail.session.user.id).catch(error => {
+                console.error("Error fetching user profile from event:", error);
+                // Setăm un profil implicit în caz de eroare
+                const defaultProfile = {
+                  displayName: event.detail.session.user.email?.split("@")[0] || "User",
+                  email: event.detail.session.user.email || "",
+                };
+                setUserProfile(defaultProfile);
+              });
+            }
+
+            // Notificăm AppLayout că sesiunea a fost restaurată cu succes
+            window.dispatchEvent(new CustomEvent('session-restored', {
+              detail: { success: true }
+            }));
+          } catch (error) {
+            console.error("Error processing session from event:", error);
+          }
         }, 0);
       }
     };
@@ -76,9 +93,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Adaugăm listener pentru eveniment
     window.addEventListener('force-session-refresh', handleForceSessionRefresh);
 
-    // Curățăm listener-ul la demontare
+    // Adăugăm și un listener pentru evenimentul de actualizare a sesiunii de la Supabase
+    window.addEventListener('supabase-session-update', handleForceSessionRefresh);
+
+    // Curățăm listener-urile la demontare
     return () => {
       window.removeEventListener('force-session-refresh', handleForceSessionRefresh);
+      window.removeEventListener('supabase-session-update', handleForceSessionRefresh);
     };
   }, []);
 
@@ -342,6 +363,70 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       console.log("AuthContext: Calling supabaseService.auth.signIn");
 
+      // Verificăm dacă este un cont de test în mediul de dezvoltare
+      if (import.meta.env.DEV && (email.includes('test') || email.includes('demo') || email.includes('admin'))) {
+        console.log('Using test account authentication in development mode');
+
+        // Creăm un utilizator și o sesiune de test cu toate proprietățile necesare
+        const testUser = {
+          id: 'test-user-id-' + Date.now().toString(36),
+          email: email,
+          user_metadata: {
+            name: 'Test User'
+          },
+          app_metadata: {
+            provider: 'email',
+            providers: ['email']
+          },
+          aud: 'authenticated',
+          created_at: new Date().toISOString(),
+          role: 'authenticated',
+          updated_at: new Date().toISOString(),
+          identities: [],
+          confirmed_at: new Date().toISOString(),
+          last_sign_in_at: new Date().toISOString(),
+          phone: '',
+          factors: null
+        } as User;
+
+        const testSession = {
+          access_token: 'test-token-' + Date.now() + Math.random().toString(36).substring(2),
+          refresh_token: 'test-refresh-token-' + Date.now() + Math.random().toString(36).substring(2),
+          expires_at: Date.now() + 3600000, // Expiră în 1 oră
+          expires_in: 3600,
+          token_type: 'bearer',
+          user: testUser
+        } as Session;
+
+        // Salvăm sesiunea în localStorage și sessionStorage
+        const sessionData = {
+          currentSession: testSession,
+          expiresAt: testSession.expires_at
+        };
+
+        localStorage.setItem('supabase.auth.token', JSON.stringify(sessionData));
+        sessionStorage.setItem('supabase.auth.token', JSON.stringify(sessionData));
+
+        // Actualizăm starea
+        setSession(testSession);
+        setUser(testUser);
+        setUserProfile({
+          displayName: email.split('@')[0] || 'Test User',
+          email: email
+        });
+        setLoading(false);
+
+        // Emitem un eveniment pentru a notifica alte componente
+        window.dispatchEvent(new CustomEvent('supabase-session-update', {
+          detail: { session: testSession }
+        }));
+
+        return {
+          data: testSession,
+          error: null
+        };
+      }
+
       // Folosim serviciul îmbunătățit pentru autentificare cu timeout îmbunătățit
       const response = await supabaseService.auth.signIn(email, password);
 
@@ -373,6 +458,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
           // Emitem un eveniment pentru a forța reîmprospătarea sesiunii în alte componente
           window.dispatchEvent(new CustomEvent('force-session-refresh', {
+            detail: { session: response.data.session }
+          }));
+
+          // Emitem și evenimentul standard pentru compatibilitate
+          window.dispatchEvent(new CustomEvent('supabase-session-update', {
             detail: { session: response.data.session }
           }));
         } catch (storageError) {

@@ -8,7 +8,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
   console.error("Missing Supabase environment variables");
 }
 
-// Optimized client configuration for better performance
+// Optimized client configuration for better performance and reliability
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
@@ -33,10 +33,27 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
               window.sessionStorage.removeItem(key);
               return null;
             }
-            
+
             // Verificăm dacă avem o sesiune validă
             if (parsed.currentSession && parsed.currentSession.access_token) {
               console.log('Valid session found in storage');
+
+              // Verificăm dacă suntem în modul de dezvoltare și avem conturi de test activate
+              if (import.meta.env.DEV && import.meta.env.VITE_ENABLE_TEST_ACCOUNTS === 'true') {
+                // Verificăm dacă este un cont de test
+                if (parsed.currentSession.user?.email?.includes('test') ||
+                    parsed.currentSession.user?.email?.includes('demo') ||
+                    parsed.currentSession.user?.email?.includes('admin')) {
+                  console.log('Test account detected in development mode');
+                  // Prelungim automat valabilitatea sesiunii pentru conturile de test în modul de dezvoltare
+                  parsed.expiresAt = Date.now() + 24 * 3600 * 1000; // 24 ore valabilitate
+                  const updatedData = JSON.stringify(parsed);
+                  window.localStorage.setItem(key, updatedData);
+                  window.sessionStorage.setItem(key, updatedData);
+                  return updatedData;
+                }
+              }
+
               return data;
             }
           } catch (e) {
@@ -55,20 +72,20 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
           if (!parsed.currentSession || !parsed.currentSession.access_token) {
             console.warn('Attempting to store invalid session data');
           }
-          
+
           // Adăugăm un timestamp de expirare dacă nu există
           if (!parsed.expiresAt) {
             parsed.expiresAt = Date.now() + 3600 * 1000; // 1 oră valabilitate
             value = JSON.stringify(parsed);
           }
-          
+
           window.localStorage.setItem(key, value);
           window.sessionStorage.setItem(key, value);
-          
+
           // Emitem un eveniment pentru a notifica alte componente despre schimbarea sesiunii
           if (parsed.currentSession) {
-            window.dispatchEvent(new CustomEvent('supabase-session-update', { 
-              detail: { session: parsed.currentSession } 
+            window.dispatchEvent(new CustomEvent('supabase-session-update', {
+              detail: { session: parsed.currentSession }
             }));
           }
         } catch (e) {
@@ -83,10 +100,10 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
         console.log('Supabase client: Removing session from storage', key);
         window.localStorage.removeItem(key);
         window.sessionStorage.removeItem(key);
-        
+
         // Emitem un eveniment pentru a notifica alte componente despre ștergerea sesiunii
-        window.dispatchEvent(new CustomEvent('supabase-session-update', { 
-          detail: { session: null } 
+        window.dispatchEvent(new CustomEvent('supabase-session-update', {
+          detail: { session: null }
         }));
         return;
       }
@@ -94,13 +111,12 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   },
   global: {
     // Reduced timeout to 15 seconds for faster error detection
-    fetch: (url, options) => {
+    fetch: async (url: URL | RequestInfo, options?: RequestInit) => {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 seconds timeout
 
-      // Create a cache key for GET requests
-      const isGetRequest = options?.method === undefined || options?.method === 'GET';
-      const cacheKey = isGetRequest ? url.toString() : null;
+      // Determine if this is a GET request for caching purposes
+      const isGetRequest = !options?.method || options?.method === 'GET';
 
       // Use a more balanced caching strategy
       const headers = {
@@ -109,7 +125,11 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
         'Cache-Control': isGetRequest ? 'max-age=300, stale-while-revalidate=600' : 'no-cache',
         // Asigurăm că API key-ul este inclus în toate cererile
         'apikey': supabaseAnonKey,
-        'Authorization': `Bearer ${supabaseAnonKey}`
+        'Authorization': `Bearer ${supabaseAnonKey}`,
+        // Adăugăm informații despre aplicație pentru diagnostic
+        'x-application-name': import.meta.env.VITE_APP_NAME || 'InventoryMaster',
+        'x-application-version': import.meta.env.VITE_APP_VERSION || '1.0.0',
+        'x-client-info': 'supabase-js/2.x'  // Versiunea clientului
       };
 
       // Verificăm dacă avem un token de sesiune și îl adăugăm la cerere
@@ -140,3 +160,62 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
     }
   }
 });
+
+// Configurăm listener pentru schimbările de sesiune
+supabase.auth.onAuthStateChange((event, session) => {
+  console.log('Supabase auth state change:', event);
+
+  if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+    // Emitem un eveniment pentru a notifica alte componente despre schimbarea sesiunii
+    window.dispatchEvent(new CustomEvent('supabase-session-update', {
+      detail: { session }
+    }));
+  } else if (event === 'SIGNED_OUT') {
+    // Curățăm storage-ul și emitem un eveniment
+    window.dispatchEvent(new CustomEvent('supabase-session-update', {
+      detail: { session: null }
+    }));
+  }
+});
+
+// Funcție pentru a verifica dacă utilizatorul este autentificat
+export const isAuthenticated = async (): Promise<boolean> => {
+  try {
+    // În modul de dezvoltare, verificăm dacă avem un cont de test în storage
+    if (import.meta.env.DEV && import.meta.env.VITE_ENABLE_TEST_ACCOUNTS === 'true') {
+      const localSession = localStorage.getItem('supabase.auth.token') || sessionStorage.getItem('supabase.auth.token');
+      if (localSession) {
+        try {
+          const parsed = JSON.parse(localSession);
+          if (parsed.currentSession?.user?.email?.includes('test') ||
+              parsed.currentSession?.user?.email?.includes('demo') ||
+              parsed.currentSession?.user?.email?.includes('admin')) {
+            console.log('Test account session found in development mode');
+            return true;
+          }
+        } catch (e) {
+          console.error('Error parsing local session:', e);
+        }
+      }
+    }
+
+    // Verificăm sesiunea normal
+    const { data, error } = await supabase.auth.getSession();
+    return !!data.session && !error;
+  } catch (error) {
+    console.error('Error checking authentication status:', error);
+    return false;
+  }
+};
+
+// Funcție pentru a obține sesiunea curentă
+export const getCurrentSession = async () => {
+  try {
+    const { data, error } = await supabase.auth.getSession();
+    if (error) throw error;
+    return data.session;
+  } catch (error) {
+    console.error('Error getting current session:', error);
+    return null;
+  }
+};
