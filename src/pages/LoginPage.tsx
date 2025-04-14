@@ -60,22 +60,38 @@ const LoginPage = () => {
 
     setLoading(true);
 
-    // Adăugăm un timeout pentru întreaga operațiune de login - reducem la 10 secunde
+    // Adăugăm un timeout pentru întreaga operațiune de login - mărim la 20 secunde pentru a da mai mult timp
     const loginTimeout = setTimeout(() => {
       if (loading) {
         setLoading(false);
         setError("Login timeout. Please check your internet connection and try again later.");
         console.error("Login timeout reached");
       }
-    }, 10000); // 10 secunde timeout
+    }, 20000); // 20 secunde timeout
 
     try {
       console.log("LoginPage: Calling signIn function with email:", email);
 
-      // Chiar și pentru conturile de test, folosim AuthContext pentru a asigura persistarea sesiunii
-      // Acest lucru va permite ca utilizatorul să rămână autentificat în toate paginile aplicației
+      // Adăugăm un eveniment pentru a asculta actualizările de sesiune
+      const sessionUpdateHandler = (event: any) => {
+        console.log("LoginPage: Received session update event");
+        if (event.detail?.session) {
+          console.log("LoginPage: Session update detected, navigating to overview");
+          // Curățăm timeout-ul
+          clearTimeout(loginTimeout);
+          // Eliminăm listener-ul
+          window.removeEventListener('supabase-session-update', sessionUpdateHandler);
+          window.removeEventListener('force-session-refresh', sessionUpdateHandler);
+          // Navigăm către pagina principală
+          navigate("/overview");
+        }
+      };
 
-      // Autentificare normală pentru conturile non-test
+      // Adăugăm listener pentru ambele evenimente
+      window.addEventListener('supabase-session-update', sessionUpdateHandler);
+      window.addEventListener('force-session-refresh', sessionUpdateHandler);
+
+      // Autentificare normală
       const { data: sessionData, error: signInError } = await signIn(email, password);
       console.log("LoginPage: signIn function returned:", {
         success: !!sessionData,
@@ -88,12 +104,33 @@ const LoginPage = () => {
 
       if (signInError) {
         console.log("signIn returned an error, throwing...");
+        // Eliminăm listener-ul în caz de eroare
+        window.removeEventListener('supabase-session-update', sessionUpdateHandler);
+        window.removeEventListener('force-session-refresh', sessionUpdateHandler);
         throw signInError;
       }
 
-      // Navigație directă către pagina principală
-      console.log("LoginPage: Authentication successful, navigating to overview");
-      navigate("/overview");
+      // Verificăm dacă avem date de sesiune
+      if (sessionData) {
+        console.log("LoginPage: Authentication successful, navigating to overview");
+        // Navigație directă către pagina principală
+        navigate("/overview");
+      } else {
+        // Așteptăm evenimentul de actualizare a sesiunii
+        console.log("LoginPage: No session data returned, waiting for session update event");
+        // Adăugăm un timeout suplimentar pentru a aștepta evenimentul
+        setTimeout(() => {
+          // Verificăm dacă încă mai suntem pe pagina de login
+          if (window.location.pathname.includes('login')) {
+            console.log("LoginPage: No session update event received, navigating to overview anyway");
+            // Eliminăm listener-ul
+            window.removeEventListener('supabase-session-update', sessionUpdateHandler);
+            window.removeEventListener('force-session-refresh', sessionUpdateHandler);
+            // Navigăm către pagina principală
+            navigate("/overview");
+          }
+        }, 2000); // 2 secunde de așteptare
+      }
     } catch (err: any) {
       // Curățăm timeout-ul în caz de eroare
       clearTimeout(loginTimeout);
@@ -274,4 +311,3 @@ const LoginPage = () => {
 };
 
 export default LoginPage;
-

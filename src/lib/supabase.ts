@@ -17,9 +17,10 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
     storageKey: 'supabase.auth.token',
     storage: {
       getItem: (key) => {
+        console.log('Supabase client: Getting session from storage', key);
         // Încercăm să obținem sesiunea din localStorage sau sessionStorage
-        const localData = localStorage.getItem(key);
-        const sessionData = sessionStorage.getItem(key);
+        const localData = window.localStorage.getItem(key);
+        const sessionData = window.sessionStorage.getItem(key);
         const data = localData || sessionData;
 
         if (data) {
@@ -28,9 +29,15 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
             const parsed = JSON.parse(data);
             if (parsed.expiresAt && parsed.expiresAt < Date.now()) {
               console.log('Session expired, removing from storage');
-              localStorage.removeItem(key);
-              sessionStorage.removeItem(key);
+              window.localStorage.removeItem(key);
+              window.sessionStorage.removeItem(key);
               return null;
+            }
+            
+            // Verificăm dacă avem o sesiune validă
+            if (parsed.currentSession && parsed.currentSession.access_token) {
+              console.log('Valid session found in storage');
+              return data;
             }
           } catch (e) {
             console.error('Error parsing session data:', e);
@@ -40,14 +47,47 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
         return data;
       },
       setItem: (key, value) => {
+        console.log('Supabase client: Setting session in storage', key);
         // Salvăm sesiunea în ambele storage-uri pentru compatibilitate
-        localStorage.setItem(key, value);
-        sessionStorage.setItem(key, value);
+        try {
+          // Verificăm dacă valoarea este validă
+          const parsed = JSON.parse(value);
+          if (!parsed.currentSession || !parsed.currentSession.access_token) {
+            console.warn('Attempting to store invalid session data');
+          }
+          
+          // Adăugăm un timestamp de expirare dacă nu există
+          if (!parsed.expiresAt) {
+            parsed.expiresAt = Date.now() + 3600 * 1000; // 1 oră valabilitate
+            value = JSON.stringify(parsed);
+          }
+          
+          window.localStorage.setItem(key, value);
+          window.sessionStorage.setItem(key, value);
+          
+          // Emitem un eveniment pentru a notifica alte componente despre schimbarea sesiunii
+          if (parsed.currentSession) {
+            window.dispatchEvent(new CustomEvent('supabase-session-update', { 
+              detail: { session: parsed.currentSession } 
+            }));
+          }
+        } catch (e) {
+          console.error('Error setting session data:', e);
+          // Încercăm să salvăm oricum
+          window.localStorage.setItem(key, value);
+          window.sessionStorage.setItem(key, value);
+        }
         return;
       },
       removeItem: (key) => {
-        localStorage.removeItem(key);
-        sessionStorage.removeItem(key);
+        console.log('Supabase client: Removing session from storage', key);
+        window.localStorage.removeItem(key);
+        window.sessionStorage.removeItem(key);
+        
+        // Emitem un eveniment pentru a notifica alte componente despre ștergerea sesiunii
+        window.dispatchEvent(new CustomEvent('supabase-session-update', { 
+          detail: { session: null } 
+        }));
         return;
       }
     }

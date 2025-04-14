@@ -382,8 +382,14 @@ export const supabaseService = {
               expiresAt: testSession.expires_at
             };
 
-            sessionStorage.setItem('supabase.auth.token', JSON.stringify(tokenData));
-            localStorage.setItem('supabase.auth.token', JSON.stringify(tokenData));
+            // Folosim direct window.localStorage și window.sessionStorage pentru a evita probleme
+            window.sessionStorage.setItem('supabase.auth.token', JSON.stringify(tokenData));
+            window.localStorage.setItem('supabase.auth.token', JSON.stringify(tokenData));
+            
+            // Emitem un eveniment pentru a notifica alte componente despre sesiunea nouă
+            window.dispatchEvent(new CustomEvent('supabase-session-update', { 
+              detail: { session: testSession } 
+            }));
 
             return {
               data: {
@@ -409,6 +415,20 @@ export const supabaseService = {
 
               // Salvăm sesiunea în localStorage pentru a o putea recupera mai târziu
               localStorage.setItem('fallback_session', JSON.stringify(fallbackResult.data.session));
+              
+              // Salvăm și în formatul Supabase pentru compatibilitate
+              const tokenData = {
+                currentSession: fallbackResult.data.session,
+                expiresAt: Date.now() + 3600000 // 1 oră valabilitate
+              };
+              
+              window.localStorage.setItem('supabase.auth.token', JSON.stringify(tokenData));
+              window.sessionStorage.setItem('supabase.auth.token', JSON.stringify(tokenData));
+              
+              // Emitem un eveniment pentru a notifica alte componente despre sesiunea nouă
+              window.dispatchEvent(new CustomEvent('supabase-session-update', { 
+                detail: { session: fallbackResult.data.session } 
+              }));
 
               return {
                 data: {
@@ -462,6 +482,29 @@ export const supabaseService = {
           success: !!result.data?.session,
           error: result.error ? 'Error present' : 'No error'
         });
+        
+        // Dacă autentificarea a reușit, salvăm sesiunea manual pentru a ne asigura că este disponibilă
+        if (result.data?.session) {
+          try {
+            const tokenData = {
+              currentSession: result.data.session,
+              expiresAt: Date.now() + 3600000 // 1 oră valabilitate
+            };
+            
+            // Folosim direct window.localStorage și window.sessionStorage pentru a evita probleme
+            window.localStorage.setItem('supabase.auth.token', JSON.stringify(tokenData));
+            window.sessionStorage.setItem('supabase.auth.token', JSON.stringify(tokenData));
+            
+            // Emitem un eveniment pentru a notifica alte componente despre sesiunea nouă
+            window.dispatchEvent(new CustomEvent('supabase-session-update', { 
+              detail: { session: result.data.session } 
+            }));
+            
+            console.log('Session saved manually after successful authentication');
+          } catch (storageError) {
+            console.error('Error saving session to storage:', storageError);
+          }
+        }
 
         return handleResponse(result.data, result.error as unknown as PostgrestError);
       } catch (error) {

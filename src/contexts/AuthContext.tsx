@@ -347,22 +347,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error(response.error.message);
       } else if (response.data?.session) {
         console.log("AuthContext: Sign in successful, session established");
-        // Immediately update the session and user state
-        setSession(response.data.session);
-        setUser(response.data.user);
-
+        
         // Salvăm sesiunea în localStorage și sessionStorage pentru a asigura persistența
+        // IMPORTANT: Facem acest lucru ÎNAINTE de a actualiza starea React
         try {
           const sessionData = {
             currentSession: response.data.session,
             expiresAt: Date.now() + 3600 * 1000 // 1 oră valabilitate
           };
-          localStorage.setItem('supabase.auth.token', JSON.stringify(sessionData));
-          sessionStorage.setItem('supabase.auth.token', JSON.stringify(sessionData));
+          
+          // Folosim direct localStorage și sessionStorage pentru a evita probleme cu storage-ul personalizat
+          window.localStorage.setItem('supabase.auth.token', JSON.stringify(sessionData));
+          window.sessionStorage.setItem('supabase.auth.token', JSON.stringify(sessionData));
+          
           console.log("Session saved to storage after login");
+          
+          // Emitem un eveniment pentru a forța reîmprospătarea sesiunii în alte componente
+          window.dispatchEvent(new CustomEvent('force-session-refresh', { 
+            detail: { session: response.data.session } 
+          }));
         } catch (storageError) {
           console.error("Error saving session to storage after login:", storageError);
         }
+        
+        // Apoi actualizăm starea React
+        setSession(response.data.session);
+        setUser(response.data.user);
+        setLoading(false); // Asigurăm că starea de încărcare este dezactivată
       } else {
         console.error("AuthContext: No session returned from authentication");
         throw new Error('No session returned from authentication');
