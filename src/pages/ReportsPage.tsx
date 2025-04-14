@@ -53,13 +53,19 @@ const ReportsPage: React.FC = () => {
 
     if (reportsError) {
       console.error("Error fetching reports:", reportsError);
-      toast({
-        variant: "destructive",
-        title: "Error loading reports",
-        description: reportsError.message,
-      });
-      // Fallback la metoda tradițională dacă useDataLoader eșuează
-      fetchReportsFallback();
+      // Evităm afișarea de notificări multiple pentru aceeași eroare
+      // Folosim un timeout pentru a evita problemele de performanță
+      const timer = setTimeout(() => {
+        toast({
+          variant: "destructive",
+          title: "Error loading reports",
+          description: reportsError.message,
+        });
+        // Fallback la metoda tradițională dacă useDataLoader eșuează
+        fetchReportsFallback();
+      }, 100);
+
+      return () => clearTimeout(timer);
     }
   }, [reportsData, reportsLoading, reportsError]);
 

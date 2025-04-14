@@ -53,13 +53,19 @@ const ResourcesPage: React.FC = () => {
 
     if (resourcesError) {
       console.error("Error fetching resources:", resourcesError);
-      toast({
-        variant: "destructive",
-        title: "Error loading resources",
-        description: resourcesError.message,
-      });
-      // Fallback la metoda tradițională dacă useDataLoader eșuează
-      fetchResourcesFallback();
+      // Evităm afișarea de notificări multiple pentru aceeași eroare
+      // Folosim un timeout pentru a evita problemele de performanță
+      const timer = setTimeout(() => {
+        toast({
+          variant: "destructive",
+          title: "Error loading resources",
+          description: resourcesError.message,
+        });
+        // Fallback la metoda tradițională dacă useDataLoader eșuează
+        fetchResourcesFallback();
+      }, 100);
+
+      return () => clearTimeout(timer);
     }
   }, [resourcesData, resourcesLoading, resourcesError]);
 

@@ -84,9 +84,17 @@ const TeamsPage: React.FC = () => {
 
       // Dacă avem date în cache, le folosim pentru afișarea inițială
       if (cachedData) {
-        const parsedData = JSON.parse(cachedData);
-        setTeams(parsedData);
-        // Continuăm cu încărcarea datelor noi în fundal
+        try {
+          const parsedData = JSON.parse(cachedData);
+          if (Array.isArray(parsedData)) {
+            setTeams(parsedData);
+            // Continuăm cu încărcarea datelor noi în fundal
+          }
+        } catch (cacheError) {
+          console.error("Error parsing cached teams data:", cacheError);
+          // Dacă cache-ul este corupt, îl ștergem
+          localStorage.removeItem(cacheKey);
+        }
       }
 
       // Optimizăm query-ul pentru a reduce timpul de încărcare

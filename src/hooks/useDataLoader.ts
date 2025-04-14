@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { dataLoader } from '@/lib/data-loader';
+import { useToast } from '@/components/ui/use-toast';
 
 /**
  * Hook pentru încărcarea optimizată a datelor
@@ -21,37 +22,54 @@ export function useDataLoader<T>(
   const [data, setData] = useState<T[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
+  const { toast } = useToast();
 
   // Generăm cheia de cache dacă nu este specificată
   const key = cacheKey || `${table}_${columns}_${JSON.stringify(options)}`;
 
-  // Funcție pentru încărcarea datelor
-  const loadData = async () => {
+  // Funcție pentru încărcarea datelor - optimizată cu useCallback
+  const loadData = useCallback(async (showToast = false) => {
     setIsLoading(true);
     setError(null);
 
     try {
       const result = await dataLoader.loadData<T>(table, columns, options, key, expireIn);
       setData(result);
+      if (showToast) {
+        toast({
+          title: "Date încărcate cu succes",
+          description: `Datele din ${table} au fost actualizate.`,
+          variant: "default"
+        });
+      }
     } catch (err) {
       console.error(`Error loading data for ${key}:`, err);
       setError(err instanceof Error ? err : new Error('Unknown error'));
+
+      // Afișăm o notificare doar dacă este solicitată explicit
+      if (showToast) {
+        toast({
+          title: "Eroare la încărcarea datelor",
+          description: err instanceof Error ? err.message : 'Eroare necunoscută',
+          variant: "destructive"
+        });
+      }
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [table, columns, JSON.stringify(options), key, expireIn, toast]);
 
   // Încărcăm datele la montarea componentei și când se schimbă dependențele
   useEffect(() => {
-    loadData();
-  }, [key, ...dependencies]);
+    loadData(false);
+  }, [loadData, ...dependencies]);
 
   // Funcție pentru reîncărcarea manuală a datelor
-  const refetch = () => {
+  const refetch = useCallback(() => {
     // Invalidăm cache-ul pentru a forța reîncărcarea
     dataLoader.invalidateCache(key);
-    return loadData();
-  };
+    return loadData(true); // Afișăm notificare la reîncărcare manuală
+  }, [key, loadData]);
 
   return { data, isLoading, error, refetch };
 }

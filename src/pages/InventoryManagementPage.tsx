@@ -854,7 +854,12 @@ const InventoryManagementPage: React.FC = () => {
     if (!authLoading && !roleLoading) {
       console.log("Loading projects...");
       // Folosim refetchProjects în loc de fetchProjects
-      refetchProjects();
+      // Adaugăm un timeout pentru a evita problemele de performanță
+      const timer = setTimeout(() => {
+        refetchProjects();
+      }, 100);
+
+      return () => clearTimeout(timer);
     }
   }, [authLoading, roleLoading, refetchProjects]);
 
