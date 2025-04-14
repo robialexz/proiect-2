@@ -43,19 +43,58 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Adăugăm un timeout pentru a evita blocarea la "se încarcă..." - redus drastic pentru performanță mai bună
     const timeoutId = setTimeout(() => {
       if (loading) {
-        console.log("Auth loading timeout reached after 1 second, forcing loading to false");
+        console.log("Auth loading timeout reached after 2 seconds, forcing loading to false");
         setLoading(false);
         // Setăm un profil implicit în caz de timeout
         if (user && !userProfile) {
-          setUserProfile({
+          const defaultProfile = {
             displayName: user.email?.split("@")[0] || "User",
             email: user.email || "",
-          });
+          };
+          setUserProfile(defaultProfile);
+
+          // Salvăm profilul implicit în cache pentru a evita încărcarea repetată
+          if (user.id) {
+            const cacheKey = `user_profile_${user.id}`;
+            cacheService.set(cacheKey, defaultProfile, { namespace: 'auth', ttl: 5 * 60 * 1000 });
+          }
         }
       }
-    }, 1000); // Redus la doar 1 secundă pentru încărcare rapidă
+    }, 2000); // Mărim la 2 secunde pentru a da mai mult timp pentru încărcare
 
     console.log("AuthContext: Checking for existing session...");
+
+    // Verificăm mai întâi dacă avem o sesiune în localStorage
+    const localSession = localStorage.getItem('supabase.auth.token');
+    if (localSession) {
+      try {
+        const parsedSession = JSON.parse(localSession);
+        if (parsedSession?.currentSession?.user) {
+          console.log("Found local session, using it");
+          const userData = parsedSession.currentSession.user;
+          setUser(userData);
+          setSession(parsedSession.currentSession);
+
+          // Încercăm să încărcăm profilul utilizatorului
+          if (userData.id) {
+            fetchUserProfile(userData.id).catch(error => {
+              console.error("Error fetching user profile from local session:", error);
+              // Setăm un profil implicit în caz de eroare
+              const defaultProfile = {
+                displayName: userData.email?.split("@")[0] || "User",
+                email: userData.email || "",
+              };
+              setUserProfile(defaultProfile);
+            });
+          }
+
+          // Continuăm cu verificarea sesiunii la server pentru a o revalida
+        }
+      } catch (error) {
+        console.error("Error parsing local session:", error);
+      }
+    }
+
     // Get initial session using the improved service
     supabaseService.auth.getSession().then(async (response) => {
       console.log("AuthContext: Initial session check result:", {
@@ -78,14 +117,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           } catch (error) {
             console.error("Error fetching user profile:", error);
             // Setăm un profil implicit în caz de eroare
-            setUserProfile({
+            const defaultProfile = {
               displayName: userResponse.data.email?.split("@")[0] || "User",
               email: userResponse.data.email || "",
-            });
+            };
+            setUserProfile(defaultProfile);
+
+            // Salvăm profilul implicit în cache pentru a evita încărcarea repetată
+            const cacheKey = `user_profile_${userResponse.data.id}`;
+            cacheService.set(cacheKey, defaultProfile, { namespace: 'auth', ttl: 5 * 60 * 1000 });
           }
         }
       } else {
-        console.log("No active session found");
+        console.log("No active session found on server");
+        // Dacă nu avem o sesiune activă pe server, dar avem una locală, încercăm să o revalidăm
+        if (user && !session) {
+          console.log("Attempting to revalidate local session");
+          // Aici am putea încerca să revalidăm sesiunea locală dacă este necesar
+        }
         setLoading(false);
       }
     }).catch(error => {

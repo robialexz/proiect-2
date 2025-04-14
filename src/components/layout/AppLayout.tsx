@@ -13,6 +13,7 @@ import { routePreloader } from '@/lib/route-preloader';
 import { OfflineIndicator } from '@/components/ui/offline-indicator';
 import usePageTransition from '@/hooks/usePageTransition';
 import { measurePerformance } from '@/lib/performance-optimizer';
+import WelcomeOverlay from '@/components/welcome/WelcomeOverlay';
 
 const AppLayout: React.FC = () => {
   const location = useLocation();
@@ -42,18 +43,17 @@ const AppLayout: React.FC = () => {
     };
   }, [location.pathname, transitionComplete]);
 
+  // Stare pentru afișarea overlay-ului de bun venit
+  const [showWelcomeOverlay, setShowWelcomeOverlay] = useState(false);
+
   // Afișăm un mesaj de bun venit doar la prima încărcare, nu la fiecare schimbare de pagină
   useEffect(() => {
     // Folosim localStorage pentru a verifica dacă mesajul a fost deja afișat în această sesiune
     const welcomeShown = localStorage.getItem('welcomeMessageShown');
 
     if (user && !loading && !welcomeShown) {
-      addNotification({
-        type: 'success',
-        title: 'Bun venit!',
-        message: getWelcomeMessage(),
-        duration: 5000,
-      });
+      // Afișăm overlay-ul de bun venit în loc de notificare
+      setShowWelcomeOverlay(true);
 
       // Marcăm mesajul ca afișat pentru această sesiune
       localStorage.setItem('welcomeMessageShown', 'true');
@@ -63,7 +63,7 @@ const AppLayout: React.FC = () => {
         localStorage.removeItem('welcomeMessageShown');
       }, 30 * 60 * 1000); // 30 minute
     }
-  }, [user, loading, addNotification]);
+  }, [user, loading]);
 
   // Gestionăm deschiderea/închiderea meniului pe mobil - optimizat cu memoizare
   const toggleMobileMenu = useMemoizedCallback(() => {
@@ -96,11 +96,16 @@ const AppLayout: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-slate-900 text-white overflow-hidden">
+      {/* Overlay de bun venit - afișat doar la prima încărcare */}
+      {showWelcomeOverlay && (
+        <WelcomeOverlay onComplete={() => setShowWelcomeOverlay(false)} />
+      )}
+
       {/* Componenta de stare a conexiunii */}
       <ConnectionStatus />
       {/* Sidebar - ascuns pe mobil când este închis */}
       <div
-        className={`fixed inset-y-0 left-0 z-50 transform ${
+        className={`fixed inset-y-0 left-0 z-40 transform ${
           isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
         } md:relative md:translate-x-0 transition-transform duration-300 ease-in-out`}
       >
@@ -110,7 +115,7 @@ const AppLayout: React.FC = () => {
       {/* Overlay pentru închiderea meniului pe mobil */}
       {isMobileMenuOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+          className="fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden"
           onClick={toggleMobileMenu}
         />
       )}
