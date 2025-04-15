@@ -6,6 +6,7 @@
 import { cacheService } from './cache-service';
 import { supabaseService } from './supabase-service';
 import { offlineService } from './offline-service';
+import { supabase } from './supabase';
 
 // Namespace pentru cache-ul de date
 const DATA_CACHE_NAMESPACE = 'data';
