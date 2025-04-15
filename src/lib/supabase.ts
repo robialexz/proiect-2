@@ -98,13 +98,24 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
       },
       removeItem: (key) => {
         console.log('Supabase client: Removing session from storage', key);
+
+        // Verificăm dacă este o deconectare intenționată sau o ștergere automată
+        const isIntentionalSignOut = window.sessionStorage.getItem('intentional_signout') === 'true';
+
         window.localStorage.removeItem(key);
         window.sessionStorage.removeItem(key);
 
-        // Emitem un eveniment pentru a notifica alte componente despre ștergerea sesiunii
-        window.dispatchEvent(new CustomEvent('supabase-session-update', {
-          detail: { session: null }
-        }));
+        // Emitem un eveniment doar dacă este o deconectare intenționată
+        if (isIntentionalSignOut) {
+          console.log('Intentional sign out detected, dispatching session update event');
+          window.dispatchEvent(new CustomEvent('supabase-session-update', {
+            detail: { session: null }
+          }));
+          // Resetăm flag-ul
+          window.sessionStorage.removeItem('intentional_signout');
+        } else {
+          console.log('Automatic session removal detected, not dispatching event');
+        }
         return;
       }
     }
@@ -171,6 +182,10 @@ supabase.auth.onAuthStateChange((event, session) => {
       detail: { session }
     }));
   } else if (event === 'SIGNED_OUT') {
+    // Setăm flag-ul pentru deconectare intenționată
+    window.sessionStorage.setItem('intentional_signout', 'true');
+    console.log('SIGNED_OUT event detected, setting intentional_signout flag');
+
     // Curățăm storage-ul și emitem un eveniment
     window.dispatchEvent(new CustomEvent('supabase-session-update', {
       detail: { session: null }

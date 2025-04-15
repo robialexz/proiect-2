@@ -599,6 +599,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
+    // Setăm flag-ul pentru deconectare intenționată înainte de a șterge sesiunea
+    try {
+      sessionStorage.setItem('intentional_signout', 'true');
+      console.log("Set intentional_signout flag before logout");
+    } catch (error) {
+      console.error("Error setting intentional_signout flag:", error);
+    }
+
     // Folosim serviciul îmbunătățit pentru deconectare
     const response = await supabaseService.auth.signOut();
 
