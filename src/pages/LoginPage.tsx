@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,13 +6,95 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { AlertCircle, Wifi, WifiOff } from "lucide-react";
+import { AlertCircle, Wifi, WifiOff, Eye, EyeOff } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import connectionService from "@/lib/connection-service";
+import { toast } from "react-hot-toast";
+
+// Fundal animat cu glassmorphism subtil și particule soft
+const GlassAnimatedBackground = () => (
+  <div className="fixed inset-0 -z-10 bg-gradient-to-br from-[#18181c] via-[#23243a] to-[#141726]">
+    {/* Efect glassmorphism subtil */}
+    <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-blue-300/10 to-purple-400/10 backdrop-blur-2xl" />
+    {/* Particule animate SVG foarte subtile */}
+    <svg className="absolute top-0 left-0 w-full h-full opacity-20 pointer-events-none" width="100%" height="100%">
+      <circle cx="15%" cy="30%" r="60" fill="#7dd3fc" fillOpacity="0.15">
+        <animate attributeName="cy" values="30%;40%;30%" dur="8s" repeatCount="indefinite" />
+      </circle>
+      <circle cx="80%" cy="70%" r="70" fill="#818cf8" fillOpacity="0.12">
+        <animate attributeName="cy" values="70%;60%;70%" dur="10s" repeatCount="indefinite" />
+      </circle>
+      <circle cx="50%" cy="10%" r="40" fill="#f472b6" fillOpacity="0.10">
+        <animate attributeName="cy" values="10%;20%;10%" dur="12s" repeatCount="indefinite" />
+      </circle>
+    </svg>
+  </div>
+);
+
+const GlassCard = ({ children }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 50 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.8 }}
+    className="glass-card bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl rounded-2xl p-8 w-full max-w-md relative overflow-hidden"
+    style={{ boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.25)' }}
+  >
+    {children}
+  </motion.div>
+);
+
+const AnimatedInput = ({ ...props }) => (
+  <motion.input
+    {...props}
+    whileFocus={{ boxShadow: "0 0 0 3px #818cf8" }}
+    transition={{ type: "spring", stiffness: 400, damping: 20 }}
+    className={
+      "bg-white/20 border border-white/30 text-slate-100 placeholder:text-slate-400 px-3 py-2 rounded w-full outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 transition-all duration-200 " +
+      (props.className || "")
+    }
+  />
+);
+
+const AnimatedCheckbox = (props) => (
+  <motion.input
+    type="checkbox"
+    whileTap={{ scale: 1.2 }}
+    transition={{ type: "spring", stiffness: 300 }}
+    {...props}
+    className={
+      "accent-indigo-400 w-4 h-4 rounded focus:ring-2 focus:ring-indigo-400 transition-all duration-200 " +
+      (props.className || "")
+    }
+  />
+);
+
+// Logo animat stilizat, SVG subtil
+const AnimatedLogo = () => (
+  <motion.svg
+    width="64" height="64" viewBox="0 0 64 64"
+    initial={{ opacity: 0, scale: 0.8 }}
+    animate={{ opacity: 1, scale: 1, rotate: [0, 10, -10, 0] }}
+    transition={{ duration: 2, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" }}
+    className="mx-auto mb-4 drop-shadow-xl"
+  >
+    <defs>
+      <radialGradient id="grad1" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stopColor="#818cf8" stopOpacity="0.7" />
+        <stop offset="100%" stopColor="#18181c" stopOpacity="0.1" />
+      </radialGradient>
+    </defs>
+    <circle cx="32" cy="32" r="28" fill="url(#grad1)" />
+    <path d="M24 36 Q32 28 40 36" stroke="#f472b6" strokeWidth="2.5" fill="none" />
+    <circle cx="28" cy="28" r="2.5" fill="#7dd3fc" />
+    <circle cx="36" cy="28" r="2.5" fill="#f472b6" />
+  </motion.svg>
+);
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<
@@ -50,10 +132,41 @@ const LoginPage = () => {
     checkConnections();
   }, []);
 
+  // La mount, preia emailul dacă există rememberMe
+  React.useEffect(() => {
+    const remembered = localStorage.getItem('rememberMe');
+    if (remembered) {
+      setRememberMe(true);
+      const rememberedEmail = localStorage.getItem('rememberedEmail');
+      if (rememberedEmail) setEmail(rememberedEmail);
+    }
+  }, []);
+
+  // Adaugă feedback vizual la autentificare și erori
+  useEffect(() => {
+    if (error) {
+      toast.error(error);
+    }
+  }, [error]);
+
+  useEffect(() => {
+    if (loading) {
+      toast.loading("Se autentifică...");
+    } else {
+      toast.dismiss();
+    }
+  }, [loading]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("LoginPage: Form submitted");
     setError(null);
+    if (rememberMe) {
+      localStorage.setItem('rememberMe', 'true');
+      localStorage.setItem('rememberedEmail', email);
+    } else {
+      localStorage.removeItem('rememberMe');
+      localStorage.removeItem('rememberedEmail');
+    }
 
     // Verifică dacă email-ul și parola sunt completate
     if (!email || !password) {
@@ -226,248 +339,186 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Elemente de fundal animate pentru un efect vizual mai plăcut */}
-      <div className="absolute inset-0 overflow-hidden">
-        <motion.div
-          className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-blue-500/10 blur-3xl"
-          animate={{
-            scale: [1, 1.2, 1],
-            opacity: [0.3, 0.5, 0.3],
-            x: [0, 20, 0],
-            y: [0, -20, 0],
-          }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div
-          className="absolute -bottom-32 -left-32 w-96 h-96 rounded-full bg-purple-500/10 blur-3xl"
-          animate={{
-            scale: [1, 1.1, 1],
-            opacity: [0.2, 0.4, 0.2],
-            x: [0, -10, 0],
-            y: [0, 10, 0],
-          }}
-          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-        />
-      </div>
+    <>
+      <GlassAnimatedBackground />
+      <div className="min-h-screen flex flex-col justify-center items-center px-4">
+        <GlassCard>
+          <AnimatedLogo />
+          <motion.h1
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="text-3xl font-extrabold text-slate-100 text-center mb-6 drop-shadow-lg"
+          >
+            Autentificare
+          </motion.h1>
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="max-w-md w-full relative z-10"
-      >
-        {/* Indicator de stare a conexiunii */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
-        >
-          {connectionStatus === "checking" && (
+          {error && (
             <motion.div
-              className="flex items-center justify-center space-x-2 text-amber-400 mb-4"
-              animate={{ scale: [1, 1.05, 1] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
-            >
-              <Wifi className="animate-pulse h-5 w-5" />
-              <span className="text-sm">Verificare conexiune...</span>
-            </motion.div>
-          )}
-
-          {connectionStatus === "offline" && (
-            <motion.div
-              initial={{ x: -10, opacity: 0 }}
+              initial={{ x: -30, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
-              transition={{ duration: 0.3 }}
+              exit={{ x: 30, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 400, damping: 20 }}
+              className="mb-4"
             >
               <Alert
                 variant="destructive"
                 className="mb-4 bg-red-600/90 border-red-700"
               >
-                <WifiOff className="h-4 w-4 mr-2" />
-                <AlertDescription>
-                  Nu există conexiune la internet sau la server. Vă rugăm să
-                  verificați conexiunea și să încercați din nou.
+                <AlertCircle className="h-5 w-5 text-red-200" />
+                <AlertDescription className="text-red-100">
+                  {error}
                 </AlertDescription>
               </Alert>
             </motion.div>
           )}
 
-          {connectionStatus === "online" && (
-            <motion.div
-              className="flex items-center justify-center space-x-2 text-green-400 mb-4"
-              initial={{ y: -10, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ duration: 0.3 }}
-            >
-              <Wifi className="h-5 w-5" />
-              <span className="text-sm">Conexiune stabilită</span>
-            </motion.div>
-          )}
-        </motion.div>
-
-        <div className="text-center mb-8">
-          <Link to="/" className="inline-block">
-            <motion.div
-              className="flex items-center justify-center gap-2 mb-6"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <motion.div
-                className="h-10 w-10 rounded-full bg-primary flex items-center justify-center"
-                initial={{ rotate: -10 }}
-                animate={{ rotate: 0 }}
-                transition={{ type: "spring", stiffness: 200 }}
-              >
-                <span className="text-primary-foreground font-bold text-xl">
-                  IM
-                </span>
-              </motion.div>
-              <motion.span
-                className="font-bold text-2xl text-white"
-                initial={{ opacity: 0, x: -5 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.2 }}
-              >
-                InventoryMaster
-              </motion.span>
-            </motion.div>
-          </Link>
-          <motion.h1
-            className="text-3xl font-bold mb-2 text-white"
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            Bine ați revenit!
-          </motion.h1>
-          <motion.p
-            className="text-slate-400"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-          >
-            Introduceți datele de autentificare pentru a accesa contul
-            dumneavoastră
-          </motion.p>
-        </div>
-
-        <motion.div
-          className="bg-slate-900 border border-slate-700 rounded-lg p-6 shadow-lg backdrop-blur-sm bg-opacity-80"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-        >
-          {error && (
-            <Alert
-              variant="destructive"
-              className="mb-4 bg-red-600 border-red-700"
-            >
-              <AlertCircle className="h-4 w-4 text-white" />
-              <AlertDescription className="text-white font-medium">
-                {error}
-              </AlertDescription>
-            </Alert>
-          )}
-
-          <form className="space-y-4" onSubmit={handleSubmit}>
+          <form className="space-y-5" onSubmit={handleSubmit}>
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-slate-300">
+              <Label htmlFor="email" className="text-slate-200">
                 Adresa de email
               </Label>
-              <Input
+              <AnimatedInput
                 id="email"
                 type="email"
                 placeholder="name@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="bg-slate-700 border-slate-600 text-white"
               />
             </div>
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="password" className="text-slate-300">
+                <Label htmlFor="password" className="text-slate-200">
                   Parolă
                 </Label>
                 <Link
                   to="/forgot-password"
-                  className="text-sm text-primary hover:underline"
+                  className="text-sm text-indigo-300 hover:underline"
                 >
                   Ați uitat parola?
                 </Link>
               </div>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="bg-slate-700 border-slate-600 text-white"
-              />
+              <div className="relative">
+                <AnimatedInput
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  autoComplete="current-password"
+                />
+                <button
+                  type="button"
+                  aria-label={showPassword ? "Ascunde parola" : "Afișează parola"}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-300 hover:text-indigo-400 focus:outline-none"
+                  onClick={() => setShowPassword((v) => !v)}
+                  tabIndex={0}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
             </div>
 
             <div className="flex items-center space-x-2">
-              <Checkbox id="remember" />
+              <AnimatedCheckbox
+                id="remember"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+              />
               <Label
                 htmlFor="remember"
-                className="text-sm font-normal cursor-pointer text-slate-300"
+                className="text-sm font-normal cursor-pointer text-slate-200"
               >
                 Ține-mă minte pentru 30 de zile
               </Label>
             </div>
 
-            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+            <motion.div
+              whileHover={{ scale: 1.04, boxShadow: "0px 4px 16px #818cf8aa" }}
+              whileTap={{ scale: 0.97 }}
+              transition={{ type: "spring", stiffness: 300 }}
+            >
               <Button
                 type="submit"
-                className="w-full"
+                className="w-full relative overflow-hidden bg-indigo-500/80 hover:bg-indigo-400/90 text-white font-semibold shadow-lg shadow-indigo-900/20 border border-white/20 backdrop-blur"
                 size="lg"
                 disabled={loading}
+                aria-busy={loading}
               >
                 {loading ? (
                   <span className="flex items-center justify-center">
                     <motion.span
                       className="mr-2 h-4 w-4 rounded-full bg-white inline-block"
-                      animate={{ scale: [1, 0.8, 1] }}
+                      animate={{ scale: [1, 0.8, 1], rotate: [0, 360, 0] }}
                       transition={{ duration: 0.8, repeat: Infinity }}
                     />
                     Autentificare...
                   </span>
                 ) : (
-                  "Autentificare"
+                  <motion.span
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.2 }}
+                  >
+                    Autentificare
+                  </motion.span>
                 )}
               </Button>
             </motion.div>
           </form>
 
-          <div className="mt-6 pt-6 border-t border-slate-700 text-center">
-            <p className="text-sm text-slate-400">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7 }}
+            className="mt-6 pt-6 border-t border-white/10 text-center"
+          >
+            <p className="text-sm text-slate-300">
               Nu aveți un cont?{" "}
               <Link
                 to="/register"
-                className="text-primary hover:underline font-medium"
+                className="text-indigo-300 hover:underline font-medium"
               >
                 Înregistrare
               </Link>
             </p>
-          </div>
-        </motion.div>
+          </motion.div>
+        </GlassCard>
 
-        <div className="mt-8 text-center">
-          <p className="text-sm text-slate-500">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1 }}
+          className="mt-8 text-center"
+        >
+          <p className="text-sm text-slate-400">
             Prin autentificare, sunteți de acord cu{" "}
-            <Link to="/terms" className="text-primary hover:underline">
+            <Link to="/terms" className="text-indigo-300 hover:underline">
               Termenii și Condițiile
             </Link>{" "}
             și{" "}
-            <Link to="/privacy" className="text-primary hover:underline">
+            <Link to="/privacy" className="text-indigo-300 hover:underline">
               Politica de Confidențialitate
             </Link>
           </p>
-        </div>
-      </motion.div>
-    </div>
+        </motion.div>
+      </div>
+      <style>{`
+        @keyframes shake {
+          0% { transform: translateX(0); }
+          20% { transform: translateX(-8px); }
+          40% { transform: translateX(8px); }
+          60% { transform: translateX(-8px); }
+          80% { transform: translateX(8px); }
+          100% { transform: translateX(0); }
+        }
+        .glass-card {
+          box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.25);
+        }
+      `}</style>
+    </>
   );
 };
 

@@ -42,6 +42,8 @@ const RoleManagementPage = lazy(() => import("./pages/RoleManagementPage"));
 const TutorialPage = lazy(() => import("./pages/TutorialPage"));
 const TasksPage = lazy(() => import("./pages/TasksPage"));
 
+import ChatBotWidget from "./components/ai/ChatBotWidget";
+
 function App() {
   return (
     <AuthProvider>
@@ -94,6 +96,8 @@ function App() {
               <Route path="/tempobook/*" />
             )}
           </Routes>
+          {/* AI ChatBot Widget global, colț dreapta-jos */}
+          <ChatBotWidget />
           </Suspense>
           </OfflineProvider>
         </AdvancedRoleProvider>
