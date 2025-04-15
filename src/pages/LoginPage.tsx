@@ -9,7 +9,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { AlertCircle, Wifi, WifiOff, Eye, EyeOff } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import connectionService from "@/lib/connection-service";
-import { toast } from "react-hot-toast";
+import { useToast } from "@/components/ui/use-toast";
+import { Toaster } from "@/components/ui/toaster";
 
 // Fundal animat cu glassmorphism subtil și particule soft
 const GlassAnimatedBackground = () => (
@@ -102,6 +103,7 @@ const LoginPage = () => {
   >("checking");
   const { signIn } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   // Verificăm conexiunea la internet și la Supabase
   React.useEffect(() => {
@@ -145,17 +147,22 @@ const LoginPage = () => {
   // Adaugă feedback vizual la autentificare și erori
   useEffect(() => {
     if (error) {
-      toast.error(error);
+      toast({
+        variant: "destructive",
+        title: "Eroare",
+        description: error
+      });
     }
-  }, [error]);
+  }, [error, toast]);
 
   useEffect(() => {
     if (loading) {
-      toast.loading("Se autentifică...");
-    } else {
-      toast.dismiss();
+      toast({
+        title: "Se autentifică...",
+        description: "Vă rugăm să așteptați"
+      });
     }
-  }, [loading]);
+  }, [loading, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -340,6 +347,7 @@ const LoginPage = () => {
 
   return (
     <>
+      <Toaster />
       <GlassAnimatedBackground />
       <div className="min-h-screen flex flex-col justify-center items-center px-4">
         <GlassCard>
