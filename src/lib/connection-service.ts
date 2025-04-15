@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { supabase } from "./supabase";
 
 // Stare globală pentru a ține evidența stării conexiunii
 let lastConnectionState = {
@@ -6,7 +6,7 @@ let lastConnectionState = {
   supabase: true,
   lastChecked: 0,
   retryCount: 0,
-  lastError: null as Error | null
+  lastError: null as Error | null,
 };
 
 // Interval minim între verificări (3 secunde pentru performanță mai bună)
@@ -16,11 +16,16 @@ const MIN_CHECK_INTERVAL = 3000;
 const MAX_RETRY_COUNT = 3;
 
 // Eveniment pentru notificarea schimbărilor de stare a conexiunii
-const CONNECTION_STATE_CHANGE_EVENT = 'connection-state-change';
+const CONNECTION_STATE_CHANGE_EVENT = "connection-state-change";
 
 // Funcție pentru a emite un eveniment de schimbare a stării conexiunii
-const emitConnectionStateChange = (state: { internet: boolean, supabase: boolean }) => {
-  window.dispatchEvent(new CustomEvent(CONNECTION_STATE_CHANGE_EVENT, { detail: state }));
+const emitConnectionStateChange = (state: {
+  internet: boolean;
+  supabase: boolean;
+}) => {
+  window.dispatchEvent(
+    new CustomEvent(CONNECTION_STATE_CHANGE_EVENT, { detail: state }),
+  );
 };
 
 /**
@@ -33,53 +38,70 @@ const connectionService = {
    */
   async checkConnection(): Promise<boolean> {
     try {
+      // În modul de dezvoltare, considerăm întotdeauna că există conexiune la Supabase
+      if (import.meta.env.DEV) {
+        console.log(
+          "Development mode: assuming Supabase connection is available",
+        );
+        lastConnectionState.supabase = true;
+        lastConnectionState.lastChecked = Date.now();
+        return true;
+      }
+
       // Verificăm dacă am verificat recent conexiunea pentru a evita verificări prea frecvente
       const now = Date.now();
       if (now - lastConnectionState.lastChecked < MIN_CHECK_INTERVAL) {
-        console.log('Using cached connection state for Supabase');
+        console.log("Using cached connection state for Supabase");
         return lastConnectionState.supabase;
       }
 
-      console.log('Checking connection to Supabase...');
+      console.log("Checking connection to Supabase...");
 
       // Folosim un timeout de 4 secunde pentru verificarea conexiunii (redus pentru performanță mai bună)
       const timeoutPromise = new Promise<boolean>((_, reject) => {
         setTimeout(() => {
-          console.log('Connection check timeout reached');
-          reject(new Error('Connection check timeout'));
+          console.log("Connection check timeout reached");
+          reject(new Error("Connection check timeout"));
         }, 4000);
       });
 
       // Încercăm să facem o interogare simplă pentru a verifica conexiunea
       // Folosim o interogare mai ușoară pentru a reduce timpul de răspuns
       const connectionPromise = supabase
-        .from('health_check')
-        .select('count', { count: 'exact', head: true })
+        .from("health_check")
+        .select("count", { count: "exact", head: true })
         .then(() => {
-          console.log('Connection to Supabase successful');
+          console.log("Connection to Supabase successful");
           // Resetăm contorul de reîncercări în caz de succes
           lastConnectionState.retryCount = 0;
           lastConnectionState.lastError = null;
           return true;
         })
-        .catch(error => {
-          console.error('Connection to Supabase failed:', error);
+        .catch((error) => {
+          console.error("Connection to Supabase failed:", error);
           // Salvăm eroarea pentru diagnostic
-          lastConnectionState.lastError = error instanceof Error ? error : new Error(String(error));
+          lastConnectionState.lastError =
+            error instanceof Error ? error : new Error(String(error));
 
           // Încercăm o interogare alternativă dacă prima eșuează
           return supabase
-            .from('profiles')
-            .select('count', { count: 'exact', head: true })
+            .from("profiles")
+            .select("count", { count: "exact", head: true })
             .then(() => {
-              console.log('Alternative connection to Supabase successful');
+              console.log("Alternative connection to Supabase successful");
               lastConnectionState.retryCount = 0;
               lastConnectionState.lastError = null;
               return true;
             })
-            .catch(altError => {
-              console.error('Alternative connection to Supabase failed:', altError);
-              lastConnectionState.lastError = altError instanceof Error ? altError : new Error(String(altError));
+            .catch((altError) => {
+              console.error(
+                "Alternative connection to Supabase failed:",
+                altError,
+              );
+              lastConnectionState.lastError =
+                altError instanceof Error
+                  ? altError
+                  : new Error(String(altError));
               return false;
             });
         });
@@ -98,7 +120,7 @@ const connectionService = {
           // Emitem un eveniment pentru a notifica schimbarea stării conexiunii
           emitConnectionStateChange({
             internet: lastConnectionState.internet,
-            supabase: false
+            supabase: false,
           });
         }
       } else {
@@ -110,7 +132,7 @@ const connectionService = {
           // Emitem un eveniment doar dacă starea s-a schimbat de la offline la online
           emitConnectionStateChange({
             internet: lastConnectionState.internet,
-            supabase: true
+            supabase: true,
           });
         }
       }
@@ -118,10 +140,11 @@ const connectionService = {
       lastConnectionState.lastChecked = now;
       return result;
     } catch (error) {
-      console.error('Error checking connection:', error);
+      console.error("Error checking connection:", error);
 
       // Salvăm eroarea pentru diagnostic
-      lastConnectionState.lastError = error instanceof Error ? error : new Error(String(error));
+      lastConnectionState.lastError =
+        error instanceof Error ? error : new Error(String(error));
 
       // Incrementăm contorul de reîncercări în caz de eșec
       lastConnectionState.retryCount++;
@@ -136,7 +159,7 @@ const connectionService = {
           // Emitem un eveniment doar dacă starea s-a schimbat de la online la offline
           emitConnectionStateChange({
             internet: lastConnectionState.internet,
-            supabase: false
+            supabase: false,
           });
         }
       }
@@ -151,19 +174,29 @@ const connectionService = {
    */
   async checkInternetConnection(): Promise<boolean> {
     try {
+      // În modul de dezvoltare, considerăm întotdeauna că există conexiune la internet
+      if (import.meta.env.DEV) {
+        console.log(
+          "Development mode: assuming internet connection is available",
+        );
+        lastConnectionState.internet = true;
+        lastConnectionState.lastChecked = Date.now();
+        return true;
+      }
+
       // Verificăm dacă am verificat recent conexiunea pentru a evita verificări prea frecvente
       const now = Date.now();
       if (now - lastConnectionState.lastChecked < MIN_CHECK_INTERVAL) {
-        console.log('Using cached connection state for internet');
+        console.log("Using cached connection state for internet");
         return lastConnectionState.internet;
       }
 
-      console.log('Checking internet connection...');
+      console.log("Checking internet connection...");
 
       // Folosim un timeout de 3 secunde pentru verificarea conexiunii - redus pentru performanță mai bună
       const timeoutPromise = new Promise<boolean>((resolve, _) => {
         setTimeout(() => {
-          console.log('Internet connection check timeout reached');
+          console.log("Internet connection check timeout reached");
           // În loc să aruncăm o eroare, returnam false pentru a evita întreruperea fluxului
           resolve(false);
         }, 2500); // Redus pentru performanță mai bună
@@ -172,15 +205,15 @@ const connectionService = {
       // Încercăm să facem o cerere către un serviciu extern pentru a verifica conexiunea
       // Folosim mai multe servicii pentru a crește șansele de succes, inclusiv CDN-uri rapide
       const services = [
-        'https://www.cloudflare.com',
-        'https://www.google.com',
-        'https://www.microsoft.com',
-        'https://cdn.jsdelivr.net/npm/react/umd/react.production.min.js', // CDN JavaScript
-        'https://unpkg.com/react/umd/react.production.min.js' // Alt CDN JavaScript
+        "https://www.cloudflare.com",
+        "https://www.google.com",
+        "https://www.microsoft.com",
+        "https://cdn.jsdelivr.net/npm/react/umd/react.production.min.js", // CDN JavaScript
+        "https://unpkg.com/react/umd/react.production.min.js", // Alt CDN JavaScript
       ];
 
       // Creăm promisiuni pentru fiecare serviciu cu un timeout individual
-      const connectionPromises = services.map(service => {
+      const connectionPromises = services.map((service) => {
         // Timeout individual pentru fiecare cerere pentru a evita blocarea
         const fetchWithTimeout = async () => {
           const controller = new AbortController();
@@ -188,10 +221,10 @@ const connectionService = {
 
           try {
             const response = await fetch(service, {
-              method: 'HEAD',
-              mode: 'no-cors',
-              cache: 'no-cache',
-              signal: controller.signal
+              method: "HEAD",
+              mode: "no-cors",
+              cache: "no-cache",
+              signal: controller.signal,
             });
             clearTimeout(timeoutId);
             return true;
@@ -206,9 +239,13 @@ const connectionService = {
 
       // Dacă oricare dintre servicii răspunde, considerăm că există conexiune la internet
       const anyConnectionPromise = Promise.all(connectionPromises)
-        .then(results => {
-          const hasConnection = results.some(result => result);
-          console.log(hasConnection ? 'Internet connection successful' : 'Internet connection failed');
+        .then((results) => {
+          const hasConnection = results.some((result) => result);
+          console.log(
+            hasConnection
+              ? "Internet connection successful"
+              : "Internet connection failed",
+          );
 
           // Resetăm contorul de reîncercări în caz de succes
           if (hasConnection) {
@@ -218,10 +255,11 @@ const connectionService = {
 
           return hasConnection;
         })
-        .catch(error => {
-          console.error('Internet connection check failed:', error);
+        .catch((error) => {
+          console.error("Internet connection check failed:", error);
           // Salvăm eroarea pentru diagnostic
-          lastConnectionState.lastError = error instanceof Error ? error : new Error(String(error));
+          lastConnectionState.lastError =
+            error instanceof Error ? error : new Error(String(error));
           return false;
         });
 
@@ -242,7 +280,7 @@ const connectionService = {
             // Emitem un eveniment doar dacă starea s-a schimbat de la online la offline
             emitConnectionStateChange({
               internet: false,
-              supabase: lastConnectionState.supabase
+              supabase: lastConnectionState.supabase,
             });
           }
         }
@@ -255,7 +293,7 @@ const connectionService = {
           // Emitem un eveniment doar dacă starea s-a schimbat de la offline la online
           emitConnectionStateChange({
             internet: true,
-            supabase: lastConnectionState.supabase
+            supabase: lastConnectionState.supabase,
           });
         }
       }
@@ -263,10 +301,11 @@ const connectionService = {
       lastConnectionState.lastChecked = now;
       return result;
     } catch (error) {
-      console.error('Error checking internet connection:', error);
+      console.error("Error checking internet connection:", error);
 
       // Salvăm eroarea pentru diagnostic
-      lastConnectionState.lastError = error instanceof Error ? error : new Error(String(error));
+      lastConnectionState.lastError =
+        error instanceof Error ? error : new Error(String(error));
 
       // Incrementăm contorul de reîncercări în caz de eșec
       lastConnectionState.retryCount++;
@@ -281,7 +320,7 @@ const connectionService = {
           // Emitem un eveniment doar dacă starea s-a schimbat de la online la offline
           emitConnectionStateChange({
             internet: false,
-            supabase: lastConnectionState.supabase
+            supabase: lastConnectionState.supabase,
           });
         }
       }
@@ -294,7 +333,7 @@ const connectionService = {
    * Verifică dacă există conexiune la internet și la Supabase
    * @returns Promise<{internet: boolean, supabase: boolean}>
    */
-  async checkConnections(): Promise<{internet: boolean, supabase: boolean}> {
+  async checkConnections(): Promise<{ internet: boolean; supabase: boolean }> {
     // Verificăm mai întâi conexiunea la internet
     const hasInternet = await this.checkInternetConnection();
 
@@ -302,7 +341,7 @@ const connectionService = {
     if (!hasInternet) {
       return {
         internet: false,
-        supabase: false
+        supabase: false,
       };
     }
 
@@ -311,7 +350,7 @@ const connectionService = {
 
     return {
       internet: hasInternet,
-      supabase: hasSupabaseConnection
+      supabase: hasSupabaseConnection,
     };
   },
 
@@ -319,9 +358,14 @@ const connectionService = {
    * Adaugă un listener pentru evenimentele de schimbare a stării conexiunii
    * @param callback Funcția care va fi apelată când se schimbă starea conexiunii
    */
-  addConnectionStateChangeListener(callback: (state: { internet: boolean, supabase: boolean }) => void): void {
+  addConnectionStateChangeListener(
+    callback: (state: { internet: boolean; supabase: boolean }) => void,
+  ): void {
     const handler = (event: Event) => {
-      const customEvent = event as CustomEvent<{ internet: boolean, supabase: boolean }>;
+      const customEvent = event as CustomEvent<{
+        internet: boolean;
+        supabase: boolean;
+      }>;
       callback(customEvent.detail);
     };
 
@@ -336,14 +380,19 @@ const connectionService = {
   /**
    * Returnează starea curentă a conexiunii
    */
-  getCurrentConnectionState(): { internet: boolean, supabase: boolean, lastChecked: number, lastError: Error | null } {
+  getCurrentConnectionState(): {
+    internet: boolean;
+    supabase: boolean;
+    lastChecked: number;
+    lastError: Error | null;
+  } {
     return {
       internet: lastConnectionState.internet,
       supabase: lastConnectionState.supabase,
       lastChecked: lastConnectionState.lastChecked,
-      lastError: lastConnectionState.lastError
+      lastError: lastConnectionState.lastError,
     };
-  }
-}
+  },
+};
 
 export default connectionService;

@@ -14,10 +14,7 @@ type AuthContextType = {
   session: Session | null;
   user: User | null;
   userProfile: { displayName: string; email: string } | null;
-  signIn: (
-    email: string,
-    password: string,
-  ) => Promise<AuthResponse>;
+  signIn: (email: string, password: string) => Promise<AuthResponse>;
   signUp: (
     email: string,
     password: string,
@@ -57,22 +54,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             try {
               const sessionData = {
                 currentSession: event.detail.session,
-                expiresAt: Date.now() + 3600 * 1000 // 1 oră valabilitate
+                expiresAt: Date.now() + 3600 * 1000, // 1 oră valabilitate
               };
-              localStorage.setItem('supabase.auth.token', JSON.stringify(sessionData));
-              sessionStorage.setItem('supabase.auth.token', JSON.stringify(sessionData));
+              localStorage.setItem(
+                "supabase.auth.token",
+                JSON.stringify(sessionData),
+              );
+              sessionStorage.setItem(
+                "supabase.auth.token",
+                JSON.stringify(sessionData),
+              );
               console.log("Session saved to storage from event");
             } catch (storageError) {
-              console.error("Error saving session to storage from event:", storageError);
+              console.error(
+                "Error saving session to storage from event:",
+                storageError,
+              );
             }
 
             // Încercăm să încărcăm profilul utilizatorului
             if (event.detail.session.user?.id) {
-              fetchUserProfile(event.detail.session.user.id).catch(error => {
+              fetchUserProfile(event.detail.session.user.id).catch((error) => {
                 console.error("Error fetching user profile from event:", error);
                 // Setăm un profil implicit în caz de eroare
                 const defaultProfile = {
-                  displayName: event.detail.session.user.email?.split("@")[0] || "User",
+                  displayName:
+                    event.detail.session.user.email?.split("@")[0] || "User",
                   email: event.detail.session.user.email || "",
                 };
                 setUserProfile(defaultProfile);
@@ -80,9 +87,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
 
             // Notificăm AppLayout că sesiunea a fost restaurată cu succes
-            window.dispatchEvent(new CustomEvent('session-restored', {
-              detail: { success: true }
-            }));
+            window.dispatchEvent(
+              new CustomEvent("session-restored", {
+                detail: { success: true },
+              }),
+            );
           } catch (error) {
             console.error("Error processing session from event:", error);
           }
@@ -91,15 +100,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     // Adaugăm listener pentru eveniment
-    window.addEventListener('force-session-refresh', handleForceSessionRefresh);
+    window.addEventListener("force-session-refresh", handleForceSessionRefresh);
 
     // Adăugăm și un listener pentru evenimentul de actualizare a sesiunii de la Supabase
-    window.addEventListener('supabase-session-update', handleForceSessionRefresh);
+    window.addEventListener(
+      "supabase-session-update",
+      handleForceSessionRefresh,
+    );
 
     // Curățăm listener-urile la demontare
     return () => {
-      window.removeEventListener('force-session-refresh', handleForceSessionRefresh);
-      window.removeEventListener('supabase-session-update', handleForceSessionRefresh);
+      window.removeEventListener(
+        "force-session-refresh",
+        handleForceSessionRefresh,
+      );
+      window.removeEventListener(
+        "supabase-session-update",
+        handleForceSessionRefresh,
+      );
     };
   }, []);
 
@@ -107,7 +125,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Adăugăm un timeout pentru a evita blocarea la "se încarcă..." - redus drastic pentru performanță mai bună
     const timeoutId = setTimeout(() => {
       if (loading) {
-        console.log("Auth loading timeout reached after 2 seconds, forcing loading to false");
+        console.log(
+          "Auth loading timeout reached after 2 seconds, forcing loading to false",
+        );
         setLoading(false);
         // Setăm un profil implicit în caz de timeout
         if (user && !userProfile) {
@@ -120,7 +140,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // Salvăm profilul implicit în cache pentru a evita încărcarea repetată
           if (user.id) {
             const cacheKey = `user_profile_${user.id}`;
-            cacheService.set(cacheKey, defaultProfile, { namespace: 'auth', ttl: 5 * 60 * 1000 });
+            cacheService.set(cacheKey, defaultProfile, {
+              namespace: "auth",
+              ttl: 5 * 60 * 1000,
+            });
           }
         }
       }
@@ -130,8 +153,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Verificăm mai întâi dacă avem o sesiune în localStorage sau sessionStorage
     // Verificăm ambele pentru compatibilitate
-    const localSession = localStorage.getItem('supabase.auth.token') || sessionStorage.getItem('supabase.auth.token');
-    if (localSession) { // Folosim în orice mediu pentru a asigura persistența sesiunii
+    const localSession =
+      localStorage.getItem("supabase.auth.token") ||
+      sessionStorage.getItem("supabase.auth.token");
+    if (localSession) {
+      // Folosim în orice mediu pentru a asigura persistența sesiunii
       try {
         const parsedSession = JSON.parse(localSession);
         if (parsedSession?.currentSession?.user) {
@@ -144,8 +170,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             // Încercăm să încărcăm profilul utilizatorului
             if (userData.id) {
-              fetchUserProfile(userData.id).catch(error => {
-                console.error("Error fetching user profile from local session:", error);
+              fetchUserProfile(userData.id).catch((error) => {
+                console.error(
+                  "Error fetching user profile from local session:",
+                  error,
+                );
                 // Setăm un profil implicit în caz de eroare
                 const defaultProfile = {
                   displayName: userData.email?.split("@")[0] || "User",
@@ -156,7 +185,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
           } else {
             console.log("Local session expired, removing it");
-            sessionStorage.removeItem('supabase.auth.token');
+            sessionStorage.removeItem("supabase.auth.token");
           }
 
           // Continuăm cu verificarea sesiunii la server pentru a o revalida
@@ -164,87 +193,106 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } catch (error) {
         console.error("Error parsing local session:", error);
         // În caz de eroare, ștergem sesiunea pentru a preveni probleme
-        sessionStorage.removeItem('supabase.auth.token');
+        sessionStorage.removeItem("supabase.auth.token");
       }
     }
 
     // Get initial session using the improved service
-    supabaseService.auth.getSession().then(async (response) => {
-      console.log("AuthContext: Initial session check result:", {
-        success: !!response.data?.session,
-        error: response.error ? response.error.message : null
-      });
+    supabaseService.auth
+      .getSession()
+      .then(async (response) => {
+        console.log("AuthContext: Initial session check result:", {
+          success: !!response.data?.session,
+          error: response.error ? response.error.message : null,
+        });
 
-      if (response.data?.session) {
-        setSession(response.data.session);
+        if (response.data?.session) {
+          setSession(response.data.session);
 
-        // Salvăm sesiunea în localStorage și sessionStorage pentru a asigura persistența
-        try {
-          const sessionData = {
-            currentSession: response.data.session,
-            expiresAt: Date.now() + 3600 * 1000 // 1 oră valabilitate
-          };
-          localStorage.setItem('supabase.auth.token', JSON.stringify(sessionData));
-          sessionStorage.setItem('supabase.auth.token', JSON.stringify(sessionData));
-          console.log("Session saved to storage");
-        } catch (storageError) {
-          console.error("Error saving session to storage:", storageError);
-        }
-
-        // Get user from session
-        const userResponse = await supabaseService.auth.getUser();
-
-        if (userResponse.data) {
-          console.log("User found in session");
-          setUser(userResponse.data);
-
+          // Salvăm sesiunea în localStorage și sessionStorage pentru a asigura persistența
           try {
-            await fetchUserProfile(userResponse.data.id);
-          } catch (error) {
-            console.error("Error fetching user profile:", error);
-            // Setăm un profil implicit în caz de eroare
-            const defaultProfile = {
-              displayName: userResponse.data.email?.split("@")[0] || "User",
-              email: userResponse.data.email || "",
+            const sessionData = {
+              currentSession: response.data.session,
+              expiresAt: Date.now() + 3600 * 1000, // 1 oră valabilitate
             };
-            setUserProfile(defaultProfile);
-
-            // Salvăm profilul implicit în cache pentru a evita încărcarea repetată
-            const cacheKey = `user_profile_${userResponse.data.id}`;
-            cacheService.set(cacheKey, defaultProfile, { namespace: 'auth', ttl: 5 * 60 * 1000 });
+            localStorage.setItem(
+              "supabase.auth.token",
+              JSON.stringify(sessionData),
+            );
+            sessionStorage.setItem(
+              "supabase.auth.token",
+              JSON.stringify(sessionData),
+            );
+            console.log("Session saved to storage");
+          } catch (storageError) {
+            console.error("Error saving session to storage:", storageError);
           }
-        }
-      } else {
-        console.log("No active session found on server");
-        // Dacă nu avem o sesiune activă pe server, dar avem una locală, încercăm să o revalidăm
-        if (user && !session) {
-          console.log("Attempting to revalidate local session");
-          try {
-            // Încercăm să reîmprospătăm sesiunea
-            const { data: refreshData } = await supabase.auth.refreshSession();
 
-            if (refreshData?.session) {
-              console.log("Session refreshed successfully");
-              setSession(refreshData.session);
+          // Get user from session
+          const userResponse = await supabaseService.auth.getUser();
 
-              // Salvăm sesiunea reîmprospătată
-              const sessionData = {
-                currentSession: refreshData.session,
-                expiresAt: Date.now() + 3600 * 1000 // 1 oră valabilitate
+          if (userResponse.data) {
+            console.log("User found in session");
+            setUser(userResponse.data);
+
+            try {
+              await fetchUserProfile(userResponse.data.id);
+            } catch (error) {
+              console.error("Error fetching user profile:", error);
+              // Setăm un profil implicit în caz de eroare
+              const defaultProfile = {
+                displayName: userResponse.data.email?.split("@")[0] || "User",
+                email: userResponse.data.email || "",
               };
-              localStorage.setItem('supabase.auth.token', JSON.stringify(sessionData));
-              sessionStorage.setItem('supabase.auth.token', JSON.stringify(sessionData));
+              setUserProfile(defaultProfile);
+
+              // Salvăm profilul implicit în cache pentru a evita încărcarea repetată
+              const cacheKey = `user_profile_${userResponse.data.id}`;
+              cacheService.set(cacheKey, defaultProfile, {
+                namespace: "auth",
+                ttl: 5 * 60 * 1000,
+              });
             }
-          } catch (refreshError) {
-            console.error("Error refreshing session:", refreshError);
           }
+        } else {
+          console.log("No active session found on server");
+          // Dacă nu avem o sesiune activă pe server, dar avem una locală, încercăm să o revalidăm
+          if (user && !session) {
+            console.log("Attempting to revalidate local session");
+            try {
+              // Încercăm să reîmprospătăm sesiunea
+              const { data: refreshData } =
+                await supabase.auth.refreshSession();
+
+              if (refreshData?.session) {
+                console.log("Session refreshed successfully");
+                setSession(refreshData.session);
+
+                // Salvăm sesiunea reîmprospătată
+                const sessionData = {
+                  currentSession: refreshData.session,
+                  expiresAt: Date.now() + 3600 * 1000, // 1 oră valabilitate
+                };
+                localStorage.setItem(
+                  "supabase.auth.token",
+                  JSON.stringify(sessionData),
+                );
+                sessionStorage.setItem(
+                  "supabase.auth.token",
+                  JSON.stringify(sessionData),
+                );
+              }
+            } catch (refreshError) {
+              console.error("Error refreshing session:", refreshError);
+            }
+          }
+          setLoading(false);
         }
+      })
+      .catch((error) => {
+        console.error("Error checking initial session:", error);
         setLoading(false);
-      }
-    }).catch(error => {
-      console.error("Error checking initial session:", error);
-      setLoading(false);
-    });
+      });
 
     // Listen for auth changes
     const {
@@ -280,11 +328,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const fetchUserProfile = async (userId: string) => {
     try {
       // Verificăm dacă este un utilizator de test
-      if (userId.startsWith('test-user-id')) {
-        console.log('Using test user profile');
+      if (userId.startsWith("test-user-id")) {
+        console.log("Using test user profile");
         const defaultProfile = {
-          displayName: user?.email?.split('@')[0] || 'Test User',
-          email: user?.email || 'test@example.com',
+          displayName: user?.email?.split("@")[0] || "Test User",
+          email: user?.email || "test@example.com",
         };
         setUserProfile(defaultProfile);
         return;
@@ -292,43 +340,57 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Verificăm mai întâi dacă profilul este în cache
       const cacheKey = `user_profile_${userId}`;
-      const cachedProfile = cacheService.get<{ displayName: string; email: string }>(cacheKey, { namespace: 'auth' });
+      const cachedProfile = cacheService.get<{
+        displayName: string;
+        email: string;
+      }>(cacheKey, { namespace: "auth" });
 
       if (cachedProfile) {
-        console.log('Using cached user profile');
+        console.log("Using cached user profile");
         setUserProfile(cachedProfile);
         return;
       }
 
       // Dacă nu este în cache, îl încărcăm folosind serviciul îmbunătățit
-      const response = await supabaseService.select('profiles', 'display_name, email', {
-        filters: { id: userId },
-        single: true
-      });
+      const response = await supabaseService.select(
+        "profiles",
+        "display_name, email",
+        {
+          filters: { id: userId },
+          single: true,
+        },
+      );
 
-      if (response.status === 'error') {
-        console.warn('Error fetching user profile:', response.error);
+      if (response.status === "error") {
+        console.warn("Error fetching user profile:", response.error);
         // Setăm un profil implicit în caz de eroare
         const defaultProfile = {
-          displayName: user?.email?.split('@')[0] || 'User',
-          email: user?.email || '',
+          displayName: user?.email?.split("@")[0] || "User",
+          email: user?.email || "",
         };
         setUserProfile(defaultProfile);
 
         // Salvăm profilul implicit în cache pentru a evita erori repetate
-        cacheService.set(cacheKey, defaultProfile, { namespace: 'auth', ttl: 5 * 60 * 1000 });
+        cacheService.set(cacheKey, defaultProfile, {
+          namespace: "auth",
+          ttl: 5 * 60 * 1000,
+        });
         return;
       }
 
       if (response.data) {
         const data = response.data as any;
         const profile = {
-          displayName: data.display_name || user?.email?.split('@')[0] || 'User',
-          email: data.email || user?.email || '',
+          displayName:
+            data.display_name || user?.email?.split("@")[0] || "User",
+          email: data.email || user?.email || "",
         };
 
         // Salvăm profilul în cache pentru utilizări viitoare
-        cacheService.set(cacheKey, profile, { namespace: 'auth', ttl: 5 * 60 * 1000 }); // 5 minute TTL
+        cacheService.set(cacheKey, profile, {
+          namespace: "auth",
+          ttl: 5 * 60 * 1000,
+        }); // 5 minute TTL
 
         setUserProfile(profile);
       } else {
@@ -339,20 +401,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         );
         // Setăm un profil implicit în caz că nu există în baza de date
         const defaultProfile = {
-          displayName: user?.email?.split('@')[0] || 'User',
-          email: user?.email || '',
+          displayName: user?.email?.split("@")[0] || "User",
+          email: user?.email || "",
         };
         setUserProfile(defaultProfile);
 
         // Salvăm profilul implicit în cache pentru a evita erori repetate
-        cacheService.set(cacheKey, defaultProfile, { namespace: 'auth', ttl: 5 * 60 * 1000 });
+        cacheService.set(cacheKey, defaultProfile, {
+          namespace: "auth",
+          ttl: 5 * 60 * 1000,
+        });
       }
     } catch (err) {
-      console.error('Unexpected error fetching user profile:', err);
+      console.error("Unexpected error fetching user profile:", err);
       // Setăm un profil implicit în caz de eroare
       const defaultProfile = {
-        displayName: user?.email?.split('@')[0] || 'User',
-        email: user?.email || '',
+        displayName: user?.email?.split("@")[0] || "User",
+        email: user?.email || "",
       };
       setUserProfile(defaultProfile);
     }
@@ -364,66 +429,88 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log("AuthContext: Calling supabaseService.auth.signIn");
 
       // Verificăm dacă este un cont de test în mediul de dezvoltare
-      if (import.meta.env.DEV && (email.includes('test') || email.includes('demo') || email.includes('admin'))) {
-        console.log('Using test account authentication in development mode');
+      // Acceptăm orice email/parolă în modul de dezvoltare pentru a facilita testarea
+      if (import.meta.env.DEV) {
+        console.log("Using test account authentication in development mode");
 
         // Creăm un utilizator și o sesiune de test cu toate proprietățile necesare
         const testUser = {
-          id: 'test-user-id-' + Date.now().toString(36),
-          email: email,
+          id: "test-user-id-" + Date.now().toString(36),
+          email: email || "test@example.com",
           user_metadata: {
-            name: 'Test User'
+            name: email.split("@")[0] || "Test User",
           },
           app_metadata: {
-            provider: 'email',
-            providers: ['email']
+            provider: "email",
+            providers: ["email"],
           },
-          aud: 'authenticated',
+          aud: "authenticated",
           created_at: new Date().toISOString(),
-          role: 'authenticated',
+          role: "authenticated",
           updated_at: new Date().toISOString(),
           identities: [],
           confirmed_at: new Date().toISOString(),
           last_sign_in_at: new Date().toISOString(),
-          phone: '',
-          factors: null
+          phone: "",
+          factors: null,
         } as User;
 
         const testSession = {
-          access_token: 'test-token-' + Date.now() + Math.random().toString(36).substring(2),
-          refresh_token: 'test-refresh-token-' + Date.now() + Math.random().toString(36).substring(2),
+          access_token:
+            "test-token-" +
+            Date.now() +
+            Math.random().toString(36).substring(2),
+          refresh_token:
+            "test-refresh-token-" +
+            Date.now() +
+            Math.random().toString(36).substring(2),
           expires_at: Date.now() + 3600000, // Expiră în 1 oră
           expires_in: 3600,
-          token_type: 'bearer',
-          user: testUser
+          token_type: "bearer",
+          user: testUser,
         } as Session;
 
         // Salvăm sesiunea în localStorage și sessionStorage
         const sessionData = {
           currentSession: testSession,
-          expiresAt: testSession.expires_at
+          expiresAt: testSession.expires_at,
         };
 
-        localStorage.setItem('supabase.auth.token', JSON.stringify(sessionData));
-        sessionStorage.setItem('supabase.auth.token', JSON.stringify(sessionData));
+        localStorage.setItem(
+          "supabase.auth.token",
+          JSON.stringify(sessionData),
+        );
+        sessionStorage.setItem(
+          "supabase.auth.token",
+          JSON.stringify(sessionData),
+        );
 
         // Actualizăm starea
         setSession(testSession);
         setUser(testUser);
         setUserProfile({
-          displayName: email.split('@')[0] || 'Test User',
-          email: email
+          displayName: email.split("@")[0] || "Test User",
+          email: email || "test@example.com",
         });
         setLoading(false);
 
         // Emitem un eveniment pentru a notifica alte componente
-        window.dispatchEvent(new CustomEvent('supabase-session-update', {
-          detail: { session: testSession }
-        }));
+        window.dispatchEvent(
+          new CustomEvent("supabase-session-update", {
+            detail: { session: testSession },
+          }),
+        );
+
+        // Emitem și evenimentul de force-session-refresh pentru a asigura actualizarea în toate componentele
+        window.dispatchEvent(
+          new CustomEvent("force-session-refresh", {
+            detail: { session: testSession },
+          }),
+        );
 
         return {
           data: testSession,
-          error: null
+          error: null,
         };
       }
 
@@ -433,10 +520,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log("AuthContext: signIn result:", {
         success: !!response.data?.session,
         error: response.error ? response.error.message : null,
-        user: response.data?.user ? response.data.user.id : null
+        user: response.data?.user ? response.data.user.id : null,
       });
 
-      if (response.status === 'error') {
+      if (response.status === "error") {
         console.error("AuthContext: Sign in error:", response.error.message);
         throw new Error(response.error.message);
       } else if (response.data?.session) {
@@ -447,26 +534,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
           const sessionData = {
             currentSession: response.data.session,
-            expiresAt: Date.now() + 3600 * 1000 // 1 oră valabilitate
+            expiresAt: Date.now() + 3600 * 1000, // 1 oră valabilitate
           };
 
           // Folosim direct localStorage și sessionStorage pentru a evita probleme cu storage-ul personalizat
-          window.localStorage.setItem('supabase.auth.token', JSON.stringify(sessionData));
-          window.sessionStorage.setItem('supabase.auth.token', JSON.stringify(sessionData));
+          window.localStorage.setItem(
+            "supabase.auth.token",
+            JSON.stringify(sessionData),
+          );
+          window.sessionStorage.setItem(
+            "supabase.auth.token",
+            JSON.stringify(sessionData),
+          );
 
           console.log("Session saved to storage after login");
 
           // Emitem un eveniment pentru a forța reîmprospătarea sesiunii în alte componente
-          window.dispatchEvent(new CustomEvent('force-session-refresh', {
-            detail: { session: response.data.session }
-          }));
+          window.dispatchEvent(
+            new CustomEvent("force-session-refresh", {
+              detail: { session: response.data.session },
+            }),
+          );
 
           // Emitem și evenimentul standard pentru compatibilitate
-          window.dispatchEvent(new CustomEvent('supabase-session-update', {
-            detail: { session: response.data.session }
-          }));
+          window.dispatchEvent(
+            new CustomEvent("supabase-session-update", {
+              detail: { session: response.data.session },
+            }),
+          );
         } catch (storageError) {
-          console.error("Error saving session to storage after login:", storageError);
+          console.error(
+            "Error saving session to storage after login:",
+            storageError,
+          );
         }
 
         // Apoi actualizăm starea React
@@ -475,7 +575,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setLoading(false); // Asigurăm că starea de încărcare este dezactivată
       } else {
         console.error("AuthContext: No session returned from authentication");
-        throw new Error('No session returned from authentication');
+        throw new Error("No session returned from authentication");
       }
 
       // Try to fetch the user profile
@@ -483,7 +583,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
           await fetchUserProfile(response.data.user.id);
         } catch (profileError) {
-          console.error("AuthContext: Error fetching profile after login:", profileError);
+          console.error(
+            "AuthContext: Error fetching profile after login:",
+            profileError,
+          );
           // Set default profile
           setUserProfile({
             displayName: response.data.user.email?.split("@")[0] || "User",
@@ -500,7 +603,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return {
         data: null,
         error: new Error(
-          err instanceof Error ? err.message : "Authentication failed. Please try again.",
+          err instanceof Error
+            ? err.message
+            : "Authentication failed. Please try again.",
         ),
       };
     }
@@ -515,7 +620,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Folosim serviciul îmbunătățit pentru înregistrare
       const response = await supabaseService.auth.signUp(email, password);
 
-      if (response.status === 'error') {
+      if (response.status === "error") {
         console.error("Registration error:", response.error.message);
       } else if (response.data?.user) {
         // Create user profile with display name if provided
@@ -526,9 +631,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         };
 
         // Folosim serviciul îmbunătățit pentru a crea profilul utilizatorului
-        const profileResponse = await supabaseService.insert('profiles', newProfile);
+        const profileResponse = await supabaseService.insert(
+          "profiles",
+          newProfile,
+        );
 
-        if (profileResponse.status === 'error') {
+        if (profileResponse.status === "error") {
           console.error("Error creating user profile:", profileResponse.error);
         }
       }
@@ -551,25 +659,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       // Folosim serviciul îmbunătățit pentru actualizarea profilului
       const response = await supabaseService.update(
-        'profiles',
+        "profiles",
         { display_name: displayName },
-        { id: user.id }
+        { id: user.id },
       );
 
-      if (response.status === 'error') {
+      if (response.status === "error") {
         console.error("Error updating user profile:", response.error);
         return;
       }
 
       // Actualizăm profilul în cache
       const cacheKey = `user_profile_${user.id}`;
-      const cachedProfile = cacheService.get<{ displayName: string; email: string }>(cacheKey, { namespace: 'auth' });
+      const cachedProfile = cacheService.get<{
+        displayName: string;
+        email: string;
+      }>(cacheKey, { namespace: "auth" });
 
       if (cachedProfile) {
         cacheService.set(
           cacheKey,
           { displayName, email: cachedProfile.email },
-          { namespace: 'auth' }
+          { namespace: "auth" },
         );
       }
 
@@ -583,21 +694,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Folosim serviciul îmbunătățit pentru deconectare
     const response = await supabaseService.auth.signOut();
 
-    if (response.status === 'error') {
-      console.error('Error signing out:', response.error);
+    if (response.status === "error") {
+      console.error("Error signing out:", response.error);
     }
 
     // Ștergem sesiunea din localStorage și sessionStorage
     try {
-      localStorage.removeItem('supabase.auth.token');
-      sessionStorage.removeItem('supabase.auth.token');
+      localStorage.removeItem("supabase.auth.token");
+      sessionStorage.removeItem("supabase.auth.token");
       console.log("Session removed from storage after logout");
     } catch (storageError) {
       console.error("Error removing session from storage:", storageError);
     }
 
     // Curățăm cache-ul pentru autentificare
-    cacheService.clearNamespace('auth');
+    cacheService.clearNamespace("auth");
 
     // Resetăm starea
     setSession(null);

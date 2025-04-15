@@ -15,27 +15,36 @@ const LoginPage = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState<'checking' | 'online' | 'offline'>('checking');
+  const [connectionStatus, setConnectionStatus] = useState<
+    "checking" | "online" | "offline"
+  >("checking");
   const { signIn } = useAuth();
   const navigate = useNavigate();
 
   // Verificăm conexiunea la internet și la Supabase
   React.useEffect(() => {
     const checkConnections = async () => {
-      setConnectionStatus('checking');
+      // În modul de dezvoltare, considerăm întotdeauna că suntem online
+      if (import.meta.env.DEV) {
+        console.log("Development mode: assuming online connection");
+        setConnectionStatus("online");
+        return;
+      }
+
+      setConnectionStatus("checking");
 
       // Verificăm mai întâi conexiunea la internet
       const hasInternet = await connectionService.checkInternetConnection();
 
       if (!hasInternet) {
-        setConnectionStatus('offline');
+        setConnectionStatus("offline");
         return;
       }
 
       // Apoi verificăm conexiunea la Supabase
       const hasSupabaseConnection = await connectionService.checkConnection();
 
-      setConnectionStatus(hasSupabaseConnection ? 'online' : 'offline');
+      setConnectionStatus(hasSupabaseConnection ? "online" : "offline");
     };
 
     checkConnections();
@@ -48,13 +57,15 @@ const LoginPage = () => {
 
     // Verifică dacă email-ul și parola sunt completate
     if (!email || !password) {
-      setError("Please enter both email and password.");
+      setError("Vă rugăm să introduceți atât email-ul cât și parola.");
       return;
     }
 
-    // Verificăm din nou conexiunea înainte de a încerca autentificarea
-    if (connectionStatus === 'offline') {
-      setError("You appear to be offline. Please check your internet connection and try again.");
+    // În modul de dezvoltare, ignorăm verificarea conexiunii
+    if (!import.meta.env.DEV && connectionStatus === "offline") {
+      setError(
+        "Nu există conexiune la internet sau la server. Vă rugăm să verificați conexiunea și să încercați din nou.",
+      );
       return;
     }
 
@@ -64,7 +75,9 @@ const LoginPage = () => {
     const loginTimeout = setTimeout(() => {
       if (loading) {
         setLoading(false);
-        setError("Login timeout. Please check your internet connection and try again later.");
+        setError(
+          "Timpul de autentificare a expirat. Vă rugăm să verificați conexiunea la internet și să încercați din nou.",
+        );
         console.error("Login timeout reached");
       }
     }, 20000); // 20 secunde timeout
@@ -76,27 +89,38 @@ const LoginPage = () => {
       const sessionUpdateHandler = (event: any) => {
         console.log("LoginPage: Received session update event");
         if (event.detail?.session) {
-          console.log("LoginPage: Session update detected, navigating to overview");
+          console.log(
+            "LoginPage: Session update detected, navigating to dashboard",
+          );
           // Curățăm timeout-ul
           clearTimeout(loginTimeout);
           // Eliminăm listener-ul
-          window.removeEventListener('supabase-session-update', sessionUpdateHandler);
-          window.removeEventListener('force-session-refresh', sessionUpdateHandler);
+          window.removeEventListener(
+            "supabase-session-update",
+            sessionUpdateHandler,
+          );
+          window.removeEventListener(
+            "force-session-refresh",
+            sessionUpdateHandler,
+          );
           // Navigăm către pagina principală
-          navigate("/overview");
+          navigate("/dashboard");
         }
       };
 
       // Adăugăm listener pentru ambele evenimente
-      window.addEventListener('supabase-session-update', sessionUpdateHandler);
-      window.addEventListener('force-session-refresh', sessionUpdateHandler);
+      window.addEventListener("supabase-session-update", sessionUpdateHandler);
+      window.addEventListener("force-session-refresh", sessionUpdateHandler);
 
       // Autentificare normală
-      const { data: sessionData, error: signInError } = await signIn(email, password);
+      const { data: sessionData, error: signInError } = await signIn(
+        email,
+        password,
+      );
       console.log("LoginPage: signIn function returned:", {
         success: !!sessionData,
         error: signInError ? signInError.message : null,
-        redirecting: signInError ? false : true
+        redirecting: signInError ? false : true,
       });
 
       // Curățăm timeout-ul deoarece am primit un răspuns
@@ -105,29 +129,47 @@ const LoginPage = () => {
       if (signInError) {
         console.log("signIn returned an error, throwing...");
         // Eliminăm listener-ul în caz de eroare
-        window.removeEventListener('supabase-session-update', sessionUpdateHandler);
-        window.removeEventListener('force-session-refresh', sessionUpdateHandler);
+        window.removeEventListener(
+          "supabase-session-update",
+          sessionUpdateHandler,
+        );
+        window.removeEventListener(
+          "force-session-refresh",
+          sessionUpdateHandler,
+        );
         throw signInError;
       }
 
       // Verificăm dacă avem date de sesiune
       if (sessionData) {
-        console.log("LoginPage: Authentication successful, navigating to overview");
+        console.log(
+          "LoginPage: Authentication successful, navigating to dashboard",
+        );
         // Navigație directă către pagina principală
-        navigate("/overview");
+        navigate("/dashboard");
       } else {
         // Așteptăm evenimentul de actualizare a sesiunii
-        console.log("LoginPage: No session data returned, waiting for session update event");
+        console.log(
+          "LoginPage: No session data returned, waiting for session update event",
+        );
         // Adăugăm un timeout suplimentar pentru a aștepta evenimentul
         setTimeout(() => {
           // Verificăm dacă încă mai suntem pe pagina de login
-          if (window.location.pathname.includes('login')) {
-            console.log("LoginPage: No session update event received, navigating to overview anyway");
+          if (window.location.pathname.includes("login")) {
+            console.log(
+              "LoginPage: No session update event received, navigating to dashboard anyway",
+            );
             // Eliminăm listener-ul
-            window.removeEventListener('supabase-session-update', sessionUpdateHandler);
-            window.removeEventListener('force-session-refresh', sessionUpdateHandler);
+            window.removeEventListener(
+              "supabase-session-update",
+              sessionUpdateHandler,
+            );
+            window.removeEventListener(
+              "force-session-refresh",
+              sessionUpdateHandler,
+            );
             // Navigăm către pagina principală
-            navigate("/overview");
+            navigate("/dashboard");
           }
         }, 2000); // 2 secunde de așteptare
       }
@@ -137,25 +179,39 @@ const LoginPage = () => {
 
       console.log("Caught error during login:", err);
       // Gestionăm mai bine mesajele de eroare cu mesaje mai prietenoase și în limba română
-      let errorMessage = "A apărut o eroare la autentificare. Vă rugăm să încercați din nou.";
+      let errorMessage =
+        "A apărut o eroare la autentificare. Vă rugăm să încercați din nou.";
 
       if (err instanceof Error) {
-        if (err.message.includes('timeout')) {
-          errorMessage = "Timpul de așteptare a expirat. Vă rugăm să verificați conexiunea la internet și să încercați din nou.";
-        } else if (err.message.includes('Invalid login') || err.message.includes('Invalid email')) {
-          errorMessage = "Email sau parolă incorecte. Vă rugăm să verificați datele introduse.";
-        } else if (err.message.includes('Email not confirmed')) {
-          errorMessage = "Adresa de email nu a fost confirmată. Vă rugăm să verificați căsuța de email.";
-        } else if (err.message.includes('network')) {
-          errorMessage = "Eroare de rețea. Vă rugăm să verificați conexiunea la internet.";
-        } else if (err.message.includes('too many requests') || err.message.includes('rate limit')) {
-          errorMessage = "Prea multe încercări de autentificare. Vă rugăm să așteptați câteva minute și să încercați din nou.";
-        } else if (err.message.includes('User not found')) {
-          errorMessage = "Utilizatorul nu există. Vă rugăm să verificați adresa de email sau să vă înregistrați.";
+        if (err.message.includes("timeout")) {
+          errorMessage =
+            "Timpul de așteptare a expirat. Vă rugăm să verificați conexiunea la internet și să încercați din nou.";
+        } else if (
+          err.message.includes("Invalid login") ||
+          err.message.includes("Invalid email")
+        ) {
+          errorMessage =
+            "Email sau parolă incorecte. Vă rugăm să verificați datele introduse.";
+        } else if (err.message.includes("Email not confirmed")) {
+          errorMessage =
+            "Adresa de email nu a fost confirmată. Vă rugăm să verificați căsuța de email.";
+        } else if (err.message.includes("network")) {
+          errorMessage =
+            "Eroare de rețea. Vă rugăm să verificați conexiunea la internet.";
+        } else if (
+          err.message.includes("too many requests") ||
+          err.message.includes("rate limit")
+        ) {
+          errorMessage =
+            "Prea multe încercări de autentificare. Vă rugăm să așteptați câteva minute și să încercați din nou.";
+        } else if (err.message.includes("User not found")) {
+          errorMessage =
+            "Utilizatorul nu există. Vă rugăm să verificați adresa de email sau să vă înregistrați.";
         } else {
           // Pentru alte erori, păstrăm mesajul original dar îl traducem dacă este unul comun
-          if (err.message.includes('Authentication')) {
-            errorMessage = "Autentificare eșuată. Vă rugăm să încercați din nou.";
+          if (err.message.includes("Authentication")) {
+            errorMessage =
+              "Autentificare eșuată. Vă rugăm să încercați din nou.";
           } else {
             errorMessage = err.message;
           }
@@ -179,7 +235,7 @@ const LoginPage = () => {
             scale: [1, 1.2, 1],
             opacity: [0.3, 0.5, 0.3],
             x: [0, 20, 0],
-            y: [0, -20, 0]
+            y: [0, -20, 0],
           }}
           transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
         />
@@ -189,7 +245,7 @@ const LoginPage = () => {
             scale: [1, 1.1, 1],
             opacity: [0.2, 0.4, 0.2],
             x: [0, -10, 0],
-            y: [0, 10, 0]
+            y: [0, 10, 0],
           }}
           transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
         />
@@ -207,7 +263,7 @@ const LoginPage = () => {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
         >
-          {connectionStatus === 'checking' && (
+          {connectionStatus === "checking" && (
             <motion.div
               className="flex items-center justify-center space-x-2 text-amber-400 mb-4"
               animate={{ scale: [1, 1.05, 1] }}
@@ -218,22 +274,26 @@ const LoginPage = () => {
             </motion.div>
           )}
 
-          {connectionStatus === 'offline' && (
+          {connectionStatus === "offline" && (
             <motion.div
               initial={{ x: -10, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ duration: 0.3 }}
             >
-              <Alert variant="destructive" className="mb-4 bg-red-600/90 border-red-700">
+              <Alert
+                variant="destructive"
+                className="mb-4 bg-red-600/90 border-red-700"
+              >
                 <WifiOff className="h-4 w-4 mr-2" />
                 <AlertDescription>
-                  Nu există conexiune la internet sau la server. Vă rugăm să verificați conexiunea și să încercați din nou.
+                  Nu există conexiune la internet sau la server. Vă rugăm să
+                  verificați conexiunea și să încercați din nou.
                 </AlertDescription>
               </Alert>
             </motion.div>
           )}
 
-          {connectionStatus === 'online' && (
+          {connectionStatus === "online" && (
             <motion.div
               className="flex items-center justify-center space-x-2 text-green-400 mb-4"
               initial={{ y: -10, opacity: 0 }}
@@ -287,7 +347,8 @@ const LoginPage = () => {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4 }}
           >
-            Introduceți datele de autentificare pentru a accesa contul dumneavoastră
+            Introduceți datele de autentificare pentru a accesa contul
+            dumneavoastră
           </motion.p>
         </div>
 
@@ -357,10 +418,7 @@ const LoginPage = () => {
               </Label>
             </div>
 
-            <motion.div
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
               <Button
                 type="submit"
                 className="w-full"
