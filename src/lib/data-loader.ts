@@ -168,7 +168,7 @@ export async function loadData<T>(
     if (data && Array.isArray(data)) {
       cacheService.set(key, data, {
         namespace: DATA_CACHE_NAMESPACE,
-        expireIn
+        ttl: expireIn
       });
 
       // Salvăm datele pentru utilizare offline

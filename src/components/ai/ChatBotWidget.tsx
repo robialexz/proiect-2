@@ -4,14 +4,11 @@ import {
   Send,
   X,
   HelpCircle,
-  Search,
-  Package,
-  FileSpreadsheet,
   User,
-  Settings,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { dataLoader } from "@/lib/data-loader";
+// import { dataLoader } from "@/lib/data-loader";
+import { cacheService } from "@/lib/cache-service";
 
 // Enhanced AI reply logic with context awareness
 const getAIResponse = async (message: string) => {
@@ -26,7 +23,7 @@ const getAIResponse = async (message: string) => {
     try {
       // Try to get inventory count from cache or database
       const cacheKey = "inventory_stats";
-      let stats = dataLoader.getData(cacheKey);
+      let stats = cacheService.get<{ totalItems: number; totalQuantity: number }>(cacheKey, { namespace: 'data' });
 
       if (!stats) {
         const { data, error } = await supabase
@@ -40,7 +37,7 @@ const getAIResponse = async (message: string) => {
           data?.reduce((sum, item) => sum + (item.quantity || 0), 0) || 0;
 
         stats = { totalItems, totalQuantity };
-        dataLoader.saveData(cacheKey, stats, 5 * 60 * 1000); // Cache for 5 minutes
+        cacheService.set(cacheKey, stats, { namespace: 'data', ttl: 5 * 60 * 1000 }); // Cache for 5 minutes
       }
 
       if (
