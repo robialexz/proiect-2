@@ -11,10 +11,11 @@ import { measurePerformance } from "@/lib/performance-optimizer";
 import { Search, Package, FileDown } from "lucide-react";
 import OptimizedDataTable from "@/components/inventory/optimized-data-table";
 import { getColumns, type Material } from "@/components/inventory/columns";
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
+import ChatBotWidget from "@/components/ai/ChatBotWidget";
 import {
   Dialog,
   DialogContent,
@@ -25,7 +26,10 @@ import {
 } from "@/components/ui/dialog";
 
 // --- Types ---
-type MaterialWithProject = Material & { project_id: string | null; project_name?: string | null };
+type MaterialWithProject = Material & {
+  project_id: string | null;
+  project_name?: string | null;
+};
 
 // --- Component ---
 const CompanyInventoryPage: React.FC = () => {
@@ -40,7 +44,8 @@ const CompanyInventoryPage: React.FC = () => {
   const [inventoryData, setInventoryData] = useState<MaterialWithProject[]>([]);
   const [loadingData, setLoadingData] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
-  const [materialToView, setMaterialToView] = useState<MaterialWithProject | null>(null);
+  const [materialToView, setMaterialToView] =
+    useState<MaterialWithProject | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
 
   // Fetch all materials from all projects
@@ -59,7 +64,7 @@ const CompanyInventoryPage: React.FC = () => {
         "id, name, dimension, unit, quantity, manufacturer, category, image_url, suplimentar, project_id, cost_per_unit, supplier_id, last_order_date, min_stock_level, max_stock_level, location, notes",
         {},
         cacheKey,
-        30 * 60 * 1000 // 30 minute cache
+        30 * 60 * 1000, // 30 minute cache
       );
 
       // Dacă nu avem date în cache, încărcăm de la server
@@ -69,7 +74,9 @@ const CompanyInventoryPage: React.FC = () => {
         // Construim query-ul pentru a obține toate materialele
         const { data: materialsData, error } = await supabase
           .from("materials")
-          .select("id, name, dimension, unit, quantity, manufacturer, category, image_url, suplimentar, project_id, cost_per_unit, supplier_id, last_order_date, min_stock_level, max_stock_level, location, notes");
+          .select(
+            "id, name, dimension, unit, quantity, manufacturer, category, image_url, suplimentar, project_id, cost_per_unit, supplier_id, last_order_date, min_stock_level, max_stock_level, location, notes",
+          );
 
         if (error) throw error;
 
@@ -88,11 +95,11 @@ const CompanyInventoryPage: React.FC = () => {
               }
             }
             return { ...material, project_name: null };
-          })
+          }),
         );
 
         setInventoryData(materialsWithProjects);
-        
+
         // Salvăm datele în cache
         dataLoader.saveData(cacheKey, materialsWithProjects, 30 * 60 * 1000);
       } else {
@@ -129,45 +136,75 @@ const CompanyInventoryPage: React.FC = () => {
   // Export to Excel
   const handleExportToExcel = () => {
     try {
-      // Creăm un nou workbook
-      const wb = XLSX.utils.book_new();
-      
-      // Pregătim datele pentru export
-      const exportData = inventoryData.map(item => ({
-        Name: item.name,
-        Dimension: item.dimension || '',
-        Unit: item.unit,
-        Quantity: item.quantity,
-        Manufacturer: item.manufacturer || '',
-        Category: item.category || '',
-        Project: item.project_name || 'No Project',
-        Supplementary: item.suplimentar || 0,
-        Location: item.location || '',
-        'Cost Per Unit': item.cost_per_unit || '',
-        'Min Stock Level': item.min_stock_level || '',
-        'Max Stock Level': item.max_stock_level || '',
-        Notes: item.notes || ''
-      }));
-      
-      // Creăm un worksheet
-      const ws = XLSX.utils.json_to_sheet(exportData);
-      
-      // Adăugăm worksheet-ul la workbook
-      XLSX.utils.book_append_sheet(wb, ws, "Company Inventory");
-      
-      // Generăm fișierul Excel
-      XLSX.writeFile(wb, "company_inventory.xlsx");
-      
+      // Create a new workbook
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Company Inventory");
+
+      // Add headers
+      worksheet.columns = [
+        { header: "Name", key: "name", width: 20 },
+        { header: "Dimension", key: "dimension", width: 15 },
+        { header: "Unit", key: "unit", width: 10 },
+        { header: "Quantity", key: "quantity", width: 10 },
+        { header: "Manufacturer", key: "manufacturer", width: 20 },
+        { header: "Category", key: "category", width: 15 },
+        { header: "Project", key: "project", width: 20 },
+        { header: "Supplementary", key: "supplementary", width: 15 },
+        { header: "Location", key: "location", width: 15 },
+        { header: "Cost Per Unit", key: "costPerUnit", width: 15 },
+        { header: "Min Stock Level", key: "minStockLevel", width: 15 },
+        { header: "Max Stock Level", key: "maxStockLevel", width: 15 },
+        { header: "Notes", key: "notes", width: 30 },
+      ];
+
+      // Add rows
+      inventoryData.forEach((item) => {
+        worksheet.addRow({
+          name: item.name,
+          dimension: item.dimension || "",
+          unit: item.unit,
+          quantity: item.quantity,
+          manufacturer: item.manufacturer || "",
+          category: item.category || "",
+          project: item.project_name || "No Project",
+          supplementary: item.suplimentar || 0,
+          location: item.location || "",
+          costPerUnit: item.cost_per_unit || "",
+          minStockLevel: item.min_stock_level || "",
+          maxStockLevel: item.max_stock_level || "",
+          notes: item.notes || "",
+        });
+      });
+
+      // Generate Excel file
+      workbook.xlsx.writeBuffer().then((buffer) => {
+        const blob = new Blob([buffer], {
+          type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "company_inventory.xlsx";
+        a.click();
+        window.URL.revokeObjectURL(url);
+      });
+
       toast({
         title: t("inventory.exportSuccess", "Export Successful"),
-        description: t("inventory.exportSuccessDesc", "Inventory data has been exported to Excel."),
+        description: t(
+          "inventory.exportSuccessDesc",
+          "Inventory data has been exported to Excel.",
+        ),
       });
     } catch (error) {
       console.error("Error exporting to Excel:", error);
       toast({
         variant: "destructive",
         title: t("inventory.exportError", "Export Failed"),
-        description: t("inventory.exportErrorDesc", "Failed to export inventory data."),
+        description: t(
+          "inventory.exportErrorDesc",
+          "Failed to export inventory data.",
+        ),
       });
     }
   };
@@ -192,7 +229,9 @@ const CompanyInventoryPage: React.FC = () => {
       accessorKey: "project_name",
       header: t("inventory.columns.project", "Project"),
       cell: ({ row }) => {
-        const projectName = row.getValue("project_name") || t("inventory.noProject", "No Project");
+        const projectName =
+          row.getValue("project_name") ||
+          t("inventory.noProject", "No Project");
         return <div>{projectName}</div>;
       },
     },
@@ -205,7 +244,9 @@ const CompanyInventoryPage: React.FC = () => {
       <div className="flex items-center justify-center h-screen bg-slate-900 text-white">
         <div className="flex flex-col items-center">
           <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-          <p className="mt-4 text-slate-400">{t("common.loading", "Loading...")}</p>
+          <p className="mt-4 text-slate-400">
+            {t("common.loading", "Loading...")}
+          </p>
         </div>
       </div>
     );
@@ -217,6 +258,12 @@ const CompanyInventoryPage: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-slate-900 text-white">
+      {/* AI Assistant */}
+      <ChatBotWidget
+        initialMessage="Bun venit în secțiunea de inventar companie! Pot să te ajut cu informații despre materiale, export de date sau căutare. Cu ce te pot ajuta?"
+        contextType="inventory"
+      />
+
       {/* Main Content Area */}
       <main className="flex-1 overflow-y-auto p-6">
         <motion.div
@@ -231,7 +278,7 @@ const CompanyInventoryPage: React.FC = () => {
               {t("inventory.companyInventory", "Company Inventory")}
             </h1>
             <Button
-              onClick={() => window.location.href = "/inventory-management"}
+              onClick={() => (window.location.href = "/inventory-management")}
               variant="outline"
             >
               {t("inventory.goToProjectInventory", "Go to Project Inventory")}
@@ -252,7 +299,7 @@ const CompanyInventoryPage: React.FC = () => {
                 type="search"
                 placeholder={t(
                   "inventory.searchPlaceholder",
-                  "Search materials..."
+                  "Search materials...",
                 )}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -282,7 +329,7 @@ const CompanyInventoryPage: React.FC = () => {
                 <div className="text-center text-slate-400 py-10">
                   {t(
                     "inventory.noMaterials",
-                    "No materials found. Add materials to your inventory."
+                    "No materials found. Add materials to your inventory.",
                   )}
                 </div>
               ) : (
@@ -307,7 +354,7 @@ const CompanyInventoryPage: React.FC = () => {
             <DialogDescription>
               {t(
                 "inventory.viewDialog.description",
-                "Detailed information about the material."
+                "Detailed information about the material.",
               )}
             </DialogDescription>
           </DialogHeader>
@@ -328,60 +375,104 @@ const CompanyInventoryPage: React.FC = () => {
                   )}
                 </div>
                 <div>
-                  <h3 className="text-sm font-medium text-slate-400 mb-1">{t("inventory.columns.name", "Name")}</h3>
+                  <h3 className="text-sm font-medium text-slate-400 mb-1">
+                    {t("inventory.columns.name", "Name")}
+                  </h3>
                   <p className="font-semibold">{materialToView.name}</p>
                 </div>
                 <div>
-                  <h3 className="text-sm font-medium text-slate-400 mb-1">{t("inventory.columns.project", "Project")}</h3>
-                  <p>{materialToView.project_name || t("inventory.noProject", "No Project")}</p>
+                  <h3 className="text-sm font-medium text-slate-400 mb-1">
+                    {t("inventory.columns.project", "Project")}
+                  </h3>
+                  <p>
+                    {materialToView.project_name ||
+                      t("inventory.noProject", "No Project")}
+                  </p>
                 </div>
                 <div>
-                  <h3 className="text-sm font-medium text-slate-400 mb-1">{t("inventory.columns.dimension", "Dimension")}</h3>
+                  <h3 className="text-sm font-medium text-slate-400 mb-1">
+                    {t("inventory.columns.dimension", "Dimension")}
+                  </h3>
                   <p>{materialToView.dimension || "-"}</p>
                 </div>
                 <div>
-                  <h3 className="text-sm font-medium text-slate-400 mb-1">{t("inventory.columns.unit", "Unit")}</h3>
+                  <h3 className="text-sm font-medium text-slate-400 mb-1">
+                    {t("inventory.columns.unit", "Unit")}
+                  </h3>
                   <p>{materialToView.unit}</p>
                 </div>
                 <div>
-                  <h3 className="text-sm font-medium text-slate-400 mb-1">{t("inventory.columns.quantity", "Quantity")}</h3>
+                  <h3 className="text-sm font-medium text-slate-400 mb-1">
+                    {t("inventory.columns.quantity", "Quantity")}
+                  </h3>
                   <p>{materialToView.quantity}</p>
                 </div>
                 <div>
-                  <h3 className="text-sm font-medium text-slate-400 mb-1">{t("inventory.columns.suplimentar", "Supplementary")}</h3>
-                  <p className={materialToView.suplimentar ? "text-yellow-400" : ""}>
+                  <h3 className="text-sm font-medium text-slate-400 mb-1">
+                    {t("inventory.columns.suplimentar", "Supplementary")}
+                  </h3>
+                  <p
+                    className={
+                      materialToView.suplimentar ? "text-yellow-400" : ""
+                    }
+                  >
                     {materialToView.suplimentar || 0}
                   </p>
                 </div>
                 <div>
-                  <h3 className="text-sm font-medium text-slate-400 mb-1">{t("inventory.columns.manufacturer", "Manufacturer")}</h3>
+                  <h3 className="text-sm font-medium text-slate-400 mb-1">
+                    {t("inventory.columns.manufacturer", "Manufacturer")}
+                  </h3>
                   <p>{materialToView.manufacturer || "-"}</p>
                 </div>
                 <div>
-                  <h3 className="text-sm font-medium text-slate-400 mb-1">{t("inventory.columns.category", "Category")}</h3>
+                  <h3 className="text-sm font-medium text-slate-400 mb-1">
+                    {t("inventory.columns.category", "Category")}
+                  </h3>
                   <p>{materialToView.category || "-"}</p>
                 </div>
                 {isManager && (
                   <>
                     <div>
-                      <h3 className="text-sm font-medium text-slate-400 mb-1">{t("inventory.managerFields.costPerUnit", "Cost Per Unit")}</h3>
+                      <h3 className="text-sm font-medium text-slate-400 mb-1">
+                        {t(
+                          "inventory.managerFields.costPerUnit",
+                          "Cost Per Unit",
+                        )}
+                      </h3>
                       <p>{materialToView.cost_per_unit || "-"}</p>
                     </div>
                     <div>
-                      <h3 className="text-sm font-medium text-slate-400 mb-1">{t("inventory.managerFields.location", "Location")}</h3>
+                      <h3 className="text-sm font-medium text-slate-400 mb-1">
+                        {t("inventory.managerFields.location", "Location")}
+                      </h3>
                       <p>{materialToView.location || "-"}</p>
                     </div>
                     <div>
-                      <h3 className="text-sm font-medium text-slate-400 mb-1">{t("inventory.managerFields.minStockLevel", "Min Stock Level")}</h3>
+                      <h3 className="text-sm font-medium text-slate-400 mb-1">
+                        {t(
+                          "inventory.managerFields.minStockLevel",
+                          "Min Stock Level",
+                        )}
+                      </h3>
                       <p>{materialToView.min_stock_level || "-"}</p>
                     </div>
                     <div>
-                      <h3 className="text-sm font-medium text-slate-400 mb-1">{t("inventory.managerFields.maxStockLevel", "Max Stock Level")}</h3>
+                      <h3 className="text-sm font-medium text-slate-400 mb-1">
+                        {t(
+                          "inventory.managerFields.maxStockLevel",
+                          "Max Stock Level",
+                        )}
+                      </h3>
                       <p>{materialToView.max_stock_level || "-"}</p>
                     </div>
                     <div className="col-span-2">
-                      <h3 className="text-sm font-medium text-slate-400 mb-1">{t("inventory.managerFields.notes", "Notes")}</h3>
-                      <p className="whitespace-pre-wrap">{materialToView.notes || "-"}</p>
+                      <h3 className="text-sm font-medium text-slate-400 mb-1">
+                        {t("inventory.managerFields.notes", "Notes")}
+                      </h3>
+                      <p className="whitespace-pre-wrap">
+                        {materialToView.notes || "-"}
+                      </p>
                     </div>
                   </>
                 )}
@@ -389,10 +480,7 @@ const CompanyInventoryPage: React.FC = () => {
             )}
           </div>
           <DialogFooter>
-            <Button
-              type="button"
-              onClick={() => setIsViewModalOpen(false)}
-            >
+            <Button type="button" onClick={() => setIsViewModalOpen(false)}>
               {t("common.close", "Close")}
             </Button>
           </DialogFooter>

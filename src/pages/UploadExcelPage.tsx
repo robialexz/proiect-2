@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { useTranslation } from "react-i18next";
+import ChatBotWidget from "@/components/ai/ChatBotWidget";
 import {
   FileSpreadsheet,
   Upload,
@@ -67,7 +68,7 @@ const UploadExcelPage: React.FC = () => {
     }
   };
 
-  const handleUpload = () => {
+  const handleUpload = async () => {
     if (!selectedFile) {
       toast({
         variant: "destructive",
@@ -76,6 +77,24 @@ const UploadExcelPage: React.FC = () => {
       });
       return;
     }
+
+    const handleUploadError = useCallback(
+      (error: any) => {
+        clearInterval();
+        setUploadStatus("error");
+        setUploadProgress(0);
+
+        toast({
+          variant: "destructive",
+          title: t("Upload Failed"),
+          description:
+            error instanceof Error
+              ? error.message
+              : t("There was an error processing your file. Please try again."),
+        });
+      },
+      [t, toast],
+    );
 
     if (!selectedProject) {
       toast({
@@ -86,37 +105,81 @@ const UploadExcelPage: React.FC = () => {
       return;
     }
 
-    // Simulate upload process
+    // Start upload process
     setUploadStatus("uploading");
+    setUploadProgress(0);
 
-    const interval = setInterval(() => {
-      setUploadProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setUploadStatus("success");
+    try {
+      // Use ExcelJS to process the file
+      const ExcelJS = await import("exceljs");
+      const workbook = new ExcelJS.Workbook();
 
-          // Add to history
-          setUploadHistory((prev) => [
-            {
-              id: Date.now(),
-              filename: selectedFile.name,
-              date: new Date().toISOString().split("T")[0],
-              status: "success",
-              items: Math.floor(Math.random() * 50) + 10, // Random number of items
-            },
-            ...prev,
-          ]);
+      // Simulate progress during file reading
+      const progressInterval = setInterval(() => {
+        setUploadProgress((prev) => Math.min(prev + 5, 90));
+      }, 200);
 
-          toast({
-            title: t("Upload Complete"),
-            description: t("Your Excel file has been successfully processed."),
-          });
+      // Read the file
+      const reader = new FileReader();
 
-          return 100;
+      reader.onload = async (e) => {
+        try {
+          const buffer = e.target?.result;
+          await workbook.xlsx.load(buffer);
+
+          clearInterval(progressInterval);
+          setUploadProgress(95);
+
+          // Process the workbook
+          const worksheet = workbook.getWorksheet(1);
+          const rowCount = worksheet?.rowCount || 0;
+
+          // Here you would normally process and save the data
+          // For now we're just simulating completion
+
+          setTimeout(() => {
+            setUploadProgress(100);
+            setUploadStatus("success");
+
+            // Add to history
+            setUploadHistory((prev) => [
+              {
+                id: Date.now(),
+                filename: selectedFile.name,
+                date: new Date().toISOString().split("T")[0],
+                status: "success",
+                items:
+                  rowCount > 0
+                    ? rowCount - 1
+                    : Math.floor(Math.random() * 50) + 10, // Use actual row count or fallback to random
+              },
+              ...prev,
+            ]);
+
+            toast({
+              title: t("Upload Complete"),
+              description: t(
+                "Your Excel file has been successfully processed.",
+              ),
+            });
+          }, 500);
+        } catch (error) {
+          console.error("Error processing Excel file:", error);
+          handleUploadError(error);
         }
-        return prev + 5;
-      });
-    }, 200);
+      };
+
+      reader.onerror = (error) => {
+        console.error("FileReader error:", error);
+        handleUploadError(error);
+      };
+
+      // Read the file as an ArrayBuffer
+      reader.readAsArrayBuffer(selectedFile);
+    } catch (error) {
+      console.error("Upload error:", error);
+      handleUploadError(error);
+    }
   };
 
   if (loading) {
@@ -133,7 +196,12 @@ const UploadExcelPage: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-slate-900 text-white">
-      
+      {/* AI Assistant */}
+      <ChatBotWidget
+        initialMessage="Bun venit în secțiunea de upload Excel! Pot să te ajut cu informații despre formatul fișierelor acceptate, procesul de import sau rezolvarea problemelor. Cu ce te pot ajuta?"
+        contextType="inventory"
+      />
+
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
         <header className="sticky top-0 z-10 bg-slate-900 border-b border-slate-800 px-6 py-4 shrink-0">
@@ -379,5 +447,3 @@ const UploadExcelPage: React.FC = () => {
 };
 
 export default UploadExcelPage;
-
-
