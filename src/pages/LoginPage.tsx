@@ -1,12 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, ChangeEvent } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { AlertCircle, Wifi, WifiOff, Eye, EyeOff } from "lucide-react";
+import { AlertCircle, Eye, EyeOff } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import connectionService from "@/lib/connection-service";
 import { useToast } from "@/components/ui/use-toast";
@@ -56,7 +54,14 @@ const AnimatedInput = ({ ...props }) => (
   />
 );
 
-const AnimatedCheckbox = (props) => (
+interface AnimatedCheckboxProps {
+  id: string;
+  checked: boolean;
+  onChange: (e: ChangeEvent<HTMLInputElement>) => void;
+  className?: string;
+}
+
+const AnimatedCheckbox = (props: AnimatedCheckboxProps) => (
   <motion.input
     type="checkbox"
     whileTap={{ scale: 1.2 }}
@@ -391,7 +396,7 @@ const LoginPage = () => {
                 type="email"
                 placeholder="name@example.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
                 required
               />
             </div>
@@ -413,7 +418,7 @@ const LoginPage = () => {
                   id="password"
                   type={showPassword ? "text" : "password"}
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
                   required
                   autoComplete="current-password"
                 />
@@ -433,7 +438,7 @@ const LoginPage = () => {
               <AnimatedCheckbox
                 id="remember"
                 checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => setRememberMe(e.target.checked)}
               />
               <Label
                 htmlFor="remember"

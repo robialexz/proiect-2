@@ -32,6 +32,8 @@ import {
   LogOut,
   HelpCircle,
   CheckCircle2,
+  Bell,
+  Cube,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation } from "react-i18next";
@@ -408,6 +410,54 @@ const Sidebar = () => {
               </Tooltip>
             </TooltipProvider>
           )}
+
+          {/* Link către pagina de demo notificări */}
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className={cn(
+                    "w-full text-slate-400 hover:text-white hover:bg-slate-800 justify-start",
+                    collapsed && "justify-center"
+                  )}
+                  onClick={() => navigate("/notifications-demo")}
+                >
+                  <Bell size={20} />
+                  {!collapsed && <span className="ml-3">Notificări Demo</span>}
+                </Button>
+              </TooltipTrigger>
+              {collapsed && (
+                <TooltipContent side="right">
+                  <p>Notificări Demo</p>
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </TooltipProvider>
+
+          {/* Link către pagina de demo Spline */}
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className={cn(
+                    "w-full text-slate-400 hover:text-white hover:bg-slate-800 justify-start",
+                    collapsed && "justify-center"
+                  )}
+                  onClick={() => navigate("/spline-demo")}
+                >
+                  <Cube size={20} />
+                  {!collapsed && <span className="ml-3">Spline 3D Demo</span>}
+                </Button>
+              </TooltipTrigger>
+              {collapsed && (
+                <TooltipContent side="right">
+                  <p>Spline 3D Demo</p>
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </TooltipProvider>
 
           {/* Link către pagina de tutorial și ajutor */}
           <TooltipProvider>
