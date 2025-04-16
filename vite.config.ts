@@ -13,7 +13,9 @@ export default defineConfig({
       "react-dom",
       "react-router-dom",
       "@supabase/supabase-js",
-      "framer-motion"
+      "framer-motion",
+      "@splinetool/runtime",
+      "@splinetool/react-spline"
     ],
     esbuildOptions: {
       target: 'es2020',
@@ -24,11 +26,15 @@ export default defineConfig({
     minify: 'terser',
     cssMinify: true,
     rollupOptions: {
+      external: [
+        '@splinetool/runtime'
+      ],
       output: {
         manualChunks: {
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
           'ui-components': ['@/components/ui'],
           'supabase': ['@supabase/supabase-js'],
+          'spline': ['@splinetool/react-spline', '@splinetool/runtime'],
         },
       },
     },
