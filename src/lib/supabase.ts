@@ -75,7 +75,7 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
 
           // Adăugăm un timestamp de expirare dacă nu există
           if (!parsed.expiresAt) {
-            parsed.expiresAt = Date.now() + 3600 * 1000; // 1 oră valabilitate
+            parsed.expiresAt = Date.now() + 24 * 3600 * 1000; // 24 ore valabilitate
             value = JSON.stringify(parsed);
           }
 
@@ -182,14 +182,37 @@ supabase.auth.onAuthStateChange((event, session) => {
       detail: { session }
     }));
   } else if (event === 'SIGNED_OUT') {
-    // Setăm flag-ul pentru deconectare intenționată
-    window.sessionStorage.setItem('intentional_signout', 'true');
-    console.log('SIGNED_OUT event detected, setting intentional_signout flag');
+    // Verificăm dacă este o deconectare intenționată sau automată
+    const isIntentionalSignOut = window.sessionStorage.getItem('intentional_signout') === 'true';
+    console.log('SIGNED_OUT event detected, intentional:', isIntentionalSignOut);
 
-    // Curățăm storage-ul și emitem un eveniment
-    window.dispatchEvent(new CustomEvent('supabase-session-update', {
-      detail: { session: null }
-    }));
+    if (isIntentionalSignOut) {
+      // Curățăm storage-ul și emitem un eveniment doar dacă este intenționată
+      window.dispatchEvent(new CustomEvent('supabase-session-update', {
+        detail: { session: null }
+      }));
+      // Resetăm flag-ul
+      window.sessionStorage.removeItem('intentional_signout');
+    } else {
+      // Dacă nu este intenționată, încercăm să reîmprospătăm sesiunea
+      console.log('Automatic sign out detected, attempting to refresh session');
+      // Vom încerca să reîmprospătăm sesiunea în loc să deconectăm utilizatorul
+      supabase.auth.refreshSession().then(({ data, error }) => {
+        if (data.session) {
+          console.log('Session refreshed successfully after auto sign out');
+          // Emitem un eveniment pentru a notifica alte componente despre sesiunea reîmprospătată
+          window.dispatchEvent(new CustomEvent('supabase-session-update', {
+            detail: { session: data.session }
+          }));
+        } else {
+          console.log('Failed to refresh session after auto sign out:', error);
+          // Doar în acest caz emitem evenimentul de deconectare
+          window.dispatchEvent(new CustomEvent('supabase-session-update', {
+            detail: { session: null }
+          }));
+        }
+      });
+    }
   }
 });
 

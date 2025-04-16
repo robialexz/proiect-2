@@ -137,6 +137,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [session, user, userProfile, loading]);
 
+  // Adaugăm un mecanism de reîmprospătare automată a sesiunii
+  useEffect(() => {
+    if (!session || !user) return;
+
+    // Reîmprospătăm sesiunea la fiecare 30 de minute
+    const refreshInterval = setInterval(async () => {
+      console.log("[AuthContext] Auto-refreshing session");
+      try {
+        const { data, error } = await supabase.auth.refreshSession();
+        if (error) {
+          console.error("[AuthContext] Error refreshing session:", error);
+        } else if (data.session) {
+          console.log("[AuthContext] Session refreshed successfully");
+          // Nu trebuie să actualizăm starea aici, deoarece onAuthStateChange va face asta
+        }
+      } catch (error) {
+        console.error("[AuthContext] Unexpected error refreshing session:", error);
+      }
+    }, 30 * 60 * 1000); // 30 minute
+
+    return () => clearInterval(refreshInterval);
+  }, [session, user]);
+
   useEffect(() => {
     // DEBUG LOGGING: Try to restore session from storage if lost
     if (!session || !user) {
@@ -474,7 +497,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (response.data?.session) {
         const sessionData = {
           currentSession: response.data.session,
-          expiresAt: Date.now() + 3600 * 1000, // 1 oră valabilitate
+          expiresAt: Date.now() + 24 * 3600 * 1000, // 24 ore valabilitate
         };
         try {
           localStorage.setItem("supabase.auth.token", JSON.stringify(sessionData));
