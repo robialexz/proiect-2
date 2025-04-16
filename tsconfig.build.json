@@ -4,6 +4,7 @@
     "skipLibCheck": true,
     "noEmitOnError": false,
     "noImplicitAny": false,
-    "suppressImplicitAnyIndexErrors": true
+    "suppressExcessPropertyErrors": true,
+    "ignoreDeprecations": "5.0"
   }
 }
