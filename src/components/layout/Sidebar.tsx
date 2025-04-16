@@ -33,7 +33,7 @@ import {
   HelpCircle,
   CheckCircle2,
   Bell,
-  Cube,
+  Box,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation } from "react-i18next";
@@ -447,7 +447,7 @@ const Sidebar = () => {
                   )}
                   onClick={() => navigate("/spline-demo")}
                 >
-                  <Cube size={20} />
+                  <Box size={20} />
                   {!collapsed && <span className="ml-3">Spline 3D Demo</span>}
                 </Button>
               </TooltipTrigger>
