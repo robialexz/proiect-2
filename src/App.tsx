@@ -24,6 +24,7 @@ const TermsPage = lazy(() => import("./pages/TermsPage"));
 const PricingPage = lazy(() => import("./pages/PricingPage"));
 const ContactPage = lazy(() => import("./pages/ContactPage"));
 const DashboardPage = lazy(() => import("./pages/DashboardPage"));
+const SplineDemo = lazy(() => import("./pages/SplineDemo"));
 
 // Lazy load additional project management pages
 const ProjectsPage = lazy(() => import("./pages/ProjectsPage"));
@@ -68,6 +69,7 @@ function App() {
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/spline-demo" element={<SplineDemo />} />
 
             {/* Protected routes inside AppLayout */}
             <Route path="/" element={<AppLayout />}>
