@@ -502,6 +502,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
           localStorage.setItem("supabase.auth.token", JSON.stringify(sessionData));
           sessionStorage.setItem("supabase.auth.token", JSON.stringify(sessionData));
+
+          // Setăm un flag pentru a indica o nouă logare - va fi folosit pentru afișarea mesajului de bun venit
+          sessionStorage.setItem("newLoginDetected", "true");
+
           console.log("[AuthContext] Session saved to storage after login");
         } catch (storageError) {
           console.error("[AuthContext] Error saving session after login:", storageError);

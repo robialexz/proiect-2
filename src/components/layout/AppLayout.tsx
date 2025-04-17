@@ -46,32 +46,24 @@ const AppLayout: React.FC = () => {
   // Stare pentru afișarea overlay-ului de bun venit
   const [showWelcomeOverlay, setShowWelcomeOverlay] = useState(false);
 
-  // Afișăm un mesaj de bun venit doar la prima încărcare, nu la fiecare schimbare de pagină
+  // Afișăm un mesaj de bun venit doar la prima logare, nu la fiecare schimbare de pagină
   useEffect(() => {
-    // Folosim localStorage pentru a verifica dacă mesajul a fost deja afișat în această sesiune
-    const welcomeShown = localStorage.getItem('welcomeMessageShown');
-    console.log('Welcome check - User:', user?.id, 'Loading:', loading, 'Shown:', welcomeShown);
+    // Folosim sessionStorage pentru a verifica dacă mesajul a fost deja afișat în această sesiune
+    // Folosim sessionStorage în loc de localStorage pentru a reseta la închiderea browserului
+    const welcomeShown = sessionStorage.getItem('welcomeMessageShown');
+    const isNewLogin = sessionStorage.getItem('newLoginDetected');
+    console.log('Welcome check - User:', user?.id, 'Loading:', loading, 'Shown:', welcomeShown, 'New login:', isNewLogin);
 
     if (user && !loading) {
-      // Forțăm afișarea mesajului de bun venit în modul de dezvoltare
-      if (import.meta.env.DEV) {
-        console.log('Forcing welcome overlay in development mode');
-        setShowWelcomeOverlay(true);
-        return;
-      }
-
-      // În producție, verificăm dacă a fost deja afișat
-      if (!welcomeShown) {
-        // Afișăm overlay-ul de bun venit în loc de notificare
+      // Verificăm dacă este o nouă logare și nu am afișat deja mesajul
+      if (isNewLogin === 'true' && !welcomeShown) {
+        console.log('Showing welcome overlay for new login');
         setShowWelcomeOverlay(true);
 
         // Marcăm mesajul ca afișat pentru această sesiune
-        localStorage.setItem('welcomeMessageShown', 'true');
-
-        // Resetăm flag-ul după 30 de minute pentru a permite afișarea unui nou mesaj în viitor
-        setTimeout(() => {
-          localStorage.removeItem('welcomeMessageShown');
-        }, 30 * 60 * 1000); // 30 minute
+        sessionStorage.setItem('welcomeMessageShown', 'true');
+        // Resetăm flag-ul de nouă logare
+        sessionStorage.removeItem('newLoginDetected');
       }
     }
   }, [user, loading]);

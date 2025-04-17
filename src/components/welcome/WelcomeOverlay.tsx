@@ -171,7 +171,7 @@ const WelcomeOverlay: React.FC<WelcomeOverlayProps> = ({ onComplete }) => {
             />
           ))}
 
-          <div className="text-center px-4 relative z-10">
+          <div className="text-center px-4 relative z-10 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl">
             <motion.div
               className="text-2xl md:text-3xl text-slate-300 mb-2"
               variants={textVariants}
