@@ -18,7 +18,7 @@ import {
   Trash2,
   FileSpreadsheet,
   FileImage,
-  FilePdf,
+  File, // Înlocuit FilePdf cu File
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -247,7 +247,7 @@ const DocumentsPage: React.FC = () => {
   const getDocumentIcon = (type: Document["type"]) => {
     switch (type) {
       case "pdf":
-        return <FilePdf className="h-5 w-5 text-red-400" />;
+        return <File className="h-5 w-5 text-red-400" />; // Înlocuit FilePdf cu File
       case "excel":
         return <FileSpreadsheet className="h-5 w-5 text-green-400" />;
       case "image":
