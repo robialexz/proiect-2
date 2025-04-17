@@ -1,0 +1,143 @@
+{
+  "title": "Echipe",
+  "subtitle": "Gestionează echipele și membrii echipelor",
+  "teamLabel": "Echipă",
+  "noDescription": "Nicio descriere furnizată",
+  "createdAt": "Creat",
+  "list": {
+    "title": "Echipe",
+    "description": "Vizualizează și gestionează toate echipele tale",
+    "searchPlaceholder": "Caută echipe...",
+    "columns": {
+      "name": "Nume",
+      "description": "Descriere",
+      "createdAt": "Data creării",
+      "actions": "Acțiuni"
+    },
+    "noTeams": "Nu există echipe. Creează una nouă!",
+    "noSearchResults": "Nu s-au găsit echipe care să corespundă căutării tale",
+    "teamsFound": "echipe găsite",
+    "tryDifferentSearch": "Încearcă un termen diferit de căutare sau șterge căutarea",
+    "createTeamPrompt": "Creează prima ta echipă pentru a începe colaborarea cu alții"
+  },
+  "actions": {
+    "addTeam": "Adaugă echipă",
+    "manageTeam": "Gestionează echipa",
+    "viewMembers": "Vezi membrii",
+    "manageMembers": "Gestionează membrii",
+    "edit": "Editează",
+    "delete": "Șterge"
+  },
+  "form": {
+    "createTitle": "Creează o echipă nouă",
+    "editTitle": "Editează echipa",
+    "createDescription": "Completează detaliile pentru a crea o echipă nouă",
+    "editDescription": "Actualizează detaliile echipei",
+    "fields": {
+      "name": "Nume echipă",
+      "description": "Descriere"
+    },
+    "placeholders": {
+      "name": "Introdu numele echipei",
+      "description": "Introdu o descriere pentru echipă"
+    },
+    "descriptions": {
+      "name": "Numele echipei tale, vizibil pentru toți membrii",
+      "description": "O scurtă descriere a scopului echipei"
+    },
+    "validation": {
+      "nameRequired": "Numele echipei este obligatoriu"
+    },
+    "createSuccess": "Echipă creată cu succes",
+    "createSuccessDescription": "Noua echipă a fost creată și este gata de utilizare",
+    "updateSuccess": "Echipă actualizată cu succes",
+    "updateSuccessDescription": "Detaliile echipei au fost actualizate",
+    "createError": "Eroare la crearea echipei",
+    "updateError": "Eroare la actualizarea echipei",
+    "errorDescription": "A apărut o eroare. Te rugăm să încerci din nou."
+  },
+  "members": {
+    "title": "Membrii echipei {{teamName}}",
+    "description": "Gestionează membrii echipei tale",
+    "addMembersPrompt": "Adaugă membri în echipa ta",
+    "addMembersDescription": "Invită membri în echipă pentru a colabora împreună la proiecte",
+    "searchPlaceholder": "Caută membri...",
+    "addMember": "Adaugă membru",
+    "columns": {
+      "name": "Nume",
+      "email": "Email",
+      "role": "Rol",
+      "phone": "Telefon",
+      "actions": "Acțiuni"
+    },
+    "noMembers": "Această echipă nu are membri. Adaugă unul nou!",
+    "noSearchResults": "Nu s-au găsit membri care să corespundă căutării tale",
+    "membersFound": "membri găsiți",
+    "actions": {
+      "manageMember": "Gestionează membrul",
+      "edit": "Editează",
+      "delete": "Șterge"
+    },
+    "roles": {
+      "manager": "Manager",
+      "lead": "Lider",
+      "member": "Membru",
+      "guest": "Invitat"
+    },
+    "form": {
+      "createTitle": "Adaugă un membru nou",
+      "editTitle": "Editează membrul",
+      "createDescription": "Completează detaliile pentru a adăuga un membru nou",
+      "editDescription": "Actualizează detaliile membrului",
+      "fields": {
+        "name": "Nume",
+        "email": "Email",
+        "role": "Rol",
+        "phone": "Telefon"
+      },
+      "placeholders": {
+        "name": "Introdu numele membrului",
+        "email": "Introdu adresa de email",
+        "role": "Selectează un rol",
+        "phone": "Introdu numărul de telefon"
+      },
+      "descriptions": {
+        "phone": "Opțional: Numărul de telefon al membrului"
+      },
+      "validation": {
+        "nameRequired": "Numele este obligatoriu",
+        "emailInvalid": "Adresa de email nu este validă",
+        "roleRequired": "Rolul este obligatoriu"
+      },
+      "createSuccess": "Membru adăugat cu succes",
+      "createSuccessDescription": "Noul membru a fost adăugat la echipă",
+      "updateSuccess": "Membru actualizat cu succes",
+      "updateSuccessDescription": "Detaliile membrului au fost actualizate",
+      "createError": "Eroare la adăugarea membrului",
+      "updateError": "Eroare la actualizarea membrului",
+      "errorDescription": "A apărut o eroare. Te rugăm să încerci din nou."
+    },
+    "notifications": {
+      "memberDeleted": "Membru șters",
+      "memberDeletedDescription": "Membrul a fost șters din echipă"
+    },
+    "errors": {
+      "fetchFailed": "Eroare la încărcarea membrilor",
+      "fetchFailedDescription": "Nu s-au putut încărca membrii echipei. Te rugăm să încerci din nou.",
+      "deleteFailed": "Eroare la ștergerea membrului",
+      "deleteFailedDescription": "Nu s-a putut șterge membrul. Te rugăm să încerci din nou."
+    }
+  },
+  "notifications": {
+    "teamDeleted": "Echipă ștearsă",
+    "teamDeletedDescription": "Echipa a fost ștearsă cu succes"
+  },
+  "errors": {
+    "fetchFailed": "Eroare la încărcarea echipelor",
+    "fetchFailedDescription": "Nu s-au putut încărca echipele. Te rugăm să încerci din nou.",
+    "deleteFailed": "Eroare la ștergerea echipei",
+    "deleteFailedDescription": "Nu s-a putut șterge echipa. Te rugăm să încerci din nou.",
+    "nameRequired": "Numele echipei este obligatoriu",
+    "nameRequiredDesc": "Te rugăm să introduci un nume pentru echipa ta"
+  }
+}

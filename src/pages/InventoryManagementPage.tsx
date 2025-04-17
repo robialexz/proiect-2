@@ -1,0 +1,2210 @@
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  useMemo,
+  Suspense,
+} from "react";
+import { motion } from "framer-motion";
+import { useAuth } from "@/contexts/AuthContext";
+import { useRole } from "@/contexts/RoleContext";
+import { Navigate, useSearchParams } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { supabase } from "@/lib/supabase";
+import {
+  requestSuplimentar,
+  confirmSuplimentar,
+  adjustSuplimentar,
+  deleteMaterial,
+} from "@/lib/edge-functions";
+import { dataLoader } from "@/lib/data-loader";
+import useDataLoader from "@/hooks/useDataLoader";
+import { measurePerformance } from "@/lib/performance-optimizer";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Upload,
+  PlusCircle,
+  Search,
+  FolderPlus,
+  Package,
+  Truck,
+} from "lucide-react";
+import { DataTable } from "@/components/inventory/data-table";
+import OptimizedDataTable from "@/components/inventory/optimized-data-table";
+import { getColumns, type Material } from "@/components/inventory/columns";
+import ExcelJS from "exceljs";
+import { useTranslation } from "react-i18next";
+import ManagerFields from "@/components/inventory/ManagerFields";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/components/ui/use-toast";
+import SupplierAnnouncementUpload from "@/components/inventory/SupplierAnnouncementUpload";
+import SupplierAnnouncementList from "@/components/inventory/SupplierAnnouncementList";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+// --- Types ---
+type Project = { id: string; name: string; created_at: string };
+type MaterialWithProject = Material & { project_id: string | null };
+
+// --- Component ---
+const InventoryManagementPage: React.FC = () => {
+  // Hooks
+  const { t } = useTranslation();
+  const { toast } = useToast();
+  const { user, loading: authLoading } = useAuth();
+  const { isManager, loading: roleLoading } = useRole();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // URL params
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // State
+  const [searchTerm, setSearchTerm] = useState("");
+  const [inventoryData, setInventoryData] = useState<MaterialWithProject[]>([]);
+  const [loadingData, setLoadingData] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("inventory");
+  const [announcementRefreshTrigger, setAnnouncementRefreshTrigger] =
+    useState(0);
+
+  // Project State
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
+    searchParams.get("project"),
+  );
+  const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
+  const [newProjectName, setNewProjectName] = useState("");
+  const [loadingProjects, setLoadingProjects] = useState(true);
+
+  // Material Dialog State
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [newMaterial, setNewMaterial] = useState({
+    name: "",
+    dimension: "",
+    unit: "",
+    quantity: 0,
+    manufacturer: "",
+    category: "",
+    image_url: "",
+    // Manager fields
+    cost_per_unit: "",
+    supplier_id: "",
+    last_order_date: "",
+    min_stock_level: "",
+    max_stock_level: "",
+    location: "",
+    notes: "",
+  });
+
+  const [materialToDelete, setMaterialToDelete] =
+    useState<MaterialWithProject | null>(null);
+
+  const [materialToEdit, setMaterialToEdit] =
+    useState<MaterialWithProject | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editMaterialData, setEditMaterialData] = useState<
+    Partial<Omit<Material, "suplimentar" | "project_id">>
+  >({});
+
+  const [materialToView, setMaterialToView] =
+    useState<MaterialWithProject | null>(null);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+
+  const [materialToAdjustSuplimentar, setMaterialToAdjustSuplimentar] =
+    useState<MaterialWithProject | null>(null);
+  const [isAdjustModalOpen, setIsAdjustModalOpen] = useState(false);
+  const [adjustmentQuantity, setAdjustmentQuantity] = useState<number | string>(
+    "",
+  );
+
+  const [materialToConfirmSuplimentar, setMaterialToConfirmSuplimentar] =
+    useState<MaterialWithProject | null>(null);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [confirmationOption, setConfirmationOption] = useState<
+    "full" | "partial" | "none"
+  >("full");
+  const [confirmedPartialQuantity, setConfirmedPartialQuantity] = useState<
+    number | string
+  >("");
+
+  // --- Data Fetching cu optimizări de performanță ---
+  const fetchMaterials = useCallback(async () => {
+    // Măsurăm performanța încărcării datelor
+    const endMeasurement = measurePerformance(
+      `Fetch materials for project ${selectedProjectId}`,
+    );
+
+    // Setăm starea de încărcare
+    setLoadingData(true);
+    setFetchError(null);
+
+    try {
+      // Verificăm dacă avem un proiect selectat
+      if (!selectedProjectId) {
+        console.log("No project selected, clearing materials data");
+        setInventoryData([]);
+        setLoadingData(false);
+        endMeasurement();
+        return;
+      }
+
+      // Verificăm dacă avem date în cache pentru afișarea rapidă
+      const localCacheKey = `materials_local_${selectedProjectId}`;
+      const cachedData = localStorage.getItem(localCacheKey);
+
+      // Folosim datele din cache pentru afișarea inițială pentru a îmbunătăți timpul de răspuns
+      if (cachedData) {
+        try {
+          const parsedData = JSON.parse(cachedData);
+          if (Array.isArray(parsedData) && parsedData.length > 0) {
+            console.log(
+              `Using cached data for project ${selectedProjectId} (${parsedData.length} items)`,
+            );
+            setInventoryData(parsedData);
+            // Continuăm cu încărcarea datelor noi în fundal
+          }
+        } catch (cacheError) {
+          console.error("Error parsing cached materials data:", cacheError);
+          localStorage.removeItem(localCacheKey);
+        }
+      }
+
+      // Folosim dataLoader pentru încărcarea optimizată a datelor
+      const cacheKey = `materials_${selectedProjectId}`;
+
+      try {
+        // Încărcăm datele folosind dataLoader
+        const data = await dataLoader.loadData<MaterialWithProject>(
+          "materials",
+          "id, name, dimension, unit, quantity, manufacturer, category, image_url, suplimentar, project_id, cost_per_unit, supplier_id, last_order_date, min_stock_level, max_stock_level, location, notes",
+          { filters: { project_id: selectedProjectId } },
+          cacheKey,
+          30 * 60 * 1000, // 30 minute cache
+        );
+
+        // Actualizăm starea
+        setInventoryData(data);
+
+        // Salvăm datele în localStorage pentru acces rapid ulterior
+        localStorage.setItem(localCacheKey, JSON.stringify(data));
+
+        // Setăm un timeout pentru expirarea cache-ului local (15 minute)
+        const expiryTime = Date.now() + 15 * 60 * 1000;
+        localStorage.setItem(`${localCacheKey}_expiry`, expiryTime.toString());
+      } catch (loaderError) {
+        console.error("Error using dataLoader:", loaderError);
+
+        // Fallback la metoda tradițională dacă dataLoader eșuează
+        console.log("Falling back to traditional loading method");
+
+        // Construim query-ul pentru a obține materialele
+        let query = supabase
+          .from("materials")
+          .select(
+            "id, name, dimension, unit, quantity, manufacturer, category, image_url, suplimentar, project_id, cost_per_unit, supplier_id, last_order_date, min_stock_level, max_stock_level, location, notes",
+          )
+          .eq("project_id", selectedProjectId);
+
+        // Executăm query-ul
+        const { data, error } = await query;
+
+        // Verificăm dacă avem erori
+        if (error) throw error;
+
+        // Actualizăm starea
+        if (data) {
+          setInventoryData(data as MaterialWithProject[]);
+
+          // Salvăm datele în localStorage pentru acces rapid ulterior
+          localStorage.setItem(localCacheKey, JSON.stringify(data));
+
+          // Setăm un timeout pentru expirarea cache-ului local (15 minute)
+          const expiryTime = Date.now() + 15 * 60 * 1000;
+          localStorage.setItem(
+            `${localCacheKey}_expiry`,
+            expiryTime.toString(),
+          );
+        }
+      }
+    } catch (error: unknown) {
+      console.error("Error fetching materials:", error);
+      let msg = error instanceof Error ? error.message : "Unknown fetch error.";
+      setFetchError(t("inventory.errors.fetchFailed", { message: msg }));
+
+      // Afișăm o notificare doar dacă nu avem date în cache
+      if (inventoryData.length === 0) {
+        toast({
+          variant: "destructive",
+          title: t("inventory.fetchError", "Error loading inventory"),
+          description: msg,
+        });
+      }
+    } finally {
+      // Asigurăm-ne că starea de încărcare este setată la false
+      setLoadingData(false);
+      endMeasurement();
+    }
+  }, [selectedProjectId, t, inventoryData.length, toast]);
+
+  // Folosim hook-ul useDataLoader pentru încărcarea proiectelor
+  const {
+    data: projectsData,
+    isLoading: projectsLoading,
+    error: projectsError,
+    refetch: refetchProjects,
+  } = useDataLoader(
+    "projects",
+    "id, name, created_at",
+    { order: "created_at" },
+    "projects_data",
+    30 * 60 * 1000, // 30 minute cache
+  );
+
+  // Actualizăm starea proiectelor când se schimbă datele
+  useEffect(() => {
+    if (projectsData && projectsData.length > 0) {
+      setProjects(projectsData);
+
+      // Dacă nu avem un proiect selectat, selectăm primul din listă
+      if (!selectedProjectId) {
+        setSelectedProjectId(projectsData[0].id);
+      }
+      // Dacă proiectul selectat nu există în lista de proiecte, selectăm primul proiect
+      else if (!projectsData.some((p) => p.id === selectedProjectId)) {
+        setSelectedProjectId(projectsData[0].id);
+      }
+    }
+
+    setLoadingProjects(projectsLoading);
+
+    if (projectsError) {
+      console.error("Error fetching projects:", projectsError);
+      // Fallback la metoda tradițională dacă useDataLoader eșuează
+      fetchProjectsFallback();
+    }
+  }, [projectsData, projectsLoading, projectsError, selectedProjectId]);
+
+  // Metoda de fallback pentru încărcarea proiectelor
+  const fetchProjectsFallback = useCallback(async () => {
+    setLoadingProjects(true);
+    try {
+      // Executăm query-ul pentru a obține proiectele
+      const { data, error } = await supabase
+        .from("projects")
+        .select("id, name, created_at")
+        .order("created_at");
+
+      if (error) throw error;
+
+      if (data) {
+        setProjects(data);
+
+        // Dacă nu avem un proiect selectat, selectăm primul din listă
+        if (!selectedProjectId && data.length > 0) {
+          setSelectedProjectId(data[0].id);
+        }
+        // Dacă proiectul selectat nu există în lista de proiecte, selectăm primul proiect
+        else if (
+          selectedProjectId &&
+          !data.some((p) => p.id === selectedProjectId)
+        ) {
+          setSelectedProjectId(data.length > 0 ? data[0].id : null);
+        }
+      } else {
+        setProjects([]);
+        setSelectedProjectId(null);
+      }
+    } catch (error: any) {
+      console.error("Error fetching projects (fallback):", error);
+      setFetchError(
+        t("inventory.errors.fetchProjectsFailed", { message: error.message }),
+      );
+    } finally {
+      setLoadingProjects(false);
+    }
+  }, [selectedProjectId, t]);
+
+  // --- Handlers ---
+  const handleCreateProject = async () => {
+    if (!newProjectName.trim()) {
+      setFetchError(
+        t("inventory.errors.projectNameRequired") ||
+          "Project name is required.",
+      );
+      return;
+    }
+    setFetchError(null);
+    try {
+      const { data, error } = await supabase
+        .from("projects")
+        .insert([{ name: newProjectName.trim() }])
+        .select()
+        .single();
+      if (error) throw error;
+      if (data) {
+        console.log("Project created:", data);
+        setIsProjectModalOpen(false);
+        setNewProjectName("");
+        await refetchProjects();
+        setSelectedProjectId(data.id);
+        toast({
+          title: t("inventory.toasts.projectCreated", "Project Created"),
+          description: t("inventory.toasts.projectCreatedDesc", {
+            name: data.name,
+          }),
+        });
+      }
+    } catch (error: any) {
+      console.error("Error creating project:", error);
+      setFetchError(
+        t("inventory.errors.createProjectFailed", { message: error.message }),
+      );
+      toast({
+        variant: "destructive",
+        title: t(
+          "inventory.toasts.projectCreateError",
+          "Error Creating Project",
+        ),
+        description: error.message,
+      });
+    }
+  };
+
+  const handleProcessSuplimentarConfirmation = async () => {
+    if (!materialToConfirmSuplimentar) return;
+    const materialId = materialToConfirmSuplimentar.id;
+    const originalSuplimentar = materialToConfirmSuplimentar.suplimentar ?? 0;
+    let quantityToAdd = 0;
+    let newSuplimentarValue = 0;
+    switch (confirmationOption) {
+      case "full":
+        quantityToAdd = originalSuplimentar;
+        newSuplimentarValue = 0;
+        break;
+      case "partial":
+        const pQty =
+          typeof confirmedPartialQuantity === "number"
+            ? confirmedPartialQuantity
+            : parseFloat(confirmedPartialQuantity);
+        if (isNaN(pQty) || pQty < 0) {
+          setFetchError(
+            t("inventory.errors.invalidPartialQuantity") ||
+              "Invalid partial quantity",
+          );
+          return;
+        }
+        quantityToAdd = pQty;
+        newSuplimentarValue = Math.max(0, originalSuplimentar - pQty);
+        if (pQty >= originalSuplimentar) newSuplimentarValue = 0;
+        break;
+      case "none":
+        quantityToAdd = 0;
+        newSuplimentarValue = 0;
+        break;
+      default:
+        setFetchError(
+          t("inventory.errors.invalidConfirmationOption") || "Invalid option",
+        );
+        return;
+    }
+    console.log(
+      `Confirming supplementary quantity: ID=${materialId}, Add=${quantityToAdd}, NewSupl=${newSuplimentarValue}`,
+    );
+    setFetchError(null);
+    setIsConfirmModalOpen(false);
+    setMaterialToConfirmSuplimentar(null);
+    setConfirmationOption("full");
+    setConfirmedPartialQuantity("");
+    try {
+      // We'll use the confirmSuplimentar function but we need to update the material directly
+      // since our edge function might not support the exact parameters we need
+      const { data, error } = await confirmSuplimentar(materialId);
+
+      if (error) {
+        console.error("Error confirming supplementary quantity:", error);
+        setFetchError(
+          t("inventory.errors.confirmFailed", { details: error.message }) ||
+            `Confirm failed: ${error.message}`,
+        );
+        toast({
+          variant: "destructive",
+          title: t("inventory.toasts.confirmError", "Confirmation Error"),
+          description: error.message,
+        });
+        return;
+      }
+
+      // Now update the material quantity directly
+      if (quantityToAdd > 0) {
+        const { data: material } = await supabase
+          .from("materials")
+          .select("quantity")
+          .eq("id", materialId)
+          .single();
+
+        if (material) {
+          const newQuantity = (material.quantity || 0) + quantityToAdd;
+          await supabase
+            .from("materials")
+            .update({
+              quantity: newQuantity,
+              suplimentar: newSuplimentarValue,
+            })
+            .eq("id", materialId);
+        }
+      }
+
+      console.log(`Supplementary quantity confirmed for ${materialId}.`);
+      fetchMaterials();
+      toast({
+        title: t(
+          "inventory.toasts.confirmSuccess",
+          "Supplementary Quantity Confirmed",
+        ),
+      });
+    } catch (error: any) {
+      console.error("Error confirming supplementary quantity:", error);
+      setFetchError(
+        t("inventory.errors.unexpectedConfirmError", {
+          message: error.message,
+        }) || `Confirm error: ${error.message}`,
+      );
+      toast({
+        variant: "destructive",
+        title: t("inventory.toasts.confirmError", "Confirmation Error"),
+        description: error.message,
+      });
+    }
+  };
+
+  const handleDeleteMaterial = async () => {
+    if (!materialToDelete) return;
+    const materialIdToDelete = materialToDelete.id;
+    const materialName = materialToDelete.name;
+    setMaterialToDelete(null);
+    try {
+      console.log(`Deleting material: ID=${materialIdToDelete}`);
+      const { data, error } = await deleteMaterial(materialIdToDelete);
+
+      if (error) {
+        console.error("Error deleting material:", error);
+        setFetchError(
+          t("inventory.errors.deleteFailed", { details: error.message }) ||
+            `Delete failed: ${error.message}`,
+        );
+        toast({
+          variant: "destructive",
+          title: t("inventory.toasts.deleteError", "Delete Error"),
+          description: error.message,
+        });
+        return;
+      }
+
+      console.log(`Material deleted successfully: ${materialIdToDelete}`);
+      fetchMaterials();
+      toast({
+        title: t("inventory.toasts.deleteSuccess", "Material Deleted"),
+        description: t("inventory.toasts.deleteSuccessDesc", {
+          name: materialName,
+        }),
+      });
+    } catch (error: any) {
+      console.error("Error calling delete function:", error);
+      setFetchError(
+        t("inventory.errors.unexpectedDeleteError", {
+          message: error.message,
+        }) || `Delete error: ${error.message}`,
+      );
+      toast({
+        variant: "destructive",
+        title: t("inventory.toasts.deleteError", "Delete Error"),
+        description: error.message,
+      });
+    }
+  };
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !selectedProjectId) {
+      if (!selectedProjectId)
+        setFetchError(
+          t("inventory.errors.selectProjectFirst") ||
+            "Please select a project before uploading.",
+        );
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+    setFetchError(null);
+    console.log("Processing file:", file.name);
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const fileData = e.target?.result;
+        if (!fileData) throw new Error("Failed to read file data.");
+        const workbook = new ExcelJS.Workbook();
+        await workbook.xlsx.load(fileData);
+        const worksheet = workbook.getWorksheet(1);
+        if (!worksheet) throw new Error("No worksheet found in Excel file.");
+        const jsonData = [];
+        worksheet.eachRow({ includeEmpty: false }, (row, rowNumber) => {
+          const rowData = [];
+          row.eachCell({ includeEmpty: true }, (cell) => {
+            rowData.push(cell.value);
+          });
+          jsonData.push(rowData);
+        });
+        if (jsonData.length < 2) {
+          console.warn("Excel file is empty or has no data rows.");
+          return;
+        }
+        const header = jsonData[0] as string[];
+        const rows = jsonData.slice(1);
+        const materialsToInsert = rows
+          .map((row: any) => ({
+            project_id: selectedProjectId,
+            name: String(row[0] ?? ""),
+            dimension: String(row[1] ?? null),
+            unit: String(row[2] ?? ""),
+            quantity: parseFloat(String(row[3] ?? "0")),
+            manufacturer: String(row[4] ?? null),
+            category: String(row[5] ?? null),
+            suplimentar: parseFloat(String(row[6] ?? "0")),
+          }))
+          .filter(
+            (material) =>
+              material.name &&
+              material.unit &&
+              !isNaN(material.quantity) &&
+              material.project_id,
+          );
+        if (materialsToInsert.length === 0) {
+          console.warn("No valid materials found in the Excel file.");
+          return;
+        }
+        console.log("Parsed materials for upload:", materialsToInsert);
+        const { error: insertError } = await supabase
+          .from("materials")
+          .insert(materialsToInsert);
+        if (insertError) throw insertError;
+        console.log(
+          `${materialsToInsert.length} materials uploaded successfully.`,
+        );
+        fetchMaterials();
+        toast({
+          title: t("inventory.toasts.uploadSuccess", "Upload Successful"),
+          description: t("inventory.toasts.uploadSuccessDesc", {
+            count: materialsToInsert.length,
+          }),
+        });
+      } catch (error: any) {
+        console.error("Error processing Excel file:", error);
+        setFetchError(
+          t("inventory.errors.uploadFailed", { message: error.message }) ||
+            `Failed to process Excel file: ${error.message}`,
+        );
+        toast({
+          variant: "destructive",
+          title: t("inventory.toasts.uploadError", "Upload Error"),
+          description: error.message,
+        });
+      } finally {
+        if (fileInputRef.current) fileInputRef.current.value = "";
+      }
+    };
+    reader.onerror = (error) => {
+      console.error("FileReader error:", error);
+      setFetchError(
+        t("inventory.errors.fileReadError", "Error reading file.") ||
+          "Error reading file.",
+      );
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    };
+    reader.readAsArrayBuffer(file);
+  };
+
+  const handleNewMaterialChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value, type } = e.target;
+    setNewMaterial((prev) => ({
+      ...prev,
+      [id]: type === "number" ? (value === "" ? "" : parseFloat(value)) : value,
+    }));
+  };
+
+  const handleSaveMaterial = async () => {
+    if (!selectedProjectId) {
+      setFetchError(
+        t("inventory.errors.selectProjectFirst") ||
+          "Please select a project before adding materials.",
+      );
+      return;
+    }
+    const quantityValue = newMaterial.quantity;
+    if (
+      !newMaterial.name ||
+      !newMaterial.unit ||
+      typeof quantityValue !== "number" ||
+      isNaN(quantityValue) ||
+      quantityValue < 0
+    ) {
+      setFetchError(
+        t("inventory.errors.invalidSaveData") ||
+          "Name, Unit, and valid Quantity required.",
+      );
+      return;
+    }
+    setFetchError(null);
+    try {
+      // Process manager fields
+      const cost =
+        typeof newMaterial.cost_per_unit === "string" &&
+        newMaterial.cost_per_unit
+          ? parseFloat(newMaterial.cost_per_unit)
+          : null;
+      const minStock =
+        typeof newMaterial.min_stock_level === "string" &&
+        newMaterial.min_stock_level
+          ? parseFloat(newMaterial.min_stock_level)
+          : null;
+      const maxStock =
+        typeof newMaterial.max_stock_level === "string" &&
+        newMaterial.max_stock_level
+          ? parseFloat(newMaterial.max_stock_level)
+          : null;
+
+      const materialToInsert = {
+        project_id: selectedProjectId,
+        name: newMaterial.name,
+        dimension: newMaterial.dimension || null,
+        unit: newMaterial.unit,
+        quantity: quantityValue,
+        manufacturer: newMaterial.manufacturer || null,
+        category: newMaterial.category || null,
+        image_url: newMaterial.image_url || null,
+        suplimentar: 0,
+        // Manager fields
+        cost_per_unit: cost,
+        supplier_id: newMaterial.supplier_id || null,
+        last_order_date: newMaterial.last_order_date || null,
+        min_stock_level: minStock,
+        max_stock_level: maxStock,
+        location: newMaterial.location || null,
+        notes: newMaterial.notes || null,
+      };
+
+      console.log("Inserting data with project ID:", materialToInsert);
+      const { data, error } = await supabase
+        .from("materials")
+        .insert([materialToInsert])
+        .select()
+        .single();
+      if (error) throw error;
+      if (data) {
+        console.log("Material saved successfully:", data);
+        fetchMaterials();
+        setNewMaterial({
+          name: "",
+          dimension: "",
+          unit: "",
+          quantity: 0,
+          manufacturer: "",
+          category: "",
+          cost_per_unit: "",
+          supplier_id: "",
+          last_order_date: "",
+          min_stock_level: "",
+          max_stock_level: "",
+          location: "",
+          notes: "",
+        });
+        setIsAddModalOpen(false);
+        toast({
+          title: t("inventory.toasts.addSuccess", "Material Added"),
+          description: t("inventory.toasts.addSuccessDesc", {
+            name: data.name,
+          }),
+        });
+      } else {
+        console.warn("Save material returned no data.");
+        fetchMaterials();
+        setIsAddModalOpen(false);
+      }
+    } catch (error: any) {
+      console.error("Error saving material:", error);
+      setFetchError(
+        t("inventory.errors.saveFailed", { message: error.message }) ||
+          `Failed to save material: ${error.message}`,
+      );
+      toast({
+        variant: "destructive",
+        title: t("inventory.toasts.addError", "Error Adding Material"),
+        description: error.message,
+      });
+    }
+  };
+
+  const handleAdjustSuplimentar = async (adjustmentSign: number) => {
+    if (
+      !materialToAdjustSuplimentar ||
+      typeof adjustmentQuantity !== "number" ||
+      isNaN(adjustmentQuantity) ||
+      adjustmentQuantity <= 0
+    ) {
+      setFetchError(
+        t("inventory.errors.invalidAdjustmentQuantity") ||
+          "Invalid quantity entered for adjustment.",
+      );
+      return;
+    }
+    const materialId = materialToAdjustSuplimentar.id;
+    const quantityToAdjust = adjustmentQuantity * adjustmentSign;
+    console.log(
+      `Adjusting supplementary quantity: ID=${materialId}, Adjust=${quantityToAdjust}`,
+    );
+    setFetchError(null);
+    setIsAdjustModalOpen(false);
+    setMaterialToAdjustSuplimentar(null);
+    setAdjustmentQuantity("");
+    try {
+      const { data, error } = await adjustSuplimentar(
+        materialId,
+        quantityToAdjust,
+      );
+
+      if (error) {
+        console.error("Error adjusting supplementary quantity:", error);
+        setFetchError(
+          t("inventory.errors.adjustFailed", { details: error.message }) ||
+            `Adjust failed: ${error.message}`,
+        );
+        toast({
+          variant: "destructive",
+          title: t("inventory.toasts.adjustError", "Adjustment Error"),
+          description: error.message,
+        });
+        return;
+      }
+
+      console.log(`Supplementary quantity adjusted for ${materialId}.`);
+      fetchMaterials();
+      toast({
+        title: t(
+          "inventory.toasts.adjustSuccess",
+          "Supplementary Quantity Adjusted",
+        ),
+      });
+    } catch (error: any) {
+      console.error("Error adjusting supplementary quantity:", error);
+      setFetchError(
+        t("inventory.errors.unexpectedAdjustError", {
+          message: error.message,
+        }) || `Adjust error: ${error.message}`,
+      );
+      toast({
+        variant: "destructive",
+        title: t("inventory.toasts.adjustError", "Adjustment Error"),
+        description: error.message,
+      });
+    }
+  };
+
+  const handleEditMaterialChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value, type } = e.target;
+    setEditMaterialData((prev) => ({
+      ...prev,
+      [id]: type === "number" ? (value === "" ? "" : parseFloat(value)) : value,
+    }));
+  };
+
+  const handleUpdateMaterial = async () => {
+    if (
+      !materialToEdit ||
+      !editMaterialData.name ||
+      !editMaterialData.unit ||
+      isNaN(editMaterialData.quantity ?? NaN) ||
+      (editMaterialData.quantity ?? -1) < 0
+    ) {
+      setFetchError(
+        t("inventory.errors.invalidUpdateData") || "Invalid data for update.",
+      );
+      return;
+    }
+    setFetchError(null);
+    try {
+      // Process manager fields
+      const cost =
+        typeof editMaterialData.cost_per_unit === "string" &&
+        editMaterialData.cost_per_unit
+          ? parseFloat(editMaterialData.cost_per_unit as string)
+          : editMaterialData.cost_per_unit;
+      const minStock =
+        typeof editMaterialData.min_stock_level === "string" &&
+        editMaterialData.min_stock_level
+          ? parseFloat(editMaterialData.min_stock_level as string)
+          : editMaterialData.min_stock_level;
+      const maxStock =
+        typeof editMaterialData.max_stock_level === "string" &&
+        editMaterialData.max_stock_level
+          ? parseFloat(editMaterialData.max_stock_level as string)
+          : editMaterialData.max_stock_level;
+
+      const { data, error } = await supabase
+        .from("materials")
+        .update({
+          name: editMaterialData.name,
+          dimension: editMaterialData.dimension || null,
+          unit: editMaterialData.unit,
+          quantity: editMaterialData.quantity,
+          manufacturer: editMaterialData.manufacturer || null,
+          category: editMaterialData.category || null,
+          image_url: editMaterialData.image_url || null,
+          // Manager fields
+          cost_per_unit: cost || null,
+          supplier_id: editMaterialData.supplier_id || null,
+          last_order_date: editMaterialData.last_order_date || null,
+          min_stock_level: minStock || null,
+          max_stock_level: maxStock || null,
+          location: editMaterialData.location || null,
+          notes: editMaterialData.notes || null,
+        })
+        .match({ id: materialToEdit.id })
+        .select()
+        .single();
+
+      if (error) throw error;
+      console.log("Supabase update result for edit:", { data, error });
+      if (data) {
+        console.log("Material updated successfully:", data);
+        fetchMaterials();
+        setIsEditModalOpen(false);
+        toast({
+          title: t("inventory.toasts.updateSuccess", "Material Updated"),
+          description: t("inventory.toasts.updateSuccessDesc", {
+            name: data.name,
+          }),
+        });
+      } else {
+        console.warn("Update material returned no data.");
+        fetchMaterials();
+        setIsEditModalOpen(false);
+      }
+    } catch (error: any) {
+      console.error("Error updating material:", error);
+      setFetchError(
+        t("inventory.errors.updateFailed", { message: error.message }) ||
+          `Failed to update material: ${error.message}`,
+      );
+      toast({
+        variant: "destructive",
+        title: t("inventory.toasts.updateError", "Error Updating Material"),
+        description: error.message,
+      });
+    }
+  };
+
+  // --- Use Effects ---
+  // Effect pentru încărcarea proiectelor la inițializare
+  useEffect(() => {
+    if (!authLoading && !roleLoading) {
+      console.log("Loading projects...");
+      // Folosim refetchProjects în loc de fetchProjects
+      // Adaugăm un timeout pentru a evita problemele de performanță
+      const timer = setTimeout(() => {
+        refetchProjects();
+      }, 100);
+
+      return () => clearTimeout(timer);
+    }
+  }, [authLoading, roleLoading, refetchProjects]);
+
+  // Effect pentru încărcarea materialelor când se schimbă proiectul selectat
+  useEffect(() => {
+    if (user && selectedProjectId) {
+      console.log(`Loading materials for project ${selectedProjectId}...`);
+      fetchMaterials();
+      // Update URL with project ID
+      setSearchParams({ project: selectedProjectId });
+    } else if (!authLoading) {
+      console.log(
+        "No project selected or user not authenticated, clearing materials",
+      );
+      setInventoryData([]);
+      setLoadingData(false);
+    }
+  }, [user, authLoading, fetchMaterials, selectedProjectId, setSearchParams]);
+
+  // Effect pentru verificarea și curățarea cache-ului expirat
+  useEffect(() => {
+    // Funcție pentru curățarea cache-ului expirat
+    const clearExpiredCache = () => {
+      const now = Date.now();
+      const keysToCheck = ["projects_data_expiry"];
+
+      // Adăugăm cheile pentru materialele din fiecare proiect
+      projects.forEach((project) => {
+        keysToCheck.push(`materials_${project.id}_expiry`);
+      });
+
+      // Verificăm și curățăm cache-ul expirat
+      keysToCheck.forEach((expiryKey) => {
+        const expireTime = localStorage.getItem(expiryKey);
+        if (expireTime && parseInt(expireTime) < now) {
+          // Extrăgem cheia de date din cheia de expirare
+          const dataKey = expiryKey.replace("_expiry", "");
+          localStorage.removeItem(dataKey);
+          localStorage.removeItem(expiryKey);
+          console.log(`Cleared expired cache for ${dataKey}`);
+        }
+      });
+    };
+
+    // Curățăm cache-ul expirat la încărcarea paginii
+    clearExpiredCache();
+  }, [projects]);
+  useEffect(() => {
+    if (materialToAdjustSuplimentar) setIsAdjustModalOpen(true);
+    else {
+      setIsAdjustModalOpen(false);
+      setAdjustmentQuantity("");
+    }
+  }, [materialToAdjustSuplimentar]);
+  useEffect(() => {
+    if (materialToConfirmSuplimentar) {
+      setIsConfirmModalOpen(true);
+      setConfirmationOption("full");
+      setConfirmedPartialQuantity("");
+    } else {
+      setIsConfirmModalOpen(false);
+    }
+  }, [materialToConfirmSuplimentar]);
+  useEffect(() => {
+    if (materialToEdit) {
+      setEditMaterialData({
+        name: materialToEdit.name,
+        dimension: materialToEdit.dimension ?? "",
+        unit: materialToEdit.unit,
+        quantity: materialToEdit.quantity,
+        manufacturer: materialToEdit.manufacturer ?? "",
+        category: materialToEdit.category ?? "",
+        // Manager fields
+        cost_per_unit: materialToEdit.cost_per_unit ?? "",
+        supplier_id: materialToEdit.supplier_id ?? "",
+        last_order_date: materialToEdit.last_order_date ?? "",
+        min_stock_level: materialToEdit.min_stock_level ?? "",
+        max_stock_level: materialToEdit.max_stock_level ?? "",
+        location: materialToEdit.location ?? "",
+        notes: materialToEdit.notes ?? "",
+      });
+      setIsEditModalOpen(true);
+    }
+  }, [materialToEdit]);
+  useEffect(() => {
+    if (!isEditModalOpen) setMaterialToEdit(null);
+  }, [isEditModalOpen]);
+  useEffect(() => {
+    if (!isViewModalOpen) setMaterialToView(null);
+  }, [isViewModalOpen]);
+
+  // --- Loading & Auth ---
+  if (authLoading || roleLoading || (loadingProjects && user)) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-slate-900 text-white">
+        <div className="flex flex-col items-center">
+          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+          <p className="mt-4 text-slate-400">
+            {t("common.loading", "Loading...")}
+            {loadingProjects ? "(Loading projects)" : ""}
+          </p>
+          {/* Adăugăm un buton pentru a reîncerca în caz de blocare */}
+          <Button
+            variant="outline"
+            className="mt-4"
+            onClick={() => {
+              console.log("Manual refresh triggered");
+              refetchProjects();
+            }}
+          >
+            {t("common.retry", "Retry")}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+  if (!user) {
+    return <Navigate to="/login" />;
+  }
+
+  // --- Columns ---
+  const columns = getColumns({
+    setMaterialToDelete,
+    setMaterialToEdit,
+    setMaterialToView,
+    setMaterialToRequestSuplimentar: setMaterialToAdjustSuplimentar,
+    setMaterialToConfirmSuplimentar,
+    t,
+  });
+
+  // --- Render ---
+  return (
+    <div className="flex h-screen bg-slate-900 text-white">
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Header */}
+        <header className="sticky top-0 z-10 bg-slate-900 border-b border-slate-800 px-6 py-4 shrink-0">
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-bold">
+              {t("inventory.pageTitle", "Inventory Management")}
+            </h1>
+            <div className="flex items-center gap-4">
+              <Select
+                value={selectedProjectId ?? ""}
+                onValueChange={(value) => setSelectedProjectId(value || null)}
+              >
+                <SelectTrigger className="w-[200px] bg-slate-800 border-slate-700 h-9">
+                  <SelectValue
+                    placeholder={t("inventory.selectProject", "Select Project")}
+                  />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-800 border-slate-700 text-white">
+                  {projects.map((project) => (
+                    <SelectItem
+                      key={project.id}
+                      value={project.id}
+                      className="focus:bg-slate-700"
+                    >
+                      {project.name}
+                    </SelectItem>
+                  ))}
+                  {projects.length === 0 && (
+                    <SelectItem value="no-projects" disabled>
+                      {t("inventory.noProjects", "No projects yet")}
+                    </SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+              <Dialog
+                open={isProjectModalOpen}
+                onOpenChange={(open) => {
+                  setIsProjectModalOpen(open);
+                  if (!open) setNewProjectName("");
+                }}
+              >
+                <DialogTrigger className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2">
+                  <FolderPlus className="h-4 w-4 mr-2" />
+                  {t("inventory.createNewProject", "Create New Project")}
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[425px] bg-slate-800 border-slate-700 text-white">
+                  <DialogHeader>
+                    <DialogTitle>
+                      {t(
+                        "inventory.newProjectDialog.title",
+                        "Create New Project",
+                      )}
+                    </DialogTitle>
+                    <DialogDescription>
+                      {t(
+                        "inventory.newProjectDialog.description",
+                        "Enter a name for the new project.",
+                      )}
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label
+                        htmlFor="projectName"
+                        className="text-right text-slate-400"
+                      >
+                        {t("inventory.form.name", "Name")}*
+                      </Label>
+                      <Input
+                        id="projectName"
+                        value={newProjectName}
+                        onChange={(e) => setNewProjectName(e.target.value)}
+                        placeholder={t(
+                          "inventory.newProjectDialog.namePlaceholder",
+                          "Project Name",
+                        )}
+                        className="col-span-3 bg-slate-700 border-slate-600"
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setIsProjectModalOpen(false)}
+                    >
+                      {t("common.cancel", "Cancel")}
+                    </Button>
+                    <Button type="submit" onClick={handleCreateProject}>
+                      {t("common.create", "Create Project")}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </div>
+          </div>
+        </header>
+
+        {/* Main Content Area */}
+        <main className="flex-1 overflow-y-auto p-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="space-y-6"
+          >
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <h1 className="text-2xl font-bold tracking-tight">
+                {t("inventory.projectInventory", "Project Inventory")}
+              </h1>
+              <Button
+                onClick={() => (window.location.href = "/company-inventory")}
+                variant="outline"
+              >
+                {t("inventory.goToCompanyInventory", "Go to Company Inventory")}
+              </Button>
+            </div>
+
+            {/* Action Bar */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex flex-wrap gap-2">
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  accept=".xlsx, .xls, .csv"
+                  style={{ display: "none" }}
+                />
+                {isManager && (
+                  <Button
+                    onClick={handleUploadClick}
+                    disabled={!selectedProjectId}
+                  >
+                    <Upload className="h-4 w-4 mr-2" />
+                    {t("inventory.uploadExcel", "Upload Excel")}
+                  </Button>
+                )}
+                <Dialog
+                  open={isAddModalOpen}
+                  onOpenChange={(open) => {
+                    setIsAddModalOpen(open);
+                    if (!open)
+                      setNewMaterial({
+                        name: "",
+                        dimension: "",
+                        unit: "",
+                        quantity: 0,
+                        manufacturer: "",
+                        category: "",
+                      });
+                  }}
+                >
+                  <DialogTrigger
+                    className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-secondary text-secondary-foreground hover:bg-secondary/80 h-9 px-4 py-2"
+                    disabled={!selectedProjectId}
+                  >
+                    <PlusCircle className="h-4 w-4 mr-2" />
+                    {t("inventory.addMaterial", "Add Material")}
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[600px] bg-slate-800 border-slate-700 text-white max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>
+                        {t("inventory.addDialog.title", "Add New Material")}
+                      </DialogTitle>
+                      <DialogDescription>
+                        {t(
+                          "inventory.addDialog.description",
+                          "Enter details. Click save when done.",
+                        )}
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <Label
+                          htmlFor="name"
+                          className="text-right text-slate-400"
+                        >
+                          {t("inventory.form.name", "Name")}*
+                        </Label>
+                        <Input
+                          id="name"
+                          value={newMaterial.name}
+                          onChange={handleNewMaterialChange}
+                          placeholder={t(
+                            "inventory.form.namePlaceholder",
+                            "Material Name",
+                          )}
+                          className="col-span-3 bg-slate-700 border-slate-600"
+                        />
+                      </div>
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <Label
+                          htmlFor="dimension"
+                          className="text-right text-slate-400"
+                        >
+                          {t("inventory.form.dimension", "Dimension")}
+                        </Label>
+                        <Input
+                          id="dimension"
+                          value={newMaterial.dimension}
+                          onChange={handleNewMaterialChange}
+                          placeholder={t(
+                            "inventory.form.dimensionPlaceholder",
+                            "e.g., 100x50, DN25",
+                          )}
+                          className="col-span-3 bg-slate-700 border-slate-600"
+                        />
+                      </div>
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <Label
+                          htmlFor="unit"
+                          className="text-right text-slate-400"
+                        >
+                          {t("inventory.form.unit", "Unit")}*
+                        </Label>
+                        <Input
+                          id="unit"
+                          value={newMaterial.unit}
+                          onChange={handleNewMaterialChange}
+                          placeholder={t(
+                            "inventory.form.unitPlaceholder",
+                            "e.g., buc, m, kg",
+                          )}
+                          className="col-span-3 bg-slate-700 border-slate-600"
+                        />
+                      </div>
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <Label
+                          htmlFor="quantity"
+                          className="text-right text-slate-400"
+                        >
+                          {t("inventory.form.quantity", "Quantity")}*
+                        </Label>
+                        <Input
+                          id="quantity"
+                          type="number"
+                          value={newMaterial.quantity}
+                          onChange={handleNewMaterialChange}
+                          placeholder="0"
+                          className="col-span-3 bg-slate-700 border-slate-600"
+                        />
+                      </div>
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <Label
+                          htmlFor="manufacturer"
+                          className="text-right text-slate-400"
+                        >
+                          {t("inventory.form.manufacturer", "Manufacturer")}
+                        </Label>
+                        <Input
+                          id="manufacturer"
+                          value={newMaterial.manufacturer}
+                          onChange={handleNewMaterialChange}
+                          placeholder={t(
+                            "inventory.form.manufacturerPlaceholder",
+                            "Manufacturer Name",
+                          )}
+                          className="col-span-3 bg-slate-700 border-slate-600"
+                        />
+                      </div>
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <Label
+                          htmlFor="category"
+                          className="text-right text-slate-400"
+                        >
+                          {t("inventory.form.category", "Category")}
+                        </Label>
+                        <Input
+                          id="category"
+                          value={newMaterial.category}
+                          onChange={handleNewMaterialChange}
+                          placeholder={t(
+                            "inventory.form.categoryPlaceholder",
+                            "e.g., HVAC, Electric",
+                          )}
+                          className="col-span-3 bg-slate-700 border-slate-600"
+                        />
+                      </div>
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <Label
+                          htmlFor="image_url"
+                          className="text-right text-slate-400"
+                        >
+                          {t("inventory.form.imageUrl", "Image")}
+                        </Label>
+                        <div className="col-span-3 space-y-2">
+                          <div className="flex items-center gap-2">
+                            <Input
+                              id="image_url"
+                              value={newMaterial.image_url}
+                              onChange={handleNewMaterialChange}
+                              placeholder={t(
+                                "inventory.form.imageUrlPlaceholder",
+                                "URL to material image",
+                              )}
+                              className="flex-1 bg-slate-700 border-slate-600"
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="bg-slate-700 border-slate-600 hover:bg-slate-600"
+                              onClick={() =>
+                                document.getElementById("image-upload")?.click()
+                              }
+                            >
+                              <Upload className="h-4 w-4 mr-2" />
+                              {t("inventory.form.uploadImage", "Upload")}
+                            </Button>
+                            <input
+                              id="image-upload"
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={async (e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  try {
+                                    // Upload to Supabase Storage
+                                    const fileExt = file.name.split(".").pop();
+                                    const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+                                    const filePath = `materials/${fileName}`;
+
+                                    const { data, error } =
+                                      await supabase.storage
+                                        .from("materials")
+                                        .upload(filePath, file);
+
+                                    if (error) throw error;
+
+                                    // Get public URL
+                                    const { data: urlData } = supabase.storage
+                                      .from("materials")
+                                      .getPublicUrl(filePath);
+
+                                    setNewMaterial({
+                                      ...newMaterial,
+                                      image_url: urlData.publicUrl,
+                                    });
+
+                                    toast({
+                                      title: t(
+                                        "inventory.imageUpload.success",
+                                        "Image uploaded",
+                                      ),
+                                      description: t(
+                                        "inventory.imageUpload.successDesc",
+                                        "Image has been uploaded successfully",
+                                      ),
+                                    });
+                                  } catch (error: any) {
+                                    console.error(
+                                      "Error uploading image:",
+                                      error,
+                                    );
+                                    toast({
+                                      variant: "destructive",
+                                      title: t(
+                                        "inventory.imageUpload.error",
+                                        "Upload failed",
+                                      ),
+                                      description: error.message,
+                                    });
+                                  }
+                                }
+                              }}
+                            />
+                          </div>
+                          {newMaterial.image_url && (
+                            <div className="flex items-center gap-2">
+                              <img
+                                src={newMaterial.image_url}
+                                alt="Preview"
+                                className="h-16 w-16 object-cover rounded-md border border-slate-600"
+                              />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                                onClick={() =>
+                                  setNewMaterial({
+                                    ...newMaterial,
+                                    image_url: "",
+                                  })
+                                }
+                              >
+                                {t("inventory.form.removeImage", "Remove")}
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Import and use ManagerFields component */}
+                      <div className="col-span-4">
+                        <ManagerFields
+                          data={newMaterial}
+                          onChange={handleNewMaterialChange}
+                        />
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setIsAddModalOpen(false)}
+                      >
+                        {t("common.cancel", "Cancel")}
+                      </Button>
+                      <Button type="submit" onClick={handleSaveMaterial}>
+                        {t("common.save", "Save Material")}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
+              <div className="relative w-full sm:w-64">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                <Input
+                  type="search"
+                  placeholder={t(
+                    "inventory.searchPlaceholder",
+                    "Search materials...",
+                  )}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-9 w-full bg-slate-800 border-slate-700 focus:ring-primary"
+                />
+              </div>
+            </div>
+
+            {/* Tabs for Inventory and Supplier Announcements */}
+            <Tabs
+              value={activeTab}
+              onValueChange={setActiveTab}
+              className="w-full"
+            >
+              <TabsList className="grid grid-cols-2 mb-6 bg-slate-800">
+                <TabsTrigger
+                  value="inventory"
+                  className="data-[state=active]:bg-slate-700"
+                >
+                  <Package className="h-4 w-4 mr-2" />
+                  {t("inventory.tabs.inventory", "Inventory")}
+                </TabsTrigger>
+                <TabsTrigger
+                  value="announcements"
+                  className="data-[state=active]:bg-slate-700"
+                >
+                  <Truck className="h-4 w-4 mr-2" />
+                  {t("inventory.tabs.announcements", "Supplier Announcements")}
+                </TabsTrigger>
+              </TabsList>
+
+              {/* Inventory Tab */}
+              <TabsContent value="inventory" className="space-y-4">
+                <Card className="bg-slate-800 border-slate-700">
+                  <CardHeader>
+                    <CardTitle>
+                      {t("inventory.overviewTitle", "Inventory Overview")}
+                      {selectedProjectId &&
+                      projects.find((p) => p.id === selectedProjectId)
+                        ? `- ${projects.find((p) => p.id === selectedProjectId)?.name}`
+                        : ""}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {fetchError && (
+                      <div className="mb-4 p-4 bg-red-900 border border-red-700 text-red-300 rounded-md">
+                        {fetchError}
+                      </div>
+                    )}
+                    {selectedProjectId ? (
+                      <OptimizedDataTable
+                        columns={columns}
+                        data={inventoryData}
+                        setMaterialToRequestSuplimentar={
+                          setMaterialToAdjustSuplimentar
+                        }
+                      />
+                    ) : (
+                      <p className="text-center text-slate-400 py-10">
+                        {t(
+                          "inventory.selectProjectPrompt",
+                          "Please select or create a project to view inventory.",
+                        )}
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Supplier Announcements Tab */}
+              <TabsContent value="announcements" className="space-y-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Upload Section */}
+                  <SupplierAnnouncementUpload
+                    projectId={selectedProjectId}
+                    onUploadSuccess={() =>
+                      setAnnouncementRefreshTrigger((prev) => prev + 1)
+                    }
+                  />
+
+                  {/* Announcements List */}
+                  <SupplierAnnouncementList
+                    projectId={selectedProjectId}
+                    refreshTrigger={announcementRefreshTrigger}
+                  />
+                </div>
+              </TabsContent>
+            </Tabs>
+          </motion.div>
+        </main>
+
+        {/* --- Dialogs --- */}
+        {/* Delete Confirmation */}
+        <AlertDialog
+          open={!!materialToDelete}
+          onOpenChange={(open) => !open && setMaterialToDelete(null)}
+        >
+          <AlertDialogContent className="bg-slate-800 border-slate-700 text-white">
+            <AlertDialogHeader>
+              <AlertDialogTitle>
+                {t("inventory.deleteDialog.title", "Are you absolutely sure?")}
+              </AlertDialogTitle>
+              <AlertDialogDescription className="text-slate-400">
+                {t(
+                  "inventory.deleteDialog.description",
+                  "This action cannot be undone. This will permanently delete the material",
+                )}
+                <span className="font-semibold text-slate-300">
+                  {materialToDelete?.name}
+                </span>
+                .
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel
+                onClick={() => setMaterialToDelete(null)}
+                className="hover:bg-slate-700"
+              >
+                {t("common.cancel", "Cancel")}
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteMaterial}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                {t("common.delete", "Delete")}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Adjust Suplimentar */}
+        <Dialog
+          open={isAdjustModalOpen}
+          onOpenChange={(open) => {
+            setIsAdjustModalOpen(open);
+            if (!open) setMaterialToAdjustSuplimentar(null);
+          }}
+        >
+          <DialogContent className="sm:max-w-[425px] bg-slate-800 border-slate-700 text-white">
+            <DialogHeader>
+              <DialogTitle>
+                {t(
+                  "inventory.adjustDialog.title",
+                  "Adjust Supplementary Quantity",
+                )}
+              </DialogTitle>
+              <DialogDescription>
+                {t(
+                  "inventory.adjustDialog.description",
+                  "Adjust supplementary quantity for {{materialName}}. Current: {{currentValue}}",
+                  {
+                    materialName: materialToAdjustSuplimentar?.name,
+                    currentValue: materialToAdjustSuplimentar?.suplimentar ?? 0,
+                  },
+                )}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label
+                  htmlFor="adjustQuantity"
+                  className="text-right text-slate-400"
+                >
+                  {t("inventory.form.quantity", "Quantity")}*
+                </Label>
+                <Input
+                  id="adjustQuantity"
+                  type="number"
+                  value={adjustmentQuantity}
+                  onChange={(e) =>
+                    setAdjustmentQuantity(
+                      e.target.value === "" ? "" : parseFloat(e.target.value),
+                    )
+                  }
+                  placeholder={t(
+                    "inventory.adjustDialog.quantityPlaceholder",
+                    "Enter quantity",
+                  )}
+                  className="col-span-3 bg-slate-700 border-slate-600"
+                />
+              </div>
+            </div>
+            <DialogFooter className="sm:justify-between">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setMaterialToAdjustSuplimentar(null)}
+              >
+                {t("common.cancel", "Cancel")}
+              </Button>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={() => handleAdjustSuplimentar(-1)}
+                >
+                  {t("inventory.adjustDialog.subtract", "Subtract")}
+                </Button>
+                <Button
+                  type="button"
+                  onClick={() => handleAdjustSuplimentar(1)}
+                >
+                  {t("inventory.adjustDialog.add", "Add")}
+                </Button>
+              </div>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Confirm Suplimentar */}
+        <Dialog
+          open={isConfirmModalOpen}
+          onOpenChange={(open) => {
+            setIsConfirmModalOpen(open);
+            if (!open) setMaterialToConfirmSuplimentar(null);
+          }}
+        >
+          <DialogContent className="sm:max-w-md bg-slate-800 border-slate-700 text-white">
+            <DialogHeader>
+              <DialogTitle>
+                {t(
+                  "inventory.confirmDialog.title",
+                  "Confirm Supplementary Quantity",
+                )}
+              </DialogTitle>
+              <DialogDescription>
+                {t(
+                  "inventory.confirmDialog.description",
+                  "Confirm procurement status for {{materialName}} (Requested: {{requestedValue}}).",
+                  {
+                    materialName: materialToConfirmSuplimentar?.name,
+                    requestedValue:
+                      materialToConfirmSuplimentar?.suplimentar ?? 0,
+                  },
+                )}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-4 space-y-4">
+              <RadioGroup
+                value={confirmationOption}
+                onValueChange={(value: "full" | "partial" | "none") =>
+                  setConfirmationOption(value)
+                }
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="full" id="r-full" />
+                  <Label htmlFor="r-full">
+                    {t(
+                      "inventory.confirmDialog.optionFull",
+                      "Fulfilled entirely ({{value}})",
+                      { value: materialToConfirmSuplimentar?.suplimentar ?? 0 },
+                    )}
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="partial" id="r-partial" />
+                  <Label htmlFor="r-partial">
+                    {t(
+                      "inventory.confirmDialog.optionPartial",
+                      "Partially fulfilled",
+                    )}
+                  </Label>
+                </div>
+                {confirmationOption === "partial" && (
+                  <div className="grid grid-cols-4 items-center gap-4 pl-6">
+                    <Label
+                      htmlFor="partialQuantity"
+                      className="text-right text-slate-400 col-span-1"
+                    >
+                      {t("inventory.confirmDialog.receivedLabel", "Received:")}
+                    </Label>
+                    <Input
+                      id="partialQuantity"
+                      type="number"
+                      value={confirmedPartialQuantity}
+                      onChange={(e) =>
+                        setConfirmedPartialQuantity(
+                          e.target.value === ""
+                            ? ""
+                            : parseFloat(e.target.value),
+                        )
+                      }
+                      placeholder={t(
+                        "inventory.confirmDialog.quantityPlaceholder",
+                        "Quantity",
+                      )}
+                      className="col-span-3 bg-slate-700 border-slate-600 h-8"
+                    />
+                  </div>
+                )}
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="none" id="r-none" />
+                  <Label htmlFor="r-none">
+                    {t(
+                      "inventory.confirmDialog.optionNone",
+                      "Could not procure",
+                    )}
+                  </Label>
+                </div>
+              </RadioGroup>
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setMaterialToConfirmSuplimentar(null)}
+              >
+                {t("common.cancel", "Cancel")}
+              </Button>
+              <Button
+                type="button"
+                onClick={handleProcessSuplimentarConfirmation}
+              >
+                {t("common.confirm", "Confirm")}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Material */}
+        <Dialog
+          open={isEditModalOpen}
+          onOpenChange={(open) => {
+            setIsEditModalOpen(open);
+            if (!open) setMaterialToEdit(null);
+          }}
+        >
+          <DialogContent className="sm:max-w-[600px] bg-slate-800 border-slate-700 text-white max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>
+                {t("inventory.editDialog.title", "Edit Material")}
+              </DialogTitle>
+              <DialogDescription>
+                {t(
+                  "inventory.editDialog.description",
+                  "Update details. Click save when done.",
+                )}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="name" className="text-right text-slate-400">
+                  {t("inventory.form.name", "Name")}*
+                </Label>
+                <Input
+                  id="name"
+                  value={editMaterialData.name ?? ""}
+                  onChange={handleEditMaterialChange}
+                  placeholder={t(
+                    "inventory.form.namePlaceholder",
+                    "Material Name",
+                  )}
+                  className="col-span-3 bg-slate-700 border-slate-600"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label
+                  htmlFor="dimension"
+                  className="text-right text-slate-400"
+                >
+                  {t("inventory.form.dimension", "Dimension")}
+                </Label>
+                <Input
+                  id="dimension"
+                  value={editMaterialData.dimension ?? ""}
+                  onChange={handleEditMaterialChange}
+                  placeholder={t(
+                    "inventory.form.dimensionPlaceholder",
+                    "e.g., 100x50, DN25",
+                  )}
+                  className="col-span-3 bg-slate-700 border-slate-600"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="unit" className="text-right text-slate-400">
+                  {t("inventory.form.unit", "Unit")}*
+                </Label>
+                <Input
+                  id="unit"
+                  value={editMaterialData.unit ?? ""}
+                  onChange={handleEditMaterialChange}
+                  placeholder={t(
+                    "inventory.form.unitPlaceholder",
+                    "e.g., buc, m, kg",
+                  )}
+                  className="col-span-3 bg-slate-700 border-slate-600"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="quantity" className="text-right text-slate-400">
+                  {t("inventory.form.quantity", "Quantity")}*
+                </Label>
+                <Input
+                  id="quantity"
+                  type="number"
+                  value={editMaterialData.quantity ?? 0}
+                  onChange={handleEditMaterialChange}
+                  placeholder="0"
+                  className="col-span-3 bg-slate-700 border-slate-600"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label
+                  htmlFor="manufacturer"
+                  className="text-right text-slate-400"
+                >
+                  {t("inventory.form.manufacturer", "Manufacturer")}
+                </Label>
+                <Input
+                  id="manufacturer"
+                  value={editMaterialData.manufacturer ?? ""}
+                  onChange={handleEditMaterialChange}
+                  placeholder={t(
+                    "inventory.form.manufacturerPlaceholder",
+                    "Manufacturer Name",
+                  )}
+                  className="col-span-3 bg-slate-700 border-slate-600"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="category" className="text-right text-slate-400">
+                  {t("inventory.form.category", "Category")}
+                </Label>
+                <Input
+                  id="category"
+                  value={editMaterialData.category ?? ""}
+                  onChange={handleEditMaterialChange}
+                  placeholder={t(
+                    "inventory.form.categoryPlaceholder",
+                    "e.g., HVAC, Electric",
+                  )}
+                  className="col-span-3 bg-slate-700 border-slate-600"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label
+                  htmlFor="image_url"
+                  className="text-right text-slate-400"
+                >
+                  {t("inventory.form.imageUrl", "Image")}
+                </Label>
+                <div className="col-span-3 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Input
+                      id="image_url"
+                      value={editMaterialData.image_url ?? ""}
+                      onChange={handleEditMaterialChange}
+                      placeholder={t(
+                        "inventory.form.imageUrlPlaceholder",
+                        "URL to material image",
+                      )}
+                      className="flex-1 bg-slate-700 border-slate-600"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="bg-slate-700 border-slate-600 hover:bg-slate-600"
+                      onClick={() =>
+                        document.getElementById("edit-image-upload")?.click()
+                      }
+                    >
+                      <Upload className="h-4 w-4 mr-2" />
+                      {t("inventory.form.uploadImage", "Upload")}
+                    </Button>
+                    <input
+                      id="edit-image-upload"
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          try {
+                            // Upload to Supabase Storage
+                            const fileExt = file.name.split(".").pop();
+                            const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+                            const filePath = `materials/${fileName}`;
+
+                            const { data, error } = await supabase.storage
+                              .from("materials")
+                              .upload(filePath, file);
+
+                            if (error) throw error;
+
+                            // Get public URL
+                            const { data: urlData } = supabase.storage
+                              .from("materials")
+                              .getPublicUrl(filePath);
+
+                            setEditMaterialData({
+                              ...editMaterialData,
+                              image_url: urlData.publicUrl,
+                            });
+
+                            toast({
+                              title: t(
+                                "inventory.imageUpload.success",
+                                "Image uploaded",
+                              ),
+                              description: t(
+                                "inventory.imageUpload.successDesc",
+                                "Image has been uploaded successfully",
+                              ),
+                            });
+                          } catch (error: any) {
+                            console.error("Error uploading image:", error);
+                            toast({
+                              variant: "destructive",
+                              title: t(
+                                "inventory.imageUpload.error",
+                                "Upload failed",
+                              ),
+                              description: error.message,
+                            });
+                          }
+                        }
+                      }}
+                    />
+                  </div>
+                  {editMaterialData.image_url && (
+                    <div className="flex items-center gap-2">
+                      <img
+                        src={editMaterialData.image_url}
+                        alt="Preview"
+                        className="h-16 w-16 object-cover rounded-md border border-slate-600"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                        onClick={() =>
+                          setEditMaterialData({
+                            ...editMaterialData,
+                            image_url: "",
+                          })
+                        }
+                      >
+                        {t("inventory.form.removeImage", "Remove")}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+              {/* Import and use ManagerFields component */}
+              <div className="col-span-4">
+                <ManagerFields
+                  data={editMaterialData}
+                  onChange={handleEditMaterialChange}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsEditModalOpen(false)}
+              >
+                {t("common.cancel", "Cancel")}
+              </Button>
+              <Button type="submit" onClick={handleUpdateMaterial}>
+                {t("common.save", "Save Changes")}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* View Material Dialog */}
+        <Dialog
+          open={isViewModalOpen}
+          onOpenChange={(open) => {
+            setIsViewModalOpen(open);
+            if (!open) setMaterialToView(null);
+          }}
+        >
+          <DialogContent className="sm:max-w-[600px] bg-slate-800 border-slate-700 text-white max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>{materialToView?.name}</DialogTitle>
+              <DialogDescription>
+                {t("inventory.viewDialog.description", "Material details")}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-6 py-4">
+              {/* Material Image */}
+              {materialToView?.image_url && (
+                <div className="flex justify-center">
+                  <img
+                    src={materialToView.image_url}
+                    alt={materialToView.name}
+                    className="max-h-[200px] object-contain rounded-md border border-slate-700"
+                  />
+                </div>
+              )}
+
+              {/* Material Details */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h3 className="text-sm font-medium text-slate-400 mb-1">
+                    {t("inventory.columns.dimension", "Dimension")}
+                  </h3>
+                  <p>{materialToView?.dimension || "-"}</p>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-slate-400 mb-1">
+                    {t("inventory.columns.unit", "Unit")}
+                  </h3>
+                  <p>{materialToView?.unit}</p>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-slate-400 mb-1">
+                    {t("inventory.columns.quantity", "Quantity")}
+                  </h3>
+                  <p>{materialToView?.quantity}</p>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-slate-400 mb-1">
+                    {t("inventory.columns.manufacturer", "Manufacturer")}
+                  </h3>
+                  <p>{materialToView?.manufacturer || "-"}</p>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-slate-400 mb-1">
+                    {t("inventory.columns.category", "Category")}
+                  </h3>
+                  <p>{materialToView?.category || "-"}</p>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-slate-400 mb-1">
+                    {t("inventory.columns.suplimentar", "Supplementary")}
+                  </h3>
+                  <p>{materialToView?.suplimentar || 0}</p>
+                </div>
+
+                {/* Manager Fields */}
+                {isManager && (
+                  <>
+                    <div className="col-span-2 mt-2">
+                      <h3 className="text-md font-semibold text-slate-300 mb-2">
+                        {t(
+                          "inventory.managerFields.title",
+                          "Manager Information",
+                        )}
+                      </h3>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-slate-400 mb-1">
+                        {t(
+                          "inventory.managerFields.costPerUnit",
+                          "Cost Per Unit",
+                        )}
+                      </h3>
+                      <p>
+                        {materialToView?.cost_per_unit
+                          ? `$${materialToView.cost_per_unit}`
+                          : "-"}
+                      </p>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-slate-400 mb-1">
+                        {t("inventory.managerFields.location", "Location")}
+                      </h3>
+                      <p>{materialToView?.location || "-"}</p>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-slate-400 mb-1">
+                        {t(
+                          "inventory.managerFields.minStockLevel",
+                          "Min Stock Level",
+                        )}
+                      </h3>
+                      <p>{materialToView?.min_stock_level || "-"}</p>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-slate-400 mb-1">
+                        {t(
+                          "inventory.managerFields.maxStockLevel",
+                          "Max Stock Level",
+                        )}
+                      </h3>
+                      <p>{materialToView?.max_stock_level || "-"}</p>
+                    </div>
+                    <div className="col-span-2">
+                      <h3 className="text-sm font-medium text-slate-400 mb-1">
+                        {t("inventory.managerFields.notes", "Notes")}
+                      </h3>
+                      <p className="whitespace-pre-wrap">
+                        {materialToView?.notes || "-"}
+                      </p>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" onClick={() => setIsViewModalOpen(false)}>
+                {t("common.close", "Close")}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </div>
+  );
+};
+
+export default InventoryManagementPage;

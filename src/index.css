@@ -1,0 +1,124 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* Tema întunecată (implicit) */
+  :root,
+  [data-theme="dark"] {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 280 75% 60%; /* Brighter purple */
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 190 95% 55%; /* Brighter blue */
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 335 80% 60%; /* Vibrant pink accent */
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 70% 50%; /* Brighter red */
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 280 75% 60%;
+
+    --success: 142 70% 45%; /* Vibrant green */
+    --success-foreground: 210 40% 98%;
+
+    --warning: 38 92% 50%; /* Bright yellow/orange */
+    --warning-foreground: 210 40% 98%;
+
+    --info: 200 90% 50%; /* Bright cyan */
+    --info-foreground: 210 40% 98%;
+
+    --radius: 0.5rem;
+  }
+
+  /* Tema luminoasă */
+  [data-theme="light"] {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 280 75% 45%; /* Purple ajustat pentru tema luminoasă */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 190 95% 40%; /* Blue ajustat pentru tema luminoasă */
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 335 80% 45%; /* Pink ajustat pentru tema luminoasă */
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 70% 45%; /* Red ajustat pentru tema luminoasă */
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 280 75% 45%;
+
+    --success: 142 70% 35%; /* Green ajustat pentru tema luminoasă */
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 40%; /* Yellow/orange ajustat pentru tema luminoasă */
+    --warning-foreground: 0 0% 100%;
+
+    --info: 200 90% 40%; /* Cyan ajustat pentru tema luminoasă */
+    --info-foreground: 0 0% 100%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  /* Tranziții pentru schimbarea temelor */
+  *, *::before, *::after {
+    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, fill 0.3s ease, stroke 0.3s ease, opacity 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+  }
+}
+
+/* Loader animation for Spline component */
+.loader {
+  width: 48px;
+  height: 48px;
+  border: 5px solid #FFF;
+  border-bottom-color: transparent;
+  border-radius: 50%;
+  display: inline-block;
+  box-sizing: border-box;
+  animation: rotation 1s linear infinite;
+}
+
+@keyframes rotation {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
