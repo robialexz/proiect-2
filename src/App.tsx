@@ -44,7 +44,7 @@ const RoleManagementPage = lazy(() => import("./pages/RoleManagementPage"));
 const TutorialPage = lazy(() => import("./pages/TutorialPage"));
 const TasksPage = lazy(() => import("./pages/TasksPage"));
 
-import ChatBotWidget from "./components/ai/ChatBotWidget";
+// ChatBotWidget este acum inclus direct în paginile relevante, nu global
 
 function App() {
   return (
@@ -100,8 +100,7 @@ function App() {
               <Route path="/tempobook/*" />
             )}
           </Routes>
-          {/* AI ChatBot Widget global, colț dreapta-jos */}
-          <ChatBotWidget />
+          {/* ChatBotWidget a fost mutat în pagina de dashboard */}
           </Suspense>
           </OfflineProvider>
         </AdvancedRoleProvider>

@@ -15,7 +15,7 @@ import ExcelJS from "exceljs";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
-import ChatBotWidget from "@/components/ai/ChatBotWidget";
+// ChatBotWidget a fost mutat în pagina de dashboard
 import {
   Dialog,
   DialogContent,
@@ -258,11 +258,7 @@ const CompanyInventoryPage: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-slate-900 text-white">
-      {/* AI Assistant */}
-      <ChatBotWidget
-        initialMessage="Bun venit în secțiunea de inventar companie! Pot să te ajut cu informații despre materiale, export de date sau căutare. Cu ce te pot ajuta?"
-        contextType="inventory"
-      />
+      {/* AI Assistant a fost mutat în pagina de dashboard */}
 
       {/* Main Content Area */}
       <main className="flex-1 overflow-y-auto p-6">

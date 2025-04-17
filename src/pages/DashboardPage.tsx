@@ -4,7 +4,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Navigate, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Upload, BarChart2, Package, Users, AlertCircle, Sun, Moon, Coffee } from "lucide-react";
+import { Upload, BarChart2, Package, Users, AlertCircle, Sun, Moon, Coffee, Bot } from "lucide-react";
+import ChatBotWidget from "@/components/ai/ChatBotWidget";
 
 const DashboardPage = () => {
   const { user, loading, userProfile } = useAuth();
@@ -428,6 +429,35 @@ const DashboardPage = () => {
                 </Card>
               </motion.div>
             </div>
+
+            {/* Secțiune pentru ChatBot */}
+            <motion.div
+              className="mt-8"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.4 }}
+            >
+              <Card className="bg-slate-800 border-slate-700 overflow-hidden relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/5 to-purple-900/10"></div>
+                <CardHeader className="relative z-10">
+                  <CardTitle className="flex items-center">
+                    <Bot className="h-5 w-5 mr-2 text-indigo-400" />
+                    <span className="bg-gradient-to-r from-indigo-400 to-purple-500 bg-clip-text text-transparent">
+                      Asistentul tău AI
+                    </span>
+                    <div className="ml-2 px-2 py-0.5 text-xs bg-indigo-500/20 text-indigo-300 rounded-full">Beta</div>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="relative z-10 p-0">
+                  <div className="p-4 pt-0">
+                    <ChatBotWidget
+                      initialMessage="Bun venit în dashboard! Sunt asistentul tău AI și te pot ajuta cu informații despre inventar, proiecte, materiale sau orice altă întrebare ai despre aplicație. Cu ce te pot ajuta astăzi?"
+                      contextType="general"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
           </motion.div>
         </main>
       </div>
