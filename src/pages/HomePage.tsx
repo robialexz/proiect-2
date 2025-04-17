@@ -30,6 +30,7 @@ import WelcomeCard from "@/components/dashboard/WelcomeCard";
 import ProjectsOverview from "@/components/dashboard/ProjectsOverview";
 import CalendarWidget from "@/components/dashboard/CalendarWidget";
 import EmailWidget from "@/components/dashboard/EmailWidget";
+import { FullPageSplineScene } from "@/components/ui/full-page-spline-scene";
 
 const HomePage = () => {
   const { user, userProfile } = useAuth();
@@ -120,6 +121,9 @@ const HomePage = () => {
 
   return (
     <div className="min-h-screen bg-slate-900 text-white">
+      {/* Spline Scene - Full Page */}
+      {!user && <FullPageSplineScene />}
+
       {/* Navigation */}
       <ModernNavbar
         isLoggedIn={!!user}
@@ -127,7 +131,7 @@ const HomePage = () => {
         userAvatar=""
       />
 
-      <main className="pt-20">
+      <main className="pt-20 relative z-10">
         {" "}
         {/* Added padding-top to account for fixed navbar */}
         {/* User Dashboard Section - Only shown when logged in */}
@@ -222,48 +226,25 @@ const HomePage = () => {
             </div>
           </section>
         )}
-        {/* Hero Section - Only shown when not logged in */}
+        {/* Hero Section - Minimal version with just buttons */}
         {!user && (
           <section className="relative pt-32 pb-24 overflow-hidden">
-            {/* Background elements */}
-            <div className="absolute inset-0 z-0">
-              <div className="absolute top-0 right-0 w-1/3 h-1/3 bg-gradient-to-r from-purple-500/20 to-blue-500/20 blur-3xl rounded-full transform translate-x-1/3 -translate-y-1/3"></div>
-              <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-gradient-to-r from-blue-500/10 to-purple-500/10 blur-3xl rounded-full transform -translate-x-1/3 translate-y-1/3"></div>
-
-              {/* Grid pattern */}
-              <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMwLTkuOTQtOC4wNi0xOC0xOC0xOFYwYzkuOTQgMCAxOCA4LjA2IDE4IDE4aDEuNWE0LjUgNC41IDAgMDA0LjUtNC41IDQuNSA0LjUgMCAwMC00LjUtNC41SDM2djEuNWE0LjUgNC41IDAgMDA0LjUgNC41IDQuNSA0LjUgMCAwMDQuNS00LjVIMTh2LTEuNU0wIDE4YzAtOS45NCA4LjA2LTE4IDE4LTE4djE4SDBaIiBmaWxsPSIjMjAyNDJlIiBmaWxsLW9wYWNpdHk9XCIuMlwiLz48L2c+PC9zdmc+')] opacity-20"></div>
-            </div>
-
             <div className="container mx-auto px-4 relative z-10">
-              <div className="flex flex-col lg:flex-row items-center gap-12">
+              <div className="flex justify-end items-center h-[60vh]">
                 <motion.div
-                  className="lg:w-1/2 text-center lg:text-left"
+                  className="w-full md:w-1/3 text-right"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6 }}
+                  transition={{ duration: 0.6, delay: 0.8 }}
                 >
-                  <Badge className="mb-4 bg-primary/20 text-primary border-primary/20 px-3 py-1 text-sm">
-                    Revolutionizing Inventory Management
-                  </Badge>
-                  <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
-                    Streamline Your{" "}
-                    <span className="text-primary">Project Materials</span> With
-                    Precision
-                  </h1>
-                  <p className="text-lg md:text-xl text-slate-300 mb-8 max-w-xl mx-auto lg:mx-0">
-                    A powerful platform designed for construction and
-                    engineering teams to track, manage, and optimize inventory
-                    with real-time insights.
-                  </p>
-
-                  <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                  <div className="flex flex-col sm:flex-row gap-4 justify-end">
                     <motion.div
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                     >
                       <Button
                         size="lg"
-                        className="bg-primary hover:bg-primary/90 text-white font-medium px-8 w-full sm:w-auto"
+                        className="bg-primary hover:bg-primary/90 text-white font-medium px-8 w-full sm:w-auto backdrop-blur-sm bg-opacity-80"
                         onClick={() =>
                           (window.location.href = user
                             ? "/dashboard"
@@ -274,180 +255,6 @@ const HomePage = () => {
                         <ArrowRight className="ml-2 h-4 w-4" />
                       </Button>
                     </motion.div>
-
-                    <motion.div
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      <Button
-                        size="lg"
-                        variant="outline"
-                        className="border-primary/50 text-white hover:bg-primary/10 w-full sm:w-auto group relative overflow-hidden"
-                      >
-                        <Download className="mr-2 h-4 w-4" />
-                        Download App
-                        <span className="absolute top-0 right-0 bg-primary text-xs px-2 py-0.5 rounded-bl-md font-medium">
-                          Coming Soon...
-                        </span>
-                      </Button>
-                    </motion.div>
-                  </div>
-
-                  <div className="mt-8 flex items-center justify-center lg:justify-start text-sm text-slate-400">
-                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                    <span>No credit card required</span>
-                    <span className="mx-2">•</span>
-                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                    <span>14-day free trial</span>
-                  </div>
-                </motion.div>
-
-                <motion.div
-                  className="lg:w-1/2"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.6, delay: 0.2 }}
-                >
-                  <div className="relative">
-                    {/* Dashboard preview */}
-                    <div className="bg-slate-800 rounded-xl border border-slate-700 shadow-2xl overflow-hidden">
-                      <div className="flex items-center justify-between p-4 border-b border-slate-700">
-                        <div className="flex items-center space-x-2">
-                          <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                          <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                          <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                        </div>
-                        <div className="text-sm text-slate-400">
-                          InventoryPro Dashboard
-                        </div>
-                      </div>
-
-                      <div className="p-6">
-                        <div className="grid grid-cols-3 gap-4 mb-6">
-                          <div className="bg-slate-700/50 p-4 rounded-lg">
-                            <div className="text-sm text-slate-400">
-                              Total Items
-                            </div>
-                            <div className="text-2xl font-bold">1,248</div>
-                            <div className="text-xs text-green-500 mt-1">
-                              +12% this month
-                            </div>
-                          </div>
-                          <div className="bg-slate-700/50 p-4 rounded-lg">
-                            <div className="text-sm text-slate-400">
-                              Projects
-                            </div>
-                            <div className="text-2xl font-bold">24</div>
-                            <div className="text-xs text-green-500 mt-1">
-                              +3 new
-                            </div>
-                          </div>
-                          <div className="bg-slate-700/50 p-4 rounded-lg">
-                            <div className="text-sm text-slate-400">
-                              Suppliers
-                            </div>
-                            <div className="text-2xl font-bold">36</div>
-                            <div className="text-xs text-green-500 mt-1">
-                              All active
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="bg-slate-700/30 rounded-lg p-4 mb-6">
-                          <div className="flex justify-between items-center mb-4">
-                            <div className="text-sm font-medium">
-                              Inventory Status
-                            </div>
-                            <div className="text-xs text-slate-400">
-                              Last updated: Today
-                            </div>
-                          </div>
-                          <div className="space-y-3">
-                            <div className="flex justify-between items-center">
-                              <div className="text-sm">Steel Pipes</div>
-                              <div className="text-sm font-medium text-green-500">
-                                In Stock
-                              </div>
-                            </div>
-                            <div className="w-full bg-slate-600 rounded-full h-1.5">
-                              <div
-                                className="bg-green-500 h-1.5 rounded-full"
-                                style={{ width: "70%" }}
-                              ></div>
-                            </div>
-
-                            <div className="flex justify-between items-center">
-                              <div className="text-sm">Concrete Mix</div>
-                              <div className="text-sm font-medium text-yellow-500">
-                                Low Stock
-                              </div>
-                            </div>
-                            <div className="w-full bg-slate-600 rounded-full h-1.5">
-                              <div
-                                className="bg-yellow-500 h-1.5 rounded-full"
-                                style={{ width: "20%" }}
-                              ></div>
-                            </div>
-
-                            <div className="flex justify-between items-center">
-                              <div className="text-sm">Electrical Wiring</div>
-                              <div className="text-sm font-medium text-blue-500">
-                                Ordered
-                              </div>
-                            </div>
-                            <div className="w-full bg-slate-600 rounded-full h-1.5">
-                              <div
-                                className="bg-blue-500 h-1.5 rounded-full"
-                                style={{ width: "45%" }}
-                              ></div>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="bg-slate-700/30 rounded-lg p-4">
-                          <div className="flex justify-between items-center mb-3">
-                            <div className="text-sm font-medium">
-                              Recent Activity
-                            </div>
-                            <div className="text-xs text-slate-400">
-                              View All
-                            </div>
-                          </div>
-                          <div className="space-y-3">
-                            <div className="flex items-center">
-                              <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center mr-3">
-                                <Package className="h-4 w-4 text-blue-500" />
-                              </div>
-                              <div>
-                                <div className="text-sm">
-                                  New shipment received
-                                </div>
-                                <div className="text-xs text-slate-400">
-                                  2 hours ago
-                                </div>
-                              </div>
-                            </div>
-                            <div className="flex items-center">
-                              <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center mr-3">
-                                <Users className="h-4 w-4 text-green-500" />
-                              </div>
-                              <div>
-                                <div className="text-sm">
-                                  Team meeting scheduled
-                                </div>
-                                <div className="text-xs text-slate-400">
-                                  Tomorrow, 10:00 AM
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Decorative elements */}
-                    <div className="absolute -bottom-6 -right-6 w-64 h-64 bg-gradient-to-r from-primary to-purple-600 rounded-full blur-3xl opacity-20 z-0"></div>
-                    <div className="absolute -top-6 -left-6 w-64 h-64 bg-gradient-to-r from-blue-600 to-primary rounded-full blur-3xl opacity-20 z-0"></div>
                   </div>
                 </motion.div>
               </div>
