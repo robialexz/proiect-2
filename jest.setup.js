@@ -1,5 +1,6 @@
 // Import testing libraries
 import '@testing-library/jest-dom';
+import { TextEncoder, TextDecoder } from 'util';
 
 // Mock matchMedia
 Object.defineProperty(window, 'matchMedia', {
@@ -114,9 +115,9 @@ const originalConsoleWarn = console.warn;
 console.error = (...args) => {
   // Filter out specific React errors that we're handling in our tests
   if (
-    args[0] && 
-    typeof args[0] === 'string' && 
-    (args[0].includes('Warning: ReactDOM.render') || 
+    args[0] &&
+    typeof args[0] === 'string' &&
+    (args[0].includes('Warning: ReactDOM.render') ||
      args[0].includes('Warning: React.createElement') ||
      args[0].includes('Warning: Invalid hook call'))
   ) {
@@ -128,9 +129,9 @@ console.error = (...args) => {
 console.warn = (...args) => {
   // Filter out specific React warnings that we're handling in our tests
   if (
-    args[0] && 
-    typeof args[0] === 'string' && 
-    (args[0].includes('Warning: React does not recognize') || 
+    args[0] &&
+    typeof args[0] === 'string' &&
+    (args[0].includes('Warning: React does not recognize') ||
      args[0].includes('Warning: The tag <'))
   ) {
     return;
