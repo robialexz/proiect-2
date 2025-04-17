@@ -26,6 +26,7 @@ const ContactPage = lazy(() => import("./pages/ContactPage"));
 const DashboardPage = lazy(() => import("./pages/DashboardPage"));
 const SplineDemo = lazy(() => import("./pages/SplineDemo"));
 const NotificationsDemo = lazy(() => import("./pages/NotificationsDemo"));
+const TestDashboardPage = lazy(() => import("./pages/TestDashboardPage"));
 
 // Lazy load additional project management pages
 const ProjectsPage = lazy(() => import("./pages/ProjectsPage"));
@@ -94,6 +95,7 @@ function App() {
               <Route path="role-management" element={<RoleManagementPage />} />
               <Route path="tutorial" element={<TutorialPage />} />
               <Route path="tasks" element={<TasksPage />} />
+              <Route path="test-dashboard" element={<TestDashboardPage />} />
             </Route>
             {/* Add tempobook route to prevent catchall from capturing it */}
             {import.meta.env.VITE_TEMPO === "true" && (

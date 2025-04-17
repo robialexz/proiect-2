@@ -34,6 +34,7 @@ import {
   CheckCircle2,
   Bell,
   Box,
+  TestTube,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation } from "react-i18next";
@@ -454,6 +455,30 @@ const Sidebar = () => {
               {collapsed && (
                 <TooltipContent side="right">
                   <p>Spline 3D Demo</p>
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </TooltipProvider>
+
+          {/* Link către dashboard-ul de testare */}
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className={cn(
+                    "w-full text-slate-400 hover:text-white hover:bg-slate-800 justify-start",
+                    collapsed && "justify-center"
+                  )}
+                  onClick={() => navigate("/test-dashboard")}
+                >
+                  <TestTube size={20} />
+                  {!collapsed && <span className="ml-3">Test Dashboard</span>}
+                </Button>
+              </TooltipTrigger>
+              {collapsed && (
+                <TooltipContent side="right">
+                  <p>Test Dashboard</p>
                 </TooltipContent>
               )}
             </Tooltip>
