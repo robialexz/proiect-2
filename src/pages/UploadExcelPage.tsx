@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { useTranslation } from "react-i18next";
-import ChatBotWidget from "@/components/ai/ChatBotWidget";
+// ChatBotWidget a fost mutat în pagina de dashboard
 import {
   FileSpreadsheet,
   Upload,
@@ -196,11 +196,7 @@ const UploadExcelPage: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-slate-900 text-white">
-      {/* AI Assistant */}
-      <ChatBotWidget
-        initialMessage="Bun venit în secțiunea de upload Excel! Pot să te ajut cu informații despre formatul fișierelor acceptate, procesul de import sau rezolvarea problemelor. Cu ce te pot ajuta?"
-        contextType="inventory"
-      />
+      {/* AI Assistant a fost mutat în pagina de dashboard */}
 
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
