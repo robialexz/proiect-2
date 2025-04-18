@@ -34,7 +34,19 @@
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <!-- Folosim un script de preload pentru a asigura încărcarea corectă a modulelor -->
+    <script>
+      // Funcție pentru a încărca modulul principal
+      function loadMainModule() {
+        const script = document.createElement('script');
+        script.type = 'module';
+        script.src = '/src/main.tsx';
+        document.body.appendChild(script);
+      }
+
+      // Încărcăm modulul principal după încărcarea paginii
+      window.addEventListener('DOMContentLoaded', loadMainModule);
+    </script>
     <script src="https://api.tempolabs.ai/proxy-asset?url=https://storage.googleapis.com/tempo-public-assets/error-handling.js"></script>
   </body>
 </html>

@@ -32,6 +32,7 @@ export default defineConfig({
     target: "es2020",
     minify: "terser",
     cssMinify: true,
+    assetsInlineLimit: 0, // Dezactivăm inlining-ul pentru a asigura că toate fișierele sunt servite corect
     rollupOptions: {
       input: {
         main: "./src/main.tsx",

@@ -13,7 +13,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com/ https://cdn.jsdelivr.net/ https://api.tempolabs.ai/; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://api.dicebear.com/; font-src 'self' data:; connect-src 'self' https://*.supabase.co https://api.tempolabs.ai/ https://www.cloudflare.com/ https://www.google.com/ https://www.microsoft.com/ https://cdn.jsdelivr.net/ https://unpkg.com/;"
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com/ https://cdn.jsdelivr.net/ https://api.tempolabs.ai/ https://vercel.live/ https://*.vercel.app/ https://*.vercel.com/; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://api.dicebear.com/; font-src 'self' data:; connect-src 'self' https://*.supabase.co https://api.tempolabs.ai/ https://www.cloudflare.com/ https://www.google.com/ https://www.microsoft.com/ https://cdn.jsdelivr.net/ https://unpkg.com/ https://vercel.live/ https://*.vercel.app/ https://*.vercel.com/;"
         }
       ]
     },
@@ -22,7 +22,24 @@
       "headers": [
         {
           "key": "Content-Type",
-          "value": "application/javascript"
+          "value": "application/javascript; charset=utf-8"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)\\.js",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/javascript; charset=utf-8"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
         }
       ]
     },
