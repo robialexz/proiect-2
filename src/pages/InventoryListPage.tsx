@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import supabaseService from '../lib/supabase-service';
+import React, { useEffect, useState } from "react";
+import { supabaseService } from "../services";
 
 const InventoryListPage: React.FC = () => {
   const [items, setItems] = useState<any[]>([]);
@@ -7,7 +7,7 @@ const InventoryListPage: React.FC = () => {
 
   const fetchItems = async () => {
     setLoading(true);
-    const res = await supabaseService.select<any[]>('resources', '*');
+    const res = await supabaseService.select<any[]>("resources", "*");
     if (res.error) {
       console.error(res.error);
     } else {
@@ -16,7 +16,9 @@ const InventoryListPage: React.FC = () => {
     setLoading(false);
   };
 
-  useEffect(() => { fetchItems(); }, []);
+  useEffect(() => {
+    fetchItems();
+  }, []);
 
   if (loading) {
     return <div className="p-8">Loading...</div>;
@@ -37,9 +39,11 @@ const InventoryListPage: React.FC = () => {
           {items.map((item: any) => (
             <tr key={item.id}>
               <td className="border px-4 py-2">{item.id}</td>
-              <td className="border px-4 py-2">{item.name || '-'}</td>
+              <td className="border px-4 py-2">{item.name || "-"}</td>
               <td className="border px-4 py-2">
-                <pre className="whitespace-pre-wrap">{JSON.stringify(item, null, 2)}</pre>
+                <pre className="whitespace-pre-wrap">
+                  {JSON.stringify(item, null, 2)}
+                </pre>
               </td>
             </tr>
           ))}
