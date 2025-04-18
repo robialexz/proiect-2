@@ -51,10 +51,46 @@ export const preloadRoute = (route: string): void => {
 export const preloadComponent = (componentPath: string): void => {
   try {
     // Folosim o abordare mai robustă pentru importul dinamic
-    const pagePath = `../pages/${componentPath}.tsx`;
-    import(/* @vite-ignore */ pagePath).catch((err) => {
-      console.warn(`Failed to preload component ${componentPath}:`, err);
-    });
+    // În loc să încărcăm direct fișierul .tsx, folosim importul normal
+    // care va fi procesat corect de bundler
+    const importPath = componentPath.replace(/Page$/, "");
+
+    // Folosim un switch pentru a mapa numele componentei la importul corect
+    switch (importPath) {
+      case "Dashboard":
+        import("../pages/DashboardPage").catch((err) => {
+          console.warn(`Failed to preload component DashboardPage:`, err);
+        });
+        break;
+      case "Overview":
+        import("../pages/OverviewPage").catch((err) => {
+          console.warn(`Failed to preload component OverviewPage:`, err);
+        });
+        break;
+      case "InventoryManagement":
+        import("../pages/InventoryManagementPage").catch((err) => {
+          console.warn(
+            `Failed to preload component InventoryManagementPage:`,
+            err
+          );
+        });
+        break;
+      case "Projects":
+        import("../pages/ProjectsPage").catch((err) => {
+          console.warn(`Failed to preload component ProjectsPage:`, err);
+        });
+        break;
+      case "CompanyInventory":
+        import("../pages/CompanyInventoryPage").catch((err) => {
+          console.warn(
+            `Failed to preload component CompanyInventoryPage:`,
+            err
+          );
+        });
+        break;
+      default:
+        console.warn(`No preload handler for component ${componentPath}`);
+    }
   } catch (err) {
     console.warn(`Failed to preload component ${componentPath}:`, err);
   }

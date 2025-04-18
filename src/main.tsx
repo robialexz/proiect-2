@@ -8,6 +8,11 @@ import "./i18n";
 import { Toaster } from "./components/ui/toaster";
 import NotificationProvider from "./components/ui/notification";
 import { ThemeProvider } from "./contexts/ThemeContext";
+// Importăm AuthProvider pentru autentificare
+import { AuthProvider } from "./contexts/AuthContext";
+import { RoleProvider } from "./contexts/RoleContext";
+import { AdvancedRoleProvider } from "./contexts/AdvancedRoleContext";
+import { OfflineProvider } from "./contexts/OfflineContext";
 // Preîncărcăm rutele frecvent accesate pentru performanță mai bună
 import { routePreloader } from "./lib/route-preloader";
 // Import React Query
@@ -37,12 +42,20 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
   // Removed StrictMode to improve performance
   <BrowserRouter basename={basename}>
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <NotificationProvider>
-          <App />
-          <Toaster />
-        </NotificationProvider>
-      </ThemeProvider>
+      <AuthProvider>
+        <RoleProvider>
+          <AdvancedRoleProvider>
+            <OfflineProvider>
+              <ThemeProvider>
+                <NotificationProvider>
+                  <App />
+                  <Toaster />
+                </NotificationProvider>
+              </ThemeProvider>
+            </OfflineProvider>
+          </AdvancedRoleProvider>
+        </RoleProvider>
+      </AuthProvider>
     </QueryClientProvider>
   </BrowserRouter>
 );
