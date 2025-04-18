@@ -87,7 +87,7 @@
   
   // Optimizăm performanța editorului
   "editor.maxTokenizationLineLength": 2500,
-  "diffEditor.maxComputationTime": 5000,
+  "diffEditor.maxComputationTime": 0,
   "diffEditor.maxFileSize": 50,
   "workbench.editor.closeOnFileDelete": false,
   "workbench.editor.limit.enabled": true,
