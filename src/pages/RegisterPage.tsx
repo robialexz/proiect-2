@@ -35,10 +35,11 @@ const RegisterPage = () => {
       // De exemplu: await supabase.from('profiles').insert({ user_id: data.user.id, first_name: firstName, last_name: lastName, company })
 
       // Redirecționăm către pagina de confirmare sau login
-      navigate("/login", { 
-        state: { 
-          message: "Cont creat cu succes! Verificați email-ul pentru a confirma contul." 
-        } 
+      navigate("/login", {
+        state: {
+          message:
+            "Cont creat cu succes! Verificați email-ul pentru a confirma contul.",
+        },
       });
     } catch (err: any) {
       console.error("Eroare la înregistrare:", err);
@@ -56,7 +57,7 @@ const RegisterPage = () => {
       justifyContent: "center",
       alignItems: "center",
       background: "linear-gradient(135deg, #1e293b, #0f172a)",
-      padding: "1rem"
+      padding: "1rem",
     },
     card: {
       backgroundColor: "rgba(255, 255, 255, 0.05)",
@@ -66,13 +67,13 @@ const RegisterPage = () => {
       padding: "2rem",
       width: "100%",
       maxWidth: "450px",
-      boxShadow: "0 10px 25px rgba(0, 0, 0, 0.2)"
+      boxShadow: "0 10px 25px rgba(0, 0, 0, 0.2)",
     },
     logo: {
       display: "flex",
       flexDirection: "column" as const,
       alignItems: "center",
-      marginBottom: "1.5rem"
+      marginBottom: "1.5rem",
     },
     logoCircle: {
       width: "3.5rem",
@@ -86,20 +87,20 @@ const RegisterPage = () => {
       fontSize: "1.5rem",
       color: "white",
       marginBottom: "0.5rem",
-      boxShadow: "0 0 15px rgba(99, 102, 241, 0.5)"
+      boxShadow: "0 0 15px rgba(99, 102, 241, 0.5)",
     },
     logoText: {
       fontSize: "1.5rem",
       fontWeight: "bold",
       color: "white",
-      margin: 0
+      margin: 0,
     },
     title: {
       fontSize: "1.75rem",
       fontWeight: "bold",
       color: "white",
       textAlign: "center" as const,
-      marginBottom: "1rem"
+      marginBottom: "1rem",
     },
     error: {
       backgroundColor: "rgba(239, 68, 68, 0.15)",
@@ -107,27 +108,27 @@ const RegisterPage = () => {
       color: "#fca5a5",
       padding: "0.75rem",
       borderRadius: "0.5rem",
-      marginBottom: "1rem"
+      marginBottom: "1rem",
     },
     form: {
       display: "flex",
       flexDirection: "column" as const,
-      gap: "1.25rem"
+      gap: "1.25rem",
     },
     formRow: {
       display: "grid",
       gridTemplateColumns: "1fr 1fr",
-      gap: "1rem"
+      gap: "1rem",
     },
     formGroup: {
       display: "flex",
       flexDirection: "column" as const,
-      gap: "0.5rem"
+      gap: "0.5rem",
     },
     label: {
       color: "#e2e8f0",
       fontSize: "0.875rem",
-      fontWeight: "500"
+      fontWeight: "500",
     },
     input: {
       width: "100%",
@@ -137,29 +138,31 @@ const RegisterPage = () => {
       borderRadius: "0.5rem",
       color: "white",
       fontSize: "0.875rem",
-      outline: "none"
+      outline: "none",
     },
     checkboxContainer: {
       display: "flex",
       alignItems: "center",
       gap: "0.75rem",
-      marginTop: "0.5rem"
+      marginTop: "0.5rem",
     },
     checkbox: {
       width: "1.25rem",
       height: "1.25rem",
       backgroundColor: agreedToTerms ? "#6366f1" : "rgba(255, 255, 255, 0.05)",
-      border: agreedToTerms ? "1px solid #6366f1" : "1px solid rgba(255, 255, 255, 0.2)",
+      border: agreedToTerms
+        ? "1px solid #6366f1"
+        : "1px solid rgba(255, 255, 255, 0.2)",
       borderRadius: "0.25rem",
       display: "flex",
       justifyContent: "center",
       alignItems: "center",
       cursor: "pointer",
-      flexShrink: 0
+      flexShrink: 0,
     },
     checkboxLabel: {
       color: "#94a3b8",
-      fontSize: "0.875rem"
+      fontSize: "0.875rem",
     },
     button: {
       backgroundColor: "#6366f1",
@@ -170,23 +173,23 @@ const RegisterPage = () => {
       border: "none",
       cursor: "pointer",
       fontSize: "0.875rem",
-      marginTop: "0.5rem"
+      marginTop: "0.5rem",
     },
     buttonDisabled: {
       opacity: 0.7,
-      cursor: "not-allowed"
+      cursor: "not-allowed",
     },
     footer: {
       textAlign: "center" as const,
       marginTop: "1rem",
       color: "#94a3b8",
-      fontSize: "0.875rem"
+      fontSize: "0.875rem",
     },
     link: {
       color: "#6366f1",
       textDecoration: "none",
-      fontWeight: "500"
-    }
+      fontWeight: "500",
+    },
   };
 
   return (
@@ -198,7 +201,7 @@ const RegisterPage = () => {
         </div>
 
         <h2 style={styles.title}>Înregistrare</h2>
-        
+
         {error && (
           <div style={styles.error}>
             <p>{error}</p>
@@ -208,7 +211,9 @@ const RegisterPage = () => {
         <form onSubmit={handleSubmit} style={styles.form}>
           <div style={styles.formRow}>
             <div style={styles.formGroup}>
-              <label htmlFor="firstName" style={styles.label}>Prenume</label>
+              <label htmlFor="firstName" style={styles.label}>
+                Prenume
+              </label>
               <input
                 id="firstName"
                 type="text"
@@ -219,9 +224,11 @@ const RegisterPage = () => {
                 style={styles.input}
               />
             </div>
-            
+
             <div style={styles.formGroup}>
-              <label htmlFor="lastName" style={styles.label}>Nume</label>
+              <label htmlFor="lastName" style={styles.label}>
+                Nume
+              </label>
               <input
                 id="lastName"
                 type="text"
@@ -235,7 +242,9 @@ const RegisterPage = () => {
           </div>
 
           <div style={styles.formGroup}>
-            <label htmlFor="email" style={styles.label}>Email</label>
+            <label htmlFor="email" style={styles.label}>
+              Email
+            </label>
             <input
               id="email"
               type="email"
@@ -248,7 +257,9 @@ const RegisterPage = () => {
           </div>
 
           <div style={styles.formGroup}>
-            <label htmlFor="company" style={styles.label}>Companie (opțional)</label>
+            <label htmlFor="company" style={styles.label}>
+              Companie (opțional)
+            </label>
             <input
               id="company"
               type="text"
@@ -260,7 +271,9 @@ const RegisterPage = () => {
           </div>
 
           <div style={styles.formGroup}>
-            <label htmlFor="password" style={styles.label}>Parolă</label>
+            <label htmlFor="password" style={styles.label}>
+              Parolă
+            </label>
             <input
               id="password"
               type="password"
@@ -272,11 +285,26 @@ const RegisterPage = () => {
             />
           </div>
 
-          <div style={styles.checkboxContainer} onClick={() => setAgreedToTerms(!agreedToTerms)}>
+          <div
+            style={styles.checkboxContainer}
+            onClick={() => setAgreedToTerms(!agreedToTerms)}
+          >
             <div style={styles.checkbox}>
               {agreedToTerms && (
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M20 6L9 17L4 12" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M20 6L9 17L4 12"
+                    stroke="white"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
                 </svg>
               )}
             </div>
@@ -292,11 +320,11 @@ const RegisterPage = () => {
             </span>
           </div>
 
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             style={{
               ...styles.button,
-              ...(loading ? styles.buttonDisabled : {})
+              ...(loading ? styles.buttonDisabled : {}),
             }}
             disabled={loading}
           >

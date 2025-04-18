@@ -55,7 +55,7 @@ const LoginPage = () => {
       justifyContent: "center",
       alignItems: "center",
       background: "linear-gradient(135deg, #1e293b, #0f172a)",
-      padding: "1rem"
+      padding: "1rem",
     },
     card: {
       backgroundColor: "rgba(255, 255, 255, 0.05)",
@@ -65,13 +65,13 @@ const LoginPage = () => {
       padding: "2rem",
       width: "100%",
       maxWidth: "450px",
-      boxShadow: "0 10px 25px rgba(0, 0, 0, 0.2)"
+      boxShadow: "0 10px 25px rgba(0, 0, 0, 0.2)",
     },
     logo: {
       display: "flex",
       flexDirection: "column" as const,
       alignItems: "center",
-      marginBottom: "1.5rem"
+      marginBottom: "1.5rem",
     },
     logoCircle: {
       width: "3.5rem",
@@ -85,20 +85,20 @@ const LoginPage = () => {
       fontSize: "1.5rem",
       color: "white",
       marginBottom: "0.5rem",
-      boxShadow: "0 0 15px rgba(99, 102, 241, 0.5)"
+      boxShadow: "0 0 15px rgba(99, 102, 241, 0.5)",
     },
     logoText: {
       fontSize: "1.5rem",
       fontWeight: "bold",
       color: "white",
-      margin: 0
+      margin: 0,
     },
     title: {
       fontSize: "1.75rem",
       fontWeight: "bold",
       color: "white",
       textAlign: "center" as const,
-      marginBottom: "1rem"
+      marginBottom: "1rem",
     },
     error: {
       backgroundColor: "rgba(239, 68, 68, 0.15)",
@@ -106,7 +106,7 @@ const LoginPage = () => {
       color: "#fca5a5",
       padding: "0.75rem",
       borderRadius: "0.5rem",
-      marginBottom: "1rem"
+      marginBottom: "1rem",
     },
     success: {
       backgroundColor: "rgba(34, 197, 94, 0.15)",
@@ -114,32 +114,32 @@ const LoginPage = () => {
       color: "#86efac",
       padding: "0.75rem",
       borderRadius: "0.5rem",
-      marginBottom: "1rem"
+      marginBottom: "1rem",
     },
     form: {
       display: "flex",
       flexDirection: "column" as const,
-      gap: "1.25rem"
+      gap: "1.25rem",
     },
     formGroup: {
       display: "flex",
       flexDirection: "column" as const,
-      gap: "0.5rem"
+      gap: "0.5rem",
     },
     label: {
       color: "#e2e8f0",
       fontSize: "0.875rem",
-      fontWeight: "500"
+      fontWeight: "500",
     },
     labelWithLink: {
       display: "flex",
       justifyContent: "space-between",
-      alignItems: "center"
+      alignItems: "center",
     },
     forgotPassword: {
       fontSize: "0.875rem",
       color: "#94a3b8",
-      textDecoration: "none"
+      textDecoration: "none",
     },
     input: {
       width: "100%",
@@ -149,7 +149,7 @@ const LoginPage = () => {
       borderRadius: "0.5rem",
       color: "white",
       fontSize: "0.875rem",
-      outline: "none"
+      outline: "none",
     },
     button: {
       backgroundColor: "#6366f1",
@@ -160,23 +160,23 @@ const LoginPage = () => {
       border: "none",
       cursor: "pointer",
       fontSize: "0.875rem",
-      marginTop: "0.5rem"
+      marginTop: "0.5rem",
     },
     buttonDisabled: {
       opacity: 0.7,
-      cursor: "not-allowed"
+      cursor: "not-allowed",
     },
     footer: {
       textAlign: "center" as const,
       marginTop: "1rem",
       color: "#94a3b8",
-      fontSize: "0.875rem"
+      fontSize: "0.875rem",
     },
     link: {
       color: "#6366f1",
       textDecoration: "none",
-      fontWeight: "500"
-    }
+      fontWeight: "500",
+    },
   };
 
   return (
@@ -188,13 +188,13 @@ const LoginPage = () => {
         </div>
 
         <h2 style={styles.title}>Autentificare</h2>
-        
+
         {error && (
           <div style={styles.error}>
             <p>{error}</p>
           </div>
         )}
-        
+
         {success && (
           <div style={styles.success}>
             <p>{success}</p>
@@ -203,7 +203,9 @@ const LoginPage = () => {
 
         <form onSubmit={handleSubmit} style={styles.form}>
           <div style={styles.formGroup}>
-            <label htmlFor="email" style={styles.label}>Email</label>
+            <label htmlFor="email" style={styles.label}>
+              Email
+            </label>
             <input
               id="email"
               type="email"
@@ -217,7 +219,9 @@ const LoginPage = () => {
 
           <div style={styles.formGroup}>
             <div style={styles.labelWithLink}>
-              <label htmlFor="password" style={styles.label}>Parolă</label>
+              <label htmlFor="password" style={styles.label}>
+                Parolă
+              </label>
               <Link to="/forgot-password" style={styles.forgotPassword}>
                 Ai uitat parola?
               </Link>
@@ -233,11 +237,11 @@ const LoginPage = () => {
             />
           </div>
 
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             style={{
               ...styles.button,
-              ...(loading ? styles.buttonDisabled : {})
+              ...(loading ? styles.buttonDisabled : {}),
             }}
             disabled={loading}
           >

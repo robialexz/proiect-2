@@ -27,7 +27,9 @@ const ForgotPasswordPage = () => {
       setEmail("");
     } catch (err: any) {
       console.error("Eroare la resetarea parolei:", err);
-      setError(err.message || "A apărut o eroare la trimiterea emailului de resetare");
+      setError(
+        err.message || "A apărut o eroare la trimiterea emailului de resetare"
+      );
     } finally {
       setLoading(false);
     }
@@ -41,7 +43,7 @@ const ForgotPasswordPage = () => {
       justifyContent: "center",
       alignItems: "center",
       background: "linear-gradient(135deg, #1e293b, #0f172a)",
-      padding: "1rem"
+      padding: "1rem",
     },
     card: {
       backgroundColor: "rgba(255, 255, 255, 0.05)",
@@ -51,13 +53,13 @@ const ForgotPasswordPage = () => {
       padding: "2rem",
       width: "100%",
       maxWidth: "450px",
-      boxShadow: "0 10px 25px rgba(0, 0, 0, 0.2)"
+      boxShadow: "0 10px 25px rgba(0, 0, 0, 0.2)",
     },
     logo: {
       display: "flex",
       flexDirection: "column" as const,
       alignItems: "center",
-      marginBottom: "1.5rem"
+      marginBottom: "1.5rem",
     },
     logoCircle: {
       width: "3.5rem",
@@ -71,26 +73,26 @@ const ForgotPasswordPage = () => {
       fontSize: "1.5rem",
       color: "white",
       marginBottom: "0.5rem",
-      boxShadow: "0 0 15px rgba(99, 102, 241, 0.5)"
+      boxShadow: "0 0 15px rgba(99, 102, 241, 0.5)",
     },
     logoText: {
       fontSize: "1.5rem",
       fontWeight: "bold",
       color: "white",
-      margin: 0
+      margin: 0,
     },
     title: {
       fontSize: "1.75rem",
       fontWeight: "bold",
       color: "white",
       textAlign: "center" as const,
-      marginBottom: "0.5rem"
+      marginBottom: "0.5rem",
     },
     subtitle: {
       color: "#94a3b8",
       textAlign: "center" as const,
       marginBottom: "1.5rem",
-      fontSize: "0.875rem"
+      fontSize: "0.875rem",
     },
     error: {
       backgroundColor: "rgba(239, 68, 68, 0.15)",
@@ -98,7 +100,7 @@ const ForgotPasswordPage = () => {
       color: "#fca5a5",
       padding: "0.75rem",
       borderRadius: "0.5rem",
-      marginBottom: "1rem"
+      marginBottom: "1rem",
     },
     success: {
       backgroundColor: "rgba(34, 197, 94, 0.15)",
@@ -106,22 +108,22 @@ const ForgotPasswordPage = () => {
       color: "#86efac",
       padding: "0.75rem",
       borderRadius: "0.5rem",
-      marginBottom: "1rem"
+      marginBottom: "1rem",
     },
     form: {
       display: "flex",
       flexDirection: "column" as const,
-      gap: "1.25rem"
+      gap: "1.25rem",
     },
     formGroup: {
       display: "flex",
       flexDirection: "column" as const,
-      gap: "0.5rem"
+      gap: "0.5rem",
     },
     label: {
       color: "#e2e8f0",
       fontSize: "0.875rem",
-      fontWeight: "500"
+      fontWeight: "500",
     },
     input: {
       width: "100%",
@@ -131,7 +133,7 @@ const ForgotPasswordPage = () => {
       borderRadius: "0.5rem",
       color: "white",
       fontSize: "0.875rem",
-      outline: "none"
+      outline: "none",
     },
     button: {
       backgroundColor: "#6366f1",
@@ -142,11 +144,11 @@ const ForgotPasswordPage = () => {
       border: "none",
       cursor: "pointer",
       fontSize: "0.875rem",
-      marginTop: "0.5rem"
+      marginTop: "0.5rem",
     },
     buttonDisabled: {
       opacity: 0.7,
-      cursor: "not-allowed"
+      cursor: "not-allowed",
     },
     backLink: {
       display: "flex",
@@ -156,13 +158,13 @@ const ForgotPasswordPage = () => {
       color: "#94a3b8",
       textDecoration: "none",
       fontSize: "0.875rem",
-      marginTop: "1rem"
+      marginTop: "1rem",
     },
     link: {
       color: "#6366f1",
       textDecoration: "none",
-      fontWeight: "500"
-    }
+      fontWeight: "500",
+    },
   };
 
   return (
@@ -175,15 +177,16 @@ const ForgotPasswordPage = () => {
 
         <h2 style={styles.title}>Resetare parolă</h2>
         <p style={styles.subtitle}>
-          Introduceți adresa de email asociată contului dvs. și vă vom trimite un link pentru resetarea parolei.
+          Introduceți adresa de email asociată contului dvs. și vă vom trimite
+          un link pentru resetarea parolei.
         </p>
-        
+
         {error && (
           <div style={styles.error}>
             <p>{error}</p>
           </div>
         )}
-        
+
         {success && (
           <div style={styles.success}>
             <p>{success}</p>
@@ -192,7 +195,9 @@ const ForgotPasswordPage = () => {
 
         <form onSubmit={handleSubmit} style={styles.form}>
           <div style={styles.formGroup}>
-            <label htmlFor="email" style={styles.label}>Email</label>
+            <label htmlFor="email" style={styles.label}>
+              Email
+            </label>
             <input
               id="email"
               type="email"
@@ -204,11 +209,11 @@ const ForgotPasswordPage = () => {
             />
           </div>
 
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             style={{
               ...styles.button,
-              ...(loading ? styles.buttonDisabled : {})
+              ...(loading ? styles.buttonDisabled : {}),
             }}
             disabled={loading}
           >
@@ -216,8 +221,20 @@ const ForgotPasswordPage = () => {
           </button>
 
           <Link to="/login" style={styles.backLink}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M19 12H5M5 12L12 19M5 12L12 5"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
             Înapoi la autentificare
           </Link>
