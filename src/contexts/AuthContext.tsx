@@ -18,7 +18,7 @@ type AuthContextType = {
   signUp: (
     email: string,
     password: string,
-    displayName?: string,
+    displayName?: string
   ) => Promise<AuthResponse>;
   updateUserProfile: (displayName: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -40,63 +40,98 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const handleForceSessionRefresh = (event: any) => {
       console.log("AuthContext: Received force-session-refresh event");
+
+      // Verificăm dacă avem o sesiune în eveniment sau un backup de sesiune
       if (event.detail?.session) {
         console.log("AuthContext: Restoring session from event");
+        restoreSession(event.detail.session);
+      } else if (event.detail?.sessionBackup) {
+        console.log("AuthContext: Attempting to restore session from backup");
+        try {
+          // Încercăm să parsăm backup-ul sesiunii
+          const parsedBackup = JSON.parse(event.detail.sessionBackup);
+          if (parsedBackup.currentSession) {
+            // Restaurăm sesiunea din backup
+            restoreSession(parsedBackup.currentSession);
 
-        // Folosim un setTimeout pentru a ne asigura că actualizările de stare nu se întâmplă în timpul render-ului
-        setTimeout(() => {
-          try {
-            setSession(event.detail.session);
-            setUser(event.detail.session.user);
-            setLoading(false);
-
-            // Salvăm sesiunea în localStorage și sessionStorage pentru a asigura persistența
-            try {
-              const sessionData = {
-                currentSession: event.detail.session,
-                expiresAt: Date.now() + 3600 * 1000, // 1 oră valabilitate
-              };
-              localStorage.setItem(
-                "supabase.auth.token",
-                JSON.stringify(sessionData),
-              );
-              sessionStorage.setItem(
-                "supabase.auth.token",
-                JSON.stringify(sessionData),
-              );
-              console.log("Session saved to storage from event");
-            } catch (storageError) {
-              console.error(
-                "Error saving session to storage from event:",
-                storageError,
-              );
-            }
-
-            // Încercăm să încărcăm profilul utilizatorului
-            if (event.detail.session.user?.id) {
-              fetchUserProfile(event.detail.session.user.id).catch((error) => {
-                console.error("Error fetching user profile from event:", error);
-                // Setăm un profil implicit în caz de eroare
-                const defaultProfile = {
-                  displayName:
-                    event.detail.session.user.email?.split("@")[0] || "User",
-                  email: event.detail.session.user.email || "",
-                };
-                setUserProfile(defaultProfile);
+            // Încercăm să reîmprospătăm sesiunea cu Supabase
+            supabase.auth
+              .refreshSession()
+              .then(({ data }) => {
+                if (data?.session) {
+                  console.log(
+                    "Session refreshed successfully after restore from backup"
+                  );
+                  restoreSession(data.session);
+                }
+              })
+              .catch((error) => {
+                console.error(
+                  "Error refreshing session after restore from backup:",
+                  error
+                );
               });
-            }
-
-            // Notificăm AppLayout că sesiunea a fost restaurată cu succes
-            window.dispatchEvent(
-              new CustomEvent("session-restored", {
-                detail: { success: true },
-              }),
-            );
-          } catch (error) {
-            console.error("Error processing session from event:", error);
           }
-        }, 0);
+        } catch (error) {
+          console.error("Error parsing session backup:", error);
+        }
       }
+    };
+
+    // Funcție pentru restaurarea sesiunii
+    const restoreSession = (sessionData: Session) => {
+      // Folosim un setTimeout pentru a ne asigura că actualizările de stare nu se întâmplă în timpul render-ului
+      setTimeout(() => {
+        try {
+          setSession(sessionData);
+          setUser(sessionData.user);
+          setLoading(false);
+
+          // Salvăm sesiunea în localStorage și sessionStorage pentru a asigura persistența
+          try {
+            const sessionDataToStore = {
+              currentSession: sessionData,
+              expiresAt: Date.now() + 3600 * 1000, // 1 oră valabilitate
+            };
+            localStorage.setItem(
+              "supabase.auth.token",
+              JSON.stringify(sessionDataToStore)
+            );
+            sessionStorage.setItem(
+              "supabase.auth.token",
+              JSON.stringify(sessionDataToStore)
+            );
+            console.log("Session saved to storage from event");
+          } catch (storageError) {
+            console.error(
+              "Error saving session to storage from event:",
+              storageError
+            );
+          }
+
+          // Încercăm să încărcăm profilul utilizatorului
+          if (sessionData.user?.id) {
+            fetchUserProfile(sessionData.user.id).catch((error) => {
+              console.error("Error fetching user profile from event:", error);
+              // Setăm un profil implicit în caz de eroare
+              const defaultProfile = {
+                displayName: sessionData.user.email?.split("@")[0] || "User",
+                email: sessionData.user.email || "",
+              };
+              setUserProfile(defaultProfile);
+            });
+          }
+
+          // Notificăm AppLayout că sesiunea a fost restaurată cu succes
+          window.dispatchEvent(
+            new CustomEvent("session-restored", {
+              detail: { success: true },
+            })
+          );
+        } catch (error) {
+          console.error("Error processing session from event:", error);
+        }
+      }, 0);
     };
 
     // Adaugăm listener pentru eveniment
@@ -105,18 +140,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Adăugăm și un listener pentru evenimentul de actualizare a sesiunii de la Supabase
     window.addEventListener(
       "supabase-session-update",
-      handleForceSessionRefresh,
+      handleForceSessionRefresh
     );
 
     // Curățăm listener-urile la demontare
     return () => {
       window.removeEventListener(
         "force-session-refresh",
-        handleForceSessionRefresh,
+        handleForceSessionRefresh
       );
       window.removeEventListener(
         "supabase-session-update",
-        handleForceSessionRefresh,
+        handleForceSessionRefresh
       );
     };
   }, []);
@@ -153,7 +188,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // Nu trebuie să actualizăm starea aici, deoarece onAuthStateChange va face asta
         }
       } catch (error) {
-        console.error("[AuthContext] Unexpected error refreshing session:", error);
+        console.error(
+          "[AuthContext] Unexpected error refreshing session:",
+          error
+        );
       }
     }, 30 * 60 * 1000); // 30 minute
 
@@ -164,14 +202,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // DEBUG LOGGING: Try to restore session from storage if lost
     if (!session || !user) {
       try {
-        const stored = localStorage.getItem("supabase.auth.token") || sessionStorage.getItem("supabase.auth.token");
+        const stored =
+          localStorage.getItem("supabase.auth.token") ||
+          sessionStorage.getItem("supabase.auth.token");
         if (stored) {
           const parsed = JSON.parse(stored);
           if (parsed.currentSession) {
             setSession(parsed.currentSession);
             setUser(parsed.currentSession.user);
             setLoading(false);
-            console.log("[AuthContext] Restored session from storage fallback.");
+            console.log(
+              "[AuthContext] Restored session from storage fallback."
+            );
           }
         }
       } catch (e) {
@@ -185,7 +227,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const timeoutId = setTimeout(() => {
       if (loading) {
         console.log(
-          "Auth loading timeout reached after 2 seconds, forcing loading to false",
+          "Auth loading timeout reached after 2 seconds, forcing loading to false"
         );
         setLoading(false);
         // Setăm un profil implicit în caz de timeout
@@ -232,7 +274,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               fetchUserProfile(userData.id).catch((error) => {
                 console.error(
                   "Error fetching user profile from local session:",
-                  error,
+                  error
                 );
                 // Setăm un profil implicit în caz de eroare
                 const defaultProfile = {
@@ -276,11 +318,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             };
             localStorage.setItem(
               "supabase.auth.token",
-              JSON.stringify(sessionData),
+              JSON.stringify(sessionData)
             );
             sessionStorage.setItem(
               "supabase.auth.token",
-              JSON.stringify(sessionData),
+              JSON.stringify(sessionData)
             );
             console.log("Session saved to storage");
           } catch (storageError) {
@@ -335,11 +377,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
                 localStorage.setItem(
                   "supabase.auth.token",
-                  JSON.stringify(sessionData),
+                  JSON.stringify(sessionData)
                 );
                 sessionStorage.setItem(
                   "supabase.auth.token",
-                  JSON.stringify(sessionData),
+                  JSON.stringify(sessionData)
                 );
               }
             } catch (refreshError) {
@@ -418,7 +460,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         {
           filters: { id: userId },
           single: true,
-        },
+        }
       );
 
       if (response.status === "error") {
@@ -457,7 +499,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Profile should have been created by the trigger handle_new_user
         // If it's not found here, log an error, but don't attempt to create it again.
         console.warn(
-          `Profile not found for user ${userId}. It should have been created by the trigger.`,
+          `Profile not found for user ${userId}. It should have been created by the trigger.`
         );
         // Setăm un profil implicit în caz că nu există în baza de date
         const defaultProfile = {
@@ -500,15 +542,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           expiresAt: Date.now() + 24 * 3600 * 1000, // 24 ore valabilitate
         };
         try {
-          localStorage.setItem("supabase.auth.token", JSON.stringify(sessionData));
-          sessionStorage.setItem("supabase.auth.token", JSON.stringify(sessionData));
+          localStorage.setItem(
+            "supabase.auth.token",
+            JSON.stringify(sessionData)
+          );
+          sessionStorage.setItem(
+            "supabase.auth.token",
+            JSON.stringify(sessionData)
+          );
 
           // Setăm un flag pentru a indica o nouă logare - va fi folosit pentru afișarea mesajului de bun venit
           sessionStorage.setItem("newLoginDetected", "true");
 
           console.log("[AuthContext] Session saved to storage after login");
         } catch (storageError) {
-          console.error("[AuthContext] Error saving session after login:", storageError);
+          console.error(
+            "[AuthContext] Error saving session after login:",
+            storageError
+          );
         }
       }
 
@@ -540,7 +591,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         error: new Error(
           err instanceof Error
             ? err.message
-            : "Authentication failed. Please try again.",
+            : "Authentication failed. Please try again."
         ),
       };
     }
@@ -549,7 +600,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signUp = async (
     email: string,
     password: string,
-    displayName?: string,
+    displayName?: string
   ) => {
     try {
       // Folosim serviciul îmbunătățit pentru înregistrare
@@ -568,7 +619,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Folosim serviciul îmbunătățit pentru a crea profilul utilizatorului
         const profileResponse = await supabaseService.insert(
           "profiles",
-          newProfile,
+          newProfile
         );
 
         if (profileResponse.status === "error") {
@@ -582,7 +633,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return {
         data: { user: null, session: null },
         error: new Error(
-          "Connection error. Please check your internet connection.",
+          "Connection error. Please check your internet connection."
         ),
       };
     }
@@ -596,7 +647,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const response = await supabaseService.update(
         "profiles",
         { display_name: displayName },
-        { id: user.id },
+        { id: user.id }
       );
 
       if (response.status === "error") {
@@ -615,7 +666,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         cacheService.set(
           cacheKey,
           { displayName, email: cachedProfile.email },
-          { namespace: "auth" },
+          { namespace: "auth" }
         );
       }
 
@@ -628,7 +679,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     // Setăm flag-ul pentru deconectare intenționată înainte de a șterge sesiunea
     try {
-      sessionStorage.setItem('intentional_signout', 'true');
+      sessionStorage.setItem("intentional_signout", "true");
       console.log("Set intentional_signout flag before logout");
     } catch (error) {
       console.error("Error setting intentional_signout flag:", error);
