@@ -196,6 +196,9 @@ const LoginPage = () => {
 
     setLoading(true);
 
+    // Set session flag for welcome message
+    sessionStorage.setItem('newLoginDetected', 'true');
+
     // Adăugăm un timeout pentru întreaga operațiune de login - mărim la 20 secunde pentru a da mai mult timp
     const loginTimeout = setTimeout(() => {
       if (loading) {

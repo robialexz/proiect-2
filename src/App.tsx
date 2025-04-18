@@ -1,5 +1,5 @@
 import { Suspense, lazy } from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { RoleProvider } from "./contexts/RoleContext";
 import { AdvancedRoleProvider } from "./contexts/AdvancedRoleContext";
@@ -65,6 +65,7 @@ const ScanPage = lazy(() => import("./pages/ScanPage"));
 import ChatBotWidget from "./components/ai/ChatBotWidget";
 
 function App() {
+  const location = useLocation();
   return (
     <AuthProvider>
       <RoleProvider>
@@ -134,8 +135,10 @@ function App() {
               <Route path="/tempobook/*" />
             )}
           </Routes>
-          {/* AI ChatBot Widget global, colț dreapta-jos */}
-          <ChatBotWidget />
+          {/* Show chatbot only on protected routes */}
+          {location.pathname.startsWith("/") && !["/login", "/register", "/forgot-password", "/reset-password"].includes(location.pathname) && (
+            <ChatBotWidget />
+          )}
           </Suspense>
           </OfflineProvider>
         </AdvancedRoleProvider>

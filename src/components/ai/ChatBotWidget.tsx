@@ -7,8 +7,8 @@ import {
   User,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-// import { dataLoader } from "@/lib/data-loader";
 import { cacheService } from "@/lib/cache-service";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Enhanced AI reply logic with context awareness
 const getAIResponse = async (message: string) => {
@@ -101,6 +101,8 @@ const ChatBotWidget: React.FC<ChatBotWidgetProps> = ({
   initialMessage = "Salut! Sunt asistentul AI. Cu ce te pot ajuta astăzi?",
   contextType = "general",
 }) => {
+  const { user } = useAuth();
+  if (!user) return null;
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<
     { sender: "user" | "bot"; text: string }[]
