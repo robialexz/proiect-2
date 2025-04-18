@@ -1,12 +1,21 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
 import { supabase } from "@/lib/supabase";
 import { Session, User } from "@supabase/supabase-js";
 import { supabaseService, SupabaseErrorResponse } from "@/lib/supabase-service";
-import { cacheService } from "@/lib/cache-service";
+import { cacheService } from "@/lib/cache-service"; // Keep cacheService for profile caching
 
 // Definim tipul pentru răspunsul de autentificare
 type AuthResponse = {
-  data: any;
+  data: {
+    user: User | null;
+    session: Session | null;
+  } | null;
   error: Error | SupabaseErrorResponse | null;
 };
 
@@ -43,298 +52,149 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     displayName: string;
     email: string;
   } | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); // Keep loading state
 
-  // Ascultăm evenimentul de forțare a reîmprospătării sesiunii
-  useEffect(() => {
-    const handleForceSessionRefresh = (event: any) => {
-      console.log("AuthContext: Received force-session-refresh event");
+  // Helper function to fetch and set user profile (memoized)
+  const fetchUserProfile = useCallback(
+    async (userId: string, currentUser: User | null) => {
+      // Use currentUser directly if passed, otherwise fallback to state (less ideal)
+      const emailForDefault = currentUser?.email || user?.email || "";
+      const defaultDisplayName = emailForDefault.split("@")[0] || "User";
 
-      // Verificăm dacă avem o sesiune în eveniment sau un backup de sesiune
-      if (event.detail?.session) {
-        console.log("AuthContext: Restoring session from event");
-        restoreSession(event.detail.session);
-      } else if (event.detail?.sessionBackup) {
-        console.log("AuthContext: Attempting to restore session from backup");
-        try {
-          // Încercăm să parsăm backup-ul sesiunii
-          const parsedBackup = JSON.parse(event.detail.sessionBackup);
-          if (parsedBackup.currentSession) {
-            // Restaurăm sesiunea din backup
-            restoreSession(parsedBackup.currentSession);
-
-            // Încercăm să reîmprospătăm sesiunea cu Supabase
-            // Folosim un timeout pentru a ne asigura că sesiunea este salvată înainte de a încerca să o reîmprospătăm
-            setTimeout(() => {
-              try {
-                supabase.auth
-                  .refreshSession()
-                  .then(({ data }) => {
-                    if (data?.session) {
-                      console.log(
-                        "Session refreshed successfully after restore from backup"
-                      );
-                      restoreSession(data.session);
-
-                      // Resetăm contorul de încercări după o reîmprospătare reușită
-                      window.sessionStorage.removeItem(
-                        "session_restore_attempts"
-                      );
-                    }
-                  })
-                  .catch((error) => {
-                    console.error(
-                      "Error refreshing session after restore from backup:",
-                      error
-                    );
-                  });
-              } catch (refreshError) {
-                console.error("Error during session refresh:", refreshError);
-              }
-            }, 500);
-          }
-        } catch (error) {
-          console.error("Error parsing session backup:", error);
+      try {
+        // Handle test users separately
+        if (userId.startsWith("test-user-id")) {
+          console.log("AuthContext: Using test user profile");
+          setUserProfile({
+            displayName: defaultDisplayName,
+            email: emailForDefault,
+          });
+          return;
         }
-      }
-    };
 
-    // Funcție pentru restaurarea sesiunii
-    const restoreSession = (sessionData: Session) => {
-      // Folosim un setTimeout pentru a ne asigura că actualizările de stare nu se întâmplă în timpul render-ului
-      setTimeout(() => {
-        try {
-          setSession(sessionData);
-          setUser(sessionData.user);
-          setLoading(false);
+        // Check cache first
+        const cacheKey = `user_profile_${userId}`;
+        const cachedProfile = cacheService.get<{
+          displayName: string;
+          email: string;
+        }>(cacheKey, { namespace: "auth" });
 
-          // Salvăm sesiunea în localStorage și sessionStorage pentru a asigura persistența
-          try {
-            const sessionDataToStore = {
-              currentSession: sessionData,
-              expiresAt: Date.now() + 3600 * 1000, // 1 oră valabilitate
-            };
+        if (cachedProfile) {
+          console.log("AuthContext: Using cached user profile");
+          setUserProfile(cachedProfile);
+          return;
+        }
 
-            // Salvăm sesiunea în format compatibil cu Supabase
-            localStorage.setItem(
-              "supabase.auth.token",
-              JSON.stringify(sessionDataToStore)
-            );
-            sessionStorage.setItem(
-              "supabase.auth.token",
-              JSON.stringify(sessionDataToStore)
-            );
-
-            // Salvăm și sesiunea direct pentru compatibilitate cu versiuni mai noi de Supabase
-            try {
-              localStorage.setItem(
-                "sb-" +
-                  import.meta.env.VITE_SUPABASE_PROJECT_ID +
-                  "-auth-token",
-                JSON.stringify(sessionData)
-              );
-            } catch (e) {
-              console.error("Error saving direct session format:", e);
-            }
-
-            console.log("Session saved to storage from event");
-          } catch (storageError) {
-            console.error(
-              "Error saving session to storage from event:",
-              storageError
-            );
+        console.log("AuthContext: Fetching user profile from Supabase");
+        // Fetch from Supabase if not cached
+        const response = await supabaseService.select(
+          "profiles",
+          "display_name, email",
+          {
+            filters: { id: userId },
+            single: true,
           }
+        );
 
-          // Încercăm să încărcăm profilul utilizatorului
-          if (sessionData.user?.id) {
-            fetchUserProfile(sessionData.user.id).catch((error) => {
-              console.error("Error fetching user profile from event:", error);
-              // Setăm un profil implicit în caz de eroare
-              const defaultProfile = {
-                displayName: sessionData.user.email?.split("@")[0] || "User",
-                email: sessionData.user.email || "",
-              };
-              setUserProfile(defaultProfile);
-            });
-          }
-
-          // Notificăm AppLayout că sesiunea a fost restaurată cu succes
-          window.dispatchEvent(
-            new CustomEvent("session-restored", {
-              detail: { success: true },
-            })
+        if (response.status === "error") {
+          console.warn(
+            "AuthContext: Error fetching user profile:",
+            response.error
           );
-        } catch (error) {
-          console.error("Error processing session from event:", error);
-        }
-      }, 0);
-    };
-
-    // Adaugăm listener pentru eveniment
-    window.addEventListener("force-session-refresh", handleForceSessionRefresh);
-
-    // Adăugăm și un listener pentru evenimentul de actualizare a sesiunii de la Supabase
-    window.addEventListener(
-      "supabase-session-update",
-      handleForceSessionRefresh
-    );
-
-    // Curățăm listener-urile la demontare
-    return () => {
-      window.removeEventListener(
-        "force-session-refresh",
-        handleForceSessionRefresh
-      );
-      window.removeEventListener(
-        "supabase-session-update",
-        handleForceSessionRefresh
-      );
-    };
-  }, []);
-
-  useEffect(() => {
-    // DEBUG LOGGING: Track session/user on mount and on change
-    console.log("[AuthContext] Session:", session);
-    console.log("[AuthContext] User:", user);
-    console.log("[AuthContext] UserProfile:", userProfile);
-    console.log("[AuthContext] Loading:", loading);
-    try {
-      const localToken = localStorage.getItem("supabase.auth.token");
-      const sessionToken = sessionStorage.getItem("supabase.auth.token");
-      console.log("[AuthContext] localStorage token:", localToken);
-      console.log("[AuthContext] sessionStorage token:", sessionToken);
-    } catch (e) {
-      console.error("[AuthContext] Error reading storage:", e);
-    }
-  }, [session, user, userProfile, loading]);
-
-  // Adaugăm un mecanism de reîmprospătare automată a sesiunii
-  useEffect(() => {
-    if (!session || !user) return;
-
-    // Reîmprospătăm sesiunea la fiecare 30 de minute
-    const refreshInterval = setInterval(async () => {
-      console.log("[AuthContext] Auto-refreshing session");
-      try {
-        const { data, error } = await supabase.auth.refreshSession();
-        if (error) {
-          console.error("[AuthContext] Error refreshing session:", error);
-        } else if (data.session) {
-          console.log("[AuthContext] Session refreshed successfully");
-          // Nu trebuie să actualizăm starea aici, deoarece onAuthStateChange va face asta
-        }
-      } catch (error) {
-        console.error(
-          "[AuthContext] Unexpected error refreshing session:",
-          error
-        );
-      }
-    }, 30 * 60 * 1000); // 30 minute
-
-    return () => clearInterval(refreshInterval);
-  }, [session, user]);
-
-  useEffect(() => {
-    // DEBUG LOGGING: Try to restore session from storage if lost
-    if (!session || !user) {
-      try {
-        const stored =
-          localStorage.getItem("supabase.auth.token") ||
-          sessionStorage.getItem("supabase.auth.token");
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          if (parsed.currentSession) {
-            setSession(parsed.currentSession);
-            setUser(parsed.currentSession.user);
-            setLoading(false);
-            console.log(
-              "[AuthContext] Restored session from storage fallback."
-            );
-          }
-        }
-      } catch (e) {
-        console.error("[AuthContext] Error restoring session from storage:", e);
-      }
-    }
-  }, [session, user]);
-
-  useEffect(() => {
-    // Adăugăm un timeout pentru a evita blocarea la "se încarcă..." - redus drastic pentru performanță mai bună
-    const timeoutId = setTimeout(() => {
-      if (loading) {
-        console.log(
-          "Auth loading timeout reached after 2 seconds, forcing loading to false"
-        );
-        setLoading(false);
-        // Setăm un profil implicit în caz de timeout
-        if (user && !userProfile) {
           const defaultProfile = {
-            displayName: user.email?.split("@")[0] || "User",
-            email: user.email || "",
+            displayName: defaultDisplayName,
+            email: emailForDefault,
           };
           setUserProfile(defaultProfile);
-
-          // Salvăm profilul implicit în cache pentru a evita încărcarea repetată
-          if (user.id) {
-            const cacheKey = `user_profile_${user.id}`;
-            cacheService.set(cacheKey, defaultProfile, {
-              namespace: "auth",
-              ttl: 5 * 60 * 1000,
-            });
-          }
+          // Cache default profile on error to avoid repeated fetches
+          cacheService.set(cacheKey, defaultProfile, {
+            namespace: "auth",
+            ttl: 5 * 60 * 1000,
+          });
+          return;
         }
-      }
-    }, 2000); // Mărim la 2 secunde pentru a da mai mult timp pentru încărcare
 
-    console.log("AuthContext: Checking for existing session...");
-
-    // Verificăm mai întâi dacă avem o sesiune în localStorage sau sessionStorage
-    // Verificăm ambele pentru compatibilitate
-    const localSession =
-      localStorage.getItem("supabase.auth.token") ||
-      sessionStorage.getItem("supabase.auth.token");
-    if (localSession) {
-      // Folosim în orice mediu pentru a asigura persistența sesiunii
-      try {
-        const parsedSession = JSON.parse(localSession);
-        if (parsedSession?.currentSession?.user) {
-          // Verificăm dacă sesiunea nu a expirat
-          if (parsedSession.expiresAt && parsedSession.expiresAt > Date.now()) {
-            console.log("Found local session, using it");
-            const userData = parsedSession.currentSession.user;
-            setUser(userData);
-            setSession(parsedSession.currentSession);
-
-            // Încercăm să încărcăm profilul utilizatorului
-            if (userData.id) {
-              fetchUserProfile(userData.id).catch((error) => {
-                console.error(
-                  "Error fetching user profile from local session:",
-                  error
-                );
-                // Setăm un profil implicit în caz de eroare
-                const defaultProfile = {
-                  displayName: userData.email?.split("@")[0] || "User",
-                  email: userData.email || "",
-                };
-                setUserProfile(defaultProfile);
-              });
-            }
-          } else {
-            console.log("Local session expired, removing it");
-            sessionStorage.removeItem("supabase.auth.token");
-          }
-
-          // Continuăm cu verificarea sesiunii la server pentru a o revalida
+        if (response.data) {
+          const data = response.data as any;
+          const profile = {
+            displayName: data.display_name || defaultDisplayName,
+            email: data.email || emailForDefault,
+          };
+          console.log("AuthContext: Caching fetched user profile");
+          cacheService.set(cacheKey, profile, {
+            namespace: "auth",
+            ttl: 5 * 60 * 1000,
+          }); // 5 minute TTL
+          setUserProfile(profile);
+        } else {
+          console.warn(
+            `AuthContext: Profile not found for user ${userId}. It should have been created by a trigger.`
+          );
+          const defaultProfile = {
+            displayName: defaultDisplayName,
+            email: emailForDefault,
+          };
+          setUserProfile(defaultProfile);
+          // Cache default profile if not found
+          cacheService.set(cacheKey, defaultProfile, {
+            namespace: "auth",
+            ttl: 5 * 60 * 1000,
+          });
         }
-      } catch (error) {
-        console.error("Error parsing local session:", error);
-        // În caz de eroare, ștergem sesiunea pentru a preveni probleme
-        sessionStorage.removeItem("supabase.auth.token");
+      } catch (err) {
+        console.error(
+          "AuthContext: Unexpected error fetching user profile:",
+          err
+        );
+        const defaultProfile = {
+          displayName: defaultDisplayName,
+          email: emailForDefault,
+        };
+        setUserProfile(defaultProfile);
       }
-    }
+    },
+    [user?.email] // Dependency on user.email for default value generation
+  );
 
-    // Get initial session using the improved service
+  // Effect to listen for session updates from the custom event
+  useEffect(() => {
+    const handleSessionUpdate = (event: any) => {
+      const newSession = event.detail?.session as Session | null;
+      console.log("AuthContext: Received supabase-session-update", newSession);
+
+      setSession(newSession);
+      const currentUser = newSession?.user ?? null;
+      setUser(currentUser);
+
+      if (currentUser) {
+        fetchUserProfile(currentUser.id, currentUser).catch((error) => {
+          console.error(
+            "Error fetching user profile on session update:",
+            error
+          );
+        });
+      } else {
+        setUserProfile(null);
+        cacheService.clearNamespace("auth"); // Clear profile cache on sign out
+      }
+      setLoading(false); // Ensure loading is false after session update
+    };
+
+    window.addEventListener("supabase-session-update", handleSessionUpdate);
+
+    return () => {
+      window.removeEventListener(
+        "supabase-session-update",
+        handleSessionUpdate
+      );
+    };
+  }, [fetchUserProfile]); // Include fetchUserProfile in dependency array
+
+  // Effect for initial session check on mount
+  useEffect(() => {
+    console.log("AuthContext: Performing initial session check...");
+    setLoading(true); // Start in loading state
+
     supabaseService.auth
       .getSession()
       .then(async (response) => {
@@ -343,285 +203,86 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           error: response.error ? response.error.message : null,
         });
 
-        if (response.data?.session) {
-          setSession(response.data.session);
-
-          // Salvăm sesiunea în localStorage și sessionStorage pentru a asigura persistența
-          try {
-            const sessionData = {
-              currentSession: response.data.session,
-              expiresAt: Date.now() + 3600 * 1000, // 1 oră valabilitate
-            };
-            localStorage.setItem(
-              "supabase.auth.token",
-              JSON.stringify(sessionData)
-            );
-            sessionStorage.setItem(
-              "supabase.auth.token",
-              JSON.stringify(sessionData)
-            );
-            console.log("Session saved to storage");
-          } catch (storageError) {
-            console.error("Error saving session to storage:", storageError);
-          }
-
-          // Get user from session
-          const userResponse = await supabaseService.auth.getUser();
-
-          if (userResponse.data) {
-            console.log("User found in session");
-            setUser(userResponse.data);
-
-            try {
-              await fetchUserProfile(userResponse.data.id);
-            } catch (error) {
-              console.error("Error fetching user profile:", error);
-              // Setăm un profil implicit în caz de eroare
-              const defaultProfile = {
-                displayName: userResponse.data.email?.split("@")[0] || "User",
-                email: userResponse.data.email || "",
-              };
-              setUserProfile(defaultProfile);
-
-              // Salvăm profilul implicit în cache pentru a evita încărcarea repetată
-              const cacheKey = `user_profile_${userResponse.data.id}`;
-              cacheService.set(cacheKey, defaultProfile, {
-                namespace: "auth",
-                ttl: 5 * 60 * 1000,
-              });
-            }
-          }
-        } else {
-          console.log("No active session found on server");
-          // Dacă nu avem o sesiune activă pe server, dar avem una locală, încercăm să o revalidăm
-          if (user && !session) {
-            console.log("Attempting to revalidate local session");
-            try {
-              // Încercăm să reîmprospătăm sesiunea
-              const { data: refreshData } =
-                await supabase.auth.refreshSession();
-
-              if (refreshData?.session) {
-                console.log("Session refreshed successfully");
-                setSession(refreshData.session);
-
-                // Salvăm sesiunea reîmprospătată
-                const sessionData = {
-                  currentSession: refreshData.session,
-                  expiresAt: Date.now() + 3600 * 1000, // 1 oră valabilitate
-                };
-
-                localStorage.setItem(
-                  "supabase.auth.token",
-                  JSON.stringify(sessionData)
-                );
-                sessionStorage.setItem(
-                  "supabase.auth.token",
-                  JSON.stringify(sessionData)
-                );
-              }
-            } catch (refreshError) {
-              console.error("Error refreshing session:", refreshError);
-            }
-          }
+        const initialSession = response.data?.session;
+        // The event listener above will handle setting the state if a session is found
+        // We just need to ensure loading is set to false if no session is found initially
+        if (!initialSession) {
+          setSession(null);
+          setUser(null);
+          setUserProfile(null);
           setLoading(false);
         }
+        // If a session *is* found, the 'supabase-session-update' event listener
+        // (triggered by onAuthStateChange in supabase.ts or the initial getSession)
+        // will handle setting the session, user, profile, and loading state.
       })
       .catch((error) => {
-        console.error("Error checking initial session:", error);
+        console.error("AuthContext: Error checking initial session:", error);
+        setSession(null);
+        setUser(null);
+        setUserProfile(null);
         setLoading(false);
       });
 
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-
-      if (session?.user) {
-        try {
-          await fetchUserProfile(session.user.id);
-        } catch (error) {
-          console.error("Error fetching user profile on auth change:", error);
-          // Setăm un profil implicit în caz de eroare
-          setUserProfile({
-            displayName: session.user.email?.split("@")[0] || "User",
-            email: session.user.email || "",
-          });
-        }
-      } else {
-        setUserProfile(null);
+    // Timeout to prevent getting stuck in loading state
+    const timeoutId = setTimeout(() => {
+      if (loading) {
+        console.warn(
+          "AuthContext: Loading timeout reached after 5 seconds, forcing loading to false"
+        );
+        setLoading(false);
       }
-
-      setLoading(false);
-    });
+    }, 5000); // 5 seconds timeout
 
     return () => {
-      subscription.unsubscribe();
       clearTimeout(timeoutId);
     };
+    // Run only on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const fetchUserProfile = async (userId: string) => {
+  // --- Sign In / Sign Up / Sign Out Methods ---
+
+  const signIn = async (
+    email: string,
+    password: string
+  ): Promise<AuthResponse> => {
+    setLoading(true);
     try {
-      // Verificăm dacă este un utilizator de test
-      if (userId.startsWith("test-user-id")) {
-        console.log("Using test user profile");
-        const defaultProfile = {
-          displayName: user?.email?.split("@")[0] || "Test User",
-          email: user?.email || "test@example.com",
-        };
-        setUserProfile(defaultProfile);
-        return;
-      }
-
-      // Verificăm mai întâi dacă profilul este în cache
-      const cacheKey = `user_profile_${userId}`;
-      const cachedProfile = cacheService.get<{
-        displayName: string;
-        email: string;
-      }>(cacheKey, { namespace: "auth" });
-
-      if (cachedProfile) {
-        console.log("Using cached user profile");
-        setUserProfile(cachedProfile);
-        return;
-      }
-
-      // Dacă nu este în cache, îl încărcăm folosind serviciul îmbunătățit
-      const response = await supabaseService.select(
-        "profiles",
-        "display_name, email",
-        {
-          filters: { id: userId },
-          single: true,
-        }
-      );
-
-      if (response.status === "error") {
-        console.warn("Error fetching user profile:", response.error);
-        // Setăm un profil implicit în caz de eroare
-        const defaultProfile = {
-          displayName: user?.email?.split("@")[0] || "User",
-          email: user?.email || "",
-        };
-        setUserProfile(defaultProfile);
-
-        // Salvăm profilul implicit în cache pentru a evita erori repetate
-        cacheService.set(cacheKey, defaultProfile, {
-          namespace: "auth",
-          ttl: 5 * 60 * 1000,
-        });
-        return;
-      }
-
-      if (response.data) {
-        const data = response.data as any;
-        const profile = {
-          displayName:
-            data.display_name || user?.email?.split("@")[0] || "User",
-          email: data.email || user?.email || "",
-        };
-
-        // Salvăm profilul în cache pentru utilizări viitoare
-        cacheService.set(cacheKey, profile, {
-          namespace: "auth",
-          ttl: 5 * 60 * 1000,
-        }); // 5 minute TTL
-
-        setUserProfile(profile);
-      } else {
-        // Profile should have been created by the trigger handle_new_user
-        // If it's not found here, log an error, but don't attempt to create it again.
-        console.warn(
-          `Profile not found for user ${userId}. It should have been created by the trigger.`
-        );
-        // Setăm un profil implicit în caz că nu există în baza de date
-        const defaultProfile = {
-          displayName: user?.email?.split("@")[0] || "User",
-          email: user?.email || "",
-        };
-        setUserProfile(defaultProfile);
-
-        // Salvăm profilul implicit în cache pentru a evita erori repetate
-        cacheService.set(cacheKey, defaultProfile, {
-          namespace: "auth",
-          ttl: 5 * 60 * 1000,
-        });
-      }
-    } catch (err) {
-      console.error("Unexpected error fetching user profile:", err);
-      // Setăm un profil implicit în caz de eroare
-      const defaultProfile = {
-        displayName: user?.email?.split("@")[0] || "User",
-        email: user?.email || "",
-      };
-      setUserProfile(defaultProfile);
-    }
-  };
-
-  const signIn = async (email: string, password: string) => {
-    try {
-      // Folosim serviciul îmbunătățit pentru autentificare
       const response = await supabaseService.auth.signIn(email, password);
 
-      if (response.status === "error") {
+      if (response.status === "error" || !response.data?.session) {
         setLoading(false);
-        return { data: null, error: response.error };
-      }
-
-      // Salvăm sesiunea în localStorage și sessionStorage dacă există
-      if (response.data?.session) {
-        const sessionData = {
-          currentSession: response.data.session,
-          expiresAt: Date.now() + 24 * 3600 * 1000, // 24 ore valabilitate
+        // Ensure state is cleared on failed login
+        setSession(null);
+        setUser(null);
+        setUserProfile(null);
+        return {
+          data: null,
+          error: response.error || new Error("Sign in failed."),
         };
-        try {
-          localStorage.setItem(
-            "supabase.auth.token",
-            JSON.stringify(sessionData)
-          );
-          sessionStorage.setItem(
-            "supabase.auth.token",
-            JSON.stringify(sessionData)
-          );
-
-          // Setăm un flag pentru a indica o nouă logare - va fi folosit pentru afișarea mesajului de bun venit
-          sessionStorage.setItem("newLoginDetected", "true");
-
-          console.log("[AuthContext] Session saved to storage after login");
-        } catch (storageError) {
-          console.error(
-            "[AuthContext] Error saving session after login:",
-            storageError
-          );
-        }
       }
 
-      // Setăm sesiunea și userul în context
-      setSession(response.data?.session || null);
-      setUser(response.data?.user || null);
-      setLoading(false);
-
-      // Încercăm să încărcăm profilul utilizatorului
-      if (response.data?.user?.id) {
-        fetchUserProfile(response.data.user.id).catch((error) => {
-          console.error("Error fetching user profile after login:", error);
-          // Setăm un profil implicit în caz de eroare
-          const defaultProfile = {
-            displayName: response.data.user.email?.split("@")[0] || "User",
-            email: response.data.user.email || "",
-          };
-          setUserProfile(defaultProfile);
-        });
+      // Session state will be updated by the 'supabase-session-update' event listener.
+      // We only need to set the newLoginDetected flag here.
+      try {
+        sessionStorage.setItem("newLoginDetected", "true");
+        console.log("[AuthContext] Set newLoginDetected flag");
+      } catch (storageError) {
+        console.error(
+          "[AuthContext] Error setting newLoginDetected flag:",
+          storageError
+        );
       }
 
+      // setLoading(false) will be handled by the event listener
       return { data: response.data, error: null };
     } catch (err) {
       console.error("AuthContext: Authentication error:", err);
-      // Forțăm resetarea stării de încărcare în caz de eroare
       setLoading(false);
+      setSession(null);
+      setUser(null);
+      setUserProfile(null);
       return {
         data: null,
         error: new Error(
@@ -637,39 +298,52 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     email: string,
     password: string,
     displayName?: string
-  ) => {
+  ): Promise<AuthResponse> => {
+    setLoading(true);
     try {
-      // Folosim serviciul îmbunătățit pentru înregistrare
+      // Use the improved service for registration
       const response = await supabaseService.auth.signUp(email, password);
 
       if (response.status === "error") {
-        console.error("Registration error:", response.error.message);
-      } else if (response.data?.user) {
+        console.error("Registration error:", response.error?.message);
+        setLoading(false);
+        return { data: null, error: response.error };
+      }
+
+      // Profile creation should ideally be handled by a DB trigger (handle_new_user)
+      // If not, uncomment and adapt the following block:
+      /*
+      else if (response.data?.user) {
         // Create user profile with display name if provided
         const newProfile = {
           id: response.data.user.id,
           display_name: displayName || email.split("@")[0] || "User",
           email: email,
         };
-
-        // Folosim serviciul îmbunătățit pentru a crea profilul utilizatorului
         const profileResponse = await supabaseService.insert(
           "profiles",
           newProfile
         );
-
         if (profileResponse.status === "error") {
           console.error("Error creating user profile:", profileResponse.error);
+          // Decide how to handle profile creation failure - maybe sign out the user?
         }
       }
+      */
 
+      setLoading(false); // Set loading false after sign up attempt
+      // The user might need email confirmation, session state might not change immediately.
       return { data: response.data, error: response.error };
     } catch (err) {
-      console.error("Supabase connection error:", err);
+      console.error(
+        "AuthContext: Supabase connection error during sign up:",
+        err
+      );
+      setLoading(false);
       return {
-        data: { user: null, session: null },
+        data: null,
         error: new Error(
-          "Connection error. Please check your internet connection."
+          "Connection error during sign up. Please check your internet connection."
         ),
       };
     }
@@ -677,9 +351,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const updateUserProfile = async (displayName: string) => {
     if (!user) return;
-
+    setLoading(true);
     try {
-      // Folosim serviciul îmbunătățit pentru actualizarea profilului
       const response = await supabaseService.update(
         "profiles",
         { display_name: displayName },
@@ -688,63 +361,57 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (response.status === "error") {
         console.error("Error updating user profile:", response.error);
+        setLoading(false);
         return;
       }
 
-      // Actualizăm profilul în cache
+      // Update profile in cache
       const cacheKey = `user_profile_${user.id}`;
       const cachedProfile = cacheService.get<{
         displayName: string;
         email: string;
       }>(cacheKey, { namespace: "auth" });
 
-      if (cachedProfile) {
-        cacheService.set(
-          cacheKey,
-          { displayName, email: cachedProfile.email },
-          { namespace: "auth" }
-        );
-      }
+      const updatedProfileData = {
+        displayName,
+        email: cachedProfile?.email || user.email || "",
+      };
 
-      setUserProfile((prev) => (prev ? { ...prev, displayName } : null));
+      cacheService.set(cacheKey, updatedProfileData, { namespace: "auth" });
+      setUserProfile(updatedProfileData); // Update local state
+      setLoading(false);
     } catch (err) {
       console.error("Unexpected error updating user profile:", err);
+      setLoading(false);
     }
   };
 
   const signOut = async () => {
-    // Setăm flag-ul pentru deconectare intenționată înainte de a șterge sesiunea
+    setLoading(true);
+    // Set intentional sign out flag for supabase.ts listener
     try {
       sessionStorage.setItem("intentional_signout", "true");
-      console.log("Set intentional_signout flag before logout");
+      console.log("AuthContext: Set intentional_signout flag before logout");
     } catch (error) {
-      console.error("Error setting intentional_signout flag:", error);
+      console.error(
+        "AuthContext: Error setting intentional_signout flag:",
+        error
+      );
     }
 
-    // Folosim serviciul îmbunătățit pentru deconectare
     const response = await supabaseService.auth.signOut();
 
     if (response.status === "error") {
-      console.error("Error signing out:", response.error);
+      console.error("AuthContext: Error signing out:", response.error);
     }
 
-    // Ștergem sesiunea din localStorage și sessionStorage
-    try {
-      localStorage.removeItem("supabase.auth.token");
-      sessionStorage.removeItem("supabase.auth.token");
-      console.log("Session removed from storage after logout");
-    } catch (storageError) {
-      console.error("Error removing session from storage:", storageError);
-    }
-
-    // Curățăm cache-ul pentru autentificare
-    cacheService.clearNamespace("auth");
-
-    // Resetăm starea
-    setSession(null);
-    setUser(null);
-    setUserProfile(null);
+    // State updates (session, user, profile to null) and cache clearing
+    // will be handled by the 'supabase-session-update' event listener.
+    // We just ensure loading is set to false eventually.
+    setLoading(false); // Set loading false after signout attempt
   };
+
+  // --- Context Value ---
 
   const value = {
     session,

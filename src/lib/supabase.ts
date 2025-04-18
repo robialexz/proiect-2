@@ -131,107 +131,28 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
         return;
       },
       removeItem: (key) => {
-        console.log("Supabase client: Removing session from storage", key);
-
-        // Verificăm dacă este o deconectare intenționată sau o ștergere automată
-        const isIntentionalSignOut =
-          window.sessionStorage.getItem("intentional_signout") === "true";
-
-        // Contorul de încercări de restaurare a sesiunii
-        const currentAttempts = parseInt(
-          window.sessionStorage.getItem("session_restore_attempts") || "0"
+        console.log(
+          "Supabase client: Removing session from storage (Simplified)",
+          key
         );
-
-        // Dacă am depășit numărul maxim de încercări, nu mai încercăm să restaurăm sesiunea
-        const maxAttempts = 2; // Limităm la 2 încercări pentru a evita bucle infinite
-
-        // Salvăm o copie a sesiunii înainte de a o șterge pentru a o putea restaura în caz de deconectare automată
-        if (!isIntentionalSignOut && currentAttempts < maxAttempts) {
-          try {
-            const sessionData =
-              window.localStorage.getItem(key) ||
-              window.sessionStorage.getItem(key);
-            if (sessionData) {
-              // Salvăm temporar sesiunea pentru a o putea restaura în caz de deconectare automată
-              window.sessionStorage.setItem("temp_session_backup", sessionData);
-              console.log("Session backup created before automatic removal");
-
-              // Incrementăm contorul de încercări
-              window.sessionStorage.setItem(
-                "session_restore_attempts",
-                (currentAttempts + 1).toString()
-              );
-            }
-          } catch (e) {
-            console.error("Error creating session backup:", e);
-          }
-        }
-
-        window.localStorage.removeItem(key);
-        window.sessionStorage.removeItem(key);
-
-        // Emitem un eveniment doar dacă este o deconectare intenționată
-        if (isIntentionalSignOut) {
-          console.log(
-            "Intentional sign out detected, dispatching session update event"
-          );
-          window.dispatchEvent(
-            new CustomEvent("supabase-session-update", {
-              detail: { session: null },
-            })
-          );
-          // Resetăm flag-ul și contorul de încercări
+        try {
+          window.localStorage.removeItem(key);
+          window.sessionStorage.removeItem(key);
+          // Clean up related flags just in case
           window.sessionStorage.removeItem("intentional_signout");
           window.sessionStorage.removeItem("session_restore_attempts");
-        } else if (currentAttempts < maxAttempts) {
-          console.log(
-            "Automatic session removal detected, attempt " +
-              (currentAttempts + 1) +
-              " of " +
-              maxAttempts
-          );
-
-          // Emitem un eveniment pentru a notifica alte componente despre deconectarea automată
-          // pentru a putea încerca să restaureze sesiunea
-          setTimeout(() => {
-            try {
-              const backupSession = window.sessionStorage.getItem(
-                "temp_session_backup"
-              );
-              if (backupSession) {
-                console.log("Attempting to restore session from backup");
-                window.dispatchEvent(
-                  new CustomEvent("force-session-refresh", {
-                    detail: { sessionBackup: backupSession },
-                  })
-                );
-              }
-            } catch (e) {
-              console.error("Error restoring session from backup:", e);
-            }
-          }, 100);
-        } else {
-          console.log(
-            "Maximum session restore attempts reached, redirecting to login"
-          );
-          // Resetăm contorul de încercări
-          window.sessionStorage.removeItem("session_restore_attempts");
-
-          // Notificăm utilizatorul că sesiunea a expirat și trebuie să se autentifice din nou
-          window.dispatchEvent(
-            new CustomEvent("session-expired", {
-              detail: {
-                message:
-                  "Sesiunea a expirat. Vă rugăm să vă autentificați din nou.",
-              },
-            })
-          );
-
-          // Redirectăm către pagina de login după o scurtă întârziere
-          setTimeout(() => {
-            window.location.href = "/login";
-          }, 500);
+          window.sessionStorage.removeItem("temp_session_backup");
+        } catch (e) {
+          console.error("Error removing session from storage:", e);
         }
+
+        // Always dispatch the update event immediately when session is removed
+        console.log("Dispatching session update event (session: null)");
+        window.dispatchEvent(
+          new CustomEvent("supabase-session-update", {
+            detail: { session: null },
+          })
+        );
         return;
       },
     },
@@ -299,56 +220,32 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
 
 // Configurăm listener pentru schimbările de sesiune
 supabase.auth.onAuthStateChange((event, session) => {
-  console.log("Supabase auth state change:", event);
+  // Log event and session for better debugging
+  console.log("Supabase auth state change:", event, session);
 
   if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
     // Emitem un eveniment pentru a notifica alte componente despre schimbarea sesiunii
+    console.log("Dispatching session update event (session updated)");
     window.dispatchEvent(
       new CustomEvent("supabase-session-update", {
         detail: { session },
       })
     );
   } else if (event === "SIGNED_OUT") {
-    // Verificăm dacă este o deconectare intenționată sau automată
-    const isIntentionalSignOut =
-      window.sessionStorage.getItem("intentional_signout") === "true";
     console.log(
-      "SIGNED_OUT event detected, intentional:",
-      isIntentionalSignOut
+      "SIGNED_OUT event detected. Dispatching session update event (session: null)"
     );
-
-    if (isIntentionalSignOut) {
-      // Curățăm storage-ul și emitem un eveniment doar dacă este intenționată
-      window.dispatchEvent(
-        new CustomEvent("supabase-session-update", {
-          detail: { session: null },
-        })
-      );
-      // Resetăm flag-ul
+    // Always dispatch null session on SIGNED_OUT immediately
+    window.dispatchEvent(
+      new CustomEvent("supabase-session-update", {
+        detail: { session: null },
+      })
+    );
+    // Clean up the intentional sign out flag if it was set, just in case
+    try {
       window.sessionStorage.removeItem("intentional_signout");
-    } else {
-      // Dacă nu este intenționată, încercăm să reîmprospătăm sesiunea
-      console.log("Automatic sign out detected, attempting to refresh session");
-      // Vom încerca să reîmprospătăm sesiunea în loc să deconectăm utilizatorul
-      supabase.auth.refreshSession().then(({ data, error }) => {
-        if (data.session) {
-          console.log("Session refreshed successfully after auto sign out");
-          // Emitem un eveniment pentru a notifica alte componente despre sesiunea reîmprospătată
-          window.dispatchEvent(
-            new CustomEvent("supabase-session-update", {
-              detail: { session: data.session },
-            })
-          );
-        } else {
-          console.log("Failed to refresh session after auto sign out:", error);
-          // Doar în acest caz emitem evenimentul de deconectare
-          window.dispatchEvent(
-            new CustomEvent("supabase-session-update", {
-              detail: { session: null },
-            })
-          );
-        }
-      });
+    } catch (e) {
+      console.error("Error removing intentional_signout flag:", e);
     }
   }
 });
