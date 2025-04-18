@@ -2,9 +2,35 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Vite + React + TS</title>
+
+    <!-- Script pentru a detecta și corecta problemele de MIME type -->
+    <script>
+      // Funcție pentru a încărca un script cu tipul corect
+      function loadScript(src) {
+        return new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = src;
+          script.type = 'application/javascript';
+          script.onload = resolve;
+          script.onerror = reject;
+          document.head.appendChild(script);
+        });
+      }
+
+      // Verificăm dacă avem erori de MIME type
+      window.addEventListener('error', function(e) {
+        if (e.message && e.message.includes('MIME type') && e.target && e.target.src) {
+          console.warn('Detected MIME type error, trying to load script with correct type:', e.target.src);
+          loadScript(e.target.src)
+            .then(() => console.log('Successfully loaded script:', e.target.src))
+            .catch(err => console.error('Failed to load script:', e.target.src, err));
+        }
+      }, true);
+    </script>
   </head>
   <body>
     <div id="root"></div>

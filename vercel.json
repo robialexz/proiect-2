@@ -7,6 +7,26 @@
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ],
+  "routes": [
+    {
+      "src": "/assets/(.*)\.js",
+      "headers": { "content-type": "application/javascript" },
+      "continue": true
+    },
+    {
+      "src": "/assets/(.*)\.css",
+      "headers": { "content-type": "text/css" },
+      "continue": true
+    },
+    {
+      "src": "/assets/(.*)\.svg",
+      "headers": { "content-type": "image/svg+xml" },
+      "continue": true
+    },
+    {
+      "handle": "filesystem"
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",

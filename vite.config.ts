@@ -2,6 +2,7 @@ import path from "path";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import { tempo } from "tempo-devtools/dist/vite";
+import { mimeTypesPlugin } from "./src/plugins/mime-types";
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -36,6 +37,10 @@ export default defineConfig({
         main: "./src/main.tsx",
       },
       output: {
+        format: "es",
+        entryFileNames: "assets/[name].[hash].js",
+        chunkFileNames: "assets/[name].[hash].js",
+        assetFileNames: "assets/[name].[hash].[ext]",
         manualChunks: {
           "react-vendor": ["react", "react-dom", "react-router-dom"],
           supabase: ["@supabase/supabase-js"],
@@ -48,7 +53,7 @@ export default defineConfig({
       ],
     },
   },
-  plugins: [react(), tempo()],
+  plugins: [react(), tempo(), mimeTypesPlugin()],
   // Opțiuni pentru commonjs
   commonjsOptions: {
     include: [/node_modules/],
