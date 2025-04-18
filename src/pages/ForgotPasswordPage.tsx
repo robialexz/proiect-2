@@ -1,46 +1,99 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { authService } from "@/services/auth/auth-service";
+import { Mail, ArrowRight, ArrowLeft } from "lucide-react";
+import "../styles/auth-pages.css";
 
-/**
- * Pagină de recuperare a parolei placeholder
- * Această pagină va fi implementată complet în viitor cu noua logică de autentificare Supabase
- */
 const ForgotPasswordPage = () => {
-  return (
-    <div className="min-h-screen flex flex-col justify-center items-center px-4 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      <div className="bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl rounded-2xl p-8 w-full max-w-md">
-        <h1 className="text-3xl font-extrabold text-slate-100 text-center mb-6">
-          Recuperare parolă
-        </h1>
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
-        <div className="p-4 bg-blue-500/20 border border-blue-500/30 rounded-lg mb-6">
-          <p className="text-blue-200 text-center">
-            Pagină în construcție. Sistemul de recuperare a parolei este în curs
-            de implementare.
-          </p>
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setSuccess(null);
+    setLoading(true);
+
+    try {
+      const { error } = await authService.resetPassword(email);
+
+      if (error) {
+        throw new Error(error.message || "Resetare parolă eșuată");
+      }
+
+      setSuccess(
+        "Am trimis un email cu instrucțiuni pentru resetarea parolei. Verificați-vă căsuța de email."
+      );
+      setEmail("");
+    } catch (err: any) {
+      console.error("Eroare la resetarea parolei:", err);
+      setError(err.message || "A apărut o eroare la trimiterea emailului de resetare");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="auth-container">
+      <div className="auth-card">
+        <div className="auth-logo">
+          <div className="logo-circle">IM</div>
+          <h1 className="logo-text">InventoryMaster</h1>
         </div>
 
-        <div className="space-y-4">
-          <Button
-            disabled
-            className="w-full bg-indigo-500/80 hover:bg-indigo-400/90 text-white font-semibold"
-            size="lg"
+        <h2 className="auth-title">Resetare parolă</h2>
+        <p className="auth-subtitle">
+          Introduceți adresa de email asociată contului dvs. și vă vom trimite un link pentru resetarea parolei.
+        </p>
+        
+        {error && (
+          <div className="auth-error">
+            <p>{error}</p>
+          </div>
+        )}
+        
+        {success && (
+          <div className="auth-success">
+            <p>{success}</p>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="auth-form">
+          <div className="form-group">
+            <Label htmlFor="email">Email</Label>
+            <div className="input-with-icon">
+              <Mail className="input-icon" />
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="nume@exemplu.com"
+                required
+                className="auth-input"
+              />
+            </div>
+          </div>
+
+          <Button 
+            type="submit" 
+            className="auth-button" 
+            disabled={loading}
           >
-            Trimite link de recuperare
+            {loading ? "Se procesează..." : "Trimite link de resetare"}
+            {!loading && <ArrowRight className="button-icon" />}
           </Button>
 
-          <div className="text-center">
-            <p className="text-sm text-slate-300 mt-4">
-              <Link
-                to="/login"
-                className="text-indigo-300 hover:underline font-medium"
-              >
-                Înapoi la autentificare
-              </Link>
-            </p>
-          </div>
-        </div>
+          <Link to="/login" className="back-to-login">
+            <ArrowLeft className="back-icon" />
+            Înapoi la autentificare
+          </Link>
+        </form>
       </div>
     </div>
   );
