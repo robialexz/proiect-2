@@ -3,13 +3,13 @@
  * Acest serviciu oferă funcții pentru încărcarea și gestionarea datelor
  */
 
-import { cacheService } from './cache-service';
-import { supabaseService } from './supabase-service';
-import { offlineService } from './offline-service';
-import { supabase } from './supabase';
+import { cacheService } from "./cache-service";
+import { supabaseService } from "../services";
+import { offlineService } from "./offline-service";
+import { supabase } from "./supabase";
 
 // Namespace pentru cache-ul de date
-const DATA_CACHE_NAMESPACE = 'data';
+const DATA_CACHE_NAMESPACE = "data";
 
 // Durata implicită de expirare a cache-ului (5 minute)
 const DEFAULT_CACHE_EXPIRY = 5 * 60 * 1000;
@@ -35,7 +35,7 @@ export async function loadData<T>(
   try {
     // Verificăm dacă datele sunt în cache
     const cachedData = cacheService.get<T[]>(key, {
-      namespace: DATA_CACHE_NAMESPACE
+      namespace: DATA_CACHE_NAMESPACE,
     });
 
     if (cachedData) {
@@ -45,7 +45,9 @@ export async function loadData<T>(
 
     // Verificăm dacă suntem offline
     if (!offlineService.isOnline()) {
-      console.log(`[DataLoader] Device is offline, checking offline data for ${key}`);
+      console.log(
+        `[DataLoader] Device is offline, checking offline data for ${key}`
+      );
 
       // Verificăm dacă avem date offline
       const offlineData = offlineService.getOfflineData<T[]>(key);
@@ -72,27 +74,38 @@ export async function loadData<T>(
 
         // Încercăm să obținem sesiunea din localStorage sau sessionStorage
         try {
-          const localSession = localStorage.getItem('supabase.auth.token') || sessionStorage.getItem('supabase.auth.token');
+          const localSession =
+            localStorage.getItem("supabase.auth.token") ||
+            sessionStorage.getItem("supabase.auth.token");
           if (localSession) {
             const parsedSession = JSON.parse(localSession);
             if (parsedSession?.currentSession?.access_token) {
-              console.log(`[DataLoader] Found local session, using it for ${key}`);
+              console.log(
+                `[DataLoader] Found local session, using it for ${key}`
+              );
               // Adaugăm manual token-ul la header-ul de autorizare pentru Supabase
               const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
               const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
               // Configurăm un header personalizat pentru cerere
               const customHeaders = {
-                'apikey': supabaseAnonKey,
-                'Authorization': `Bearer ${parsedSession.currentSession.access_token}`
+                apikey: supabaseAnonKey,
+                Authorization: `Bearer ${parsedSession.currentSession.access_token}`,
               };
 
               // Folosim fetch direct cu header-urile personalizate
-              console.log(`[DataLoader] Making direct fetch with custom headers for ${key}`);
-              const directResponse = await fetch(`${supabaseUrl}/rest/v1/${table}?select=${encodeURIComponent(columns)}`, {
-                method: 'GET',
-                headers: customHeaders
-              });
+              console.log(
+                `[DataLoader] Making direct fetch with custom headers for ${key}`
+              );
+              const directResponse = await fetch(
+                `${supabaseUrl}/rest/v1/${table}?select=${encodeURIComponent(
+                  columns
+                )}`,
+                {
+                  method: "GET",
+                  headers: customHeaders,
+                }
+              );
 
               if (directResponse.ok) {
                 const data = await directResponse.json();
@@ -102,12 +115,17 @@ export async function loadData<T>(
             }
           }
         } catch (localSessionError) {
-          console.error(`[DataLoader] Error using local session:`, localSessionError);
+          console.error(
+            `[DataLoader] Error using local session:`,
+            localSessionError
+          );
         }
 
         // Dacă suntem în modul de dezvoltare, generam date de test
         if (import.meta.env.DEV) {
-          console.log(`[DataLoader] No valid session, using test data for ${key}`);
+          console.log(
+            `[DataLoader] No valid session, using test data for ${key}`
+          );
           return generateTestData<T>(table, 10);
         }
       }
@@ -118,27 +136,43 @@ export async function loadData<T>(
 
     const response = await supabaseService.select(table, columns, options);
 
-    if (response.status === 'error') {
-      console.error(`[DataLoader] Error fetching data for ${key}:`, response.error);
+    if (response.status === "error") {
+      console.error(
+        `[DataLoader] Error fetching data for ${key}:`,
+        response.error
+      );
 
       // Verificăm dacă eroarea este de autentificare (401)
-      if (response.error?.code === '401' || response.error?.message?.includes('JWT')) {
-        console.warn(`[DataLoader] Authentication error for ${key}, trying to refresh session`);
+      if (
+        response.error?.code === "401" ||
+        response.error?.message?.includes("JWT")
+      ) {
+        console.warn(
+          `[DataLoader] Authentication error for ${key}, trying to refresh session`
+        );
 
         try {
           // Încercăm să reîmprospătăm sesiunea
           const { data: refreshData } = await supabase.auth.refreshSession();
 
           if (refreshData?.session) {
-            console.log(`[DataLoader] Session refreshed, retrying fetch for ${key}`);
+            console.log(
+              `[DataLoader] Session refreshed, retrying fetch for ${key}`
+            );
             // Reîncercam cererea după reîmprospătarea sesiunii
-            const retryResponse = await supabaseService.select(table, columns, options);
-            if (retryResponse.status === 'success') {
-              return retryResponse.data as T[] || [];
+            const retryResponse = await supabaseService.select(
+              table,
+              columns,
+              options
+            );
+            if (retryResponse.status === "success") {
+              return (retryResponse.data as T[]) || [];
             }
           } else if (import.meta.env.DEV) {
             // În modul de dezvoltare, generam date de test dacă reîmprospătarea eșuează
-            console.log(`[DataLoader] Session refresh failed, using test data for ${key}`);
+            console.log(
+              `[DataLoader] Session refresh failed, using test data for ${key}`
+            );
             return generateTestData<T>(table, 10);
           }
         } catch (refreshError) {
@@ -149,26 +183,30 @@ export async function loadData<T>(
       // Verificăm dacă avem date offline ca fallback în caz de eroare
       const offlineData = offlineService.getOfflineData<T[]>(key);
       if (offlineData) {
-        console.log(`[DataLoader] Using offline data as fallback after error for ${key}`);
+        console.log(
+          `[DataLoader] Using offline data as fallback after error for ${key}`
+        );
         return offlineData;
       }
 
       // În modul de dezvoltare, generam date de test ca ultim fallback
       if (import.meta.env.DEV) {
-        console.log(`[DataLoader] Using generated test data as last resort for ${key}`);
+        console.log(
+          `[DataLoader] Using generated test data as last resort for ${key}`
+        );
         return generateTestData<T>(table, 10);
       }
 
-      throw new Error(response.error?.message || 'Unknown error');
+      throw new Error(response.error?.message || "Unknown error");
     }
 
-    const data = response.data as T[] || [];
+    const data = (response.data as T[]) || [];
 
     // Salvăm datele în cache doar dacă avem date valide
     if (data && Array.isArray(data)) {
       cacheService.set(key, data, {
         namespace: DATA_CACHE_NAMESPACE,
-        ttl: expireIn
+        ttl: expireIn,
       });
 
       // Salvăm datele pentru utilizare offline
@@ -177,11 +215,14 @@ export async function loadData<T>(
 
     return data;
   } catch (error) {
-    console.error(`[DataLoader] Unexpected error fetching data for ${key}:`, error);
+    console.error(
+      `[DataLoader] Unexpected error fetching data for ${key}:`,
+      error
+    );
 
     // Încercăm să recuperăm date din cache sau offline în caz de eroare
     const cachedData = cacheService.get<T[]>(key, {
-      namespace: DATA_CACHE_NAMESPACE
+      namespace: DATA_CACHE_NAMESPACE,
     });
 
     if (cachedData) {
@@ -221,7 +262,7 @@ export async function preloadData<T>(
 
     // Verificăm dacă datele sunt deja în cache
     const cachedData = cacheService.get<T[]>(key, {
-      namespace: DATA_CACHE_NAMESPACE
+      namespace: DATA_CACHE_NAMESPACE,
     });
 
     if (cachedData) {
@@ -235,7 +276,7 @@ export async function preloadData<T>(
 
     console.log(`[DataLoader] Data preloaded for ${key}`);
   } catch (error) {
-    console.error('[DataLoader] Error preloading data:', error);
+    console.error("[DataLoader] Error preloading data:", error);
   }
 }
 
@@ -245,7 +286,7 @@ export async function preloadData<T>(
  */
 export function invalidateCache(cacheKey: string): void {
   cacheService.delete(cacheKey, {
-    namespace: DATA_CACHE_NAMESPACE
+    namespace: DATA_CACHE_NAMESPACE,
   });
   console.log(`[DataLoader] Cache invalidated for ${cacheKey}`);
 }
@@ -255,7 +296,7 @@ export function invalidateCache(cacheKey: string): void {
  */
 export function invalidateAllCache(): void {
   cacheService.clearNamespace(DATA_CACHE_NAMESPACE);
-  console.log('[DataLoader] All data cache invalidated');
+  console.log("[DataLoader] All data cache invalidated");
 }
 
 /**
@@ -274,52 +315,62 @@ function generateTestData<T>(table: string, count: number = 10): T[] {
 
     // Generăm date specifice pentru fiecare tip de tabel
     switch (table) {
-      case 'projects':
+      case "projects":
         result.push({
           id,
           name: `Test Project ${i + 1}`,
-          description: `This is a test project generated for development purposes #${i + 1}`,
-          status: ['planning', 'in_progress', 'completed', 'on_hold'][i % 4],
+          description: `This is a test project generated for development purposes #${
+            i + 1
+          }`,
+          status: ["planning", "in_progress", "completed", "on_hold"][i % 4],
           created_at: new Date(Date.now() - i * 86400000).toISOString(),
           updated_at: new Date().toISOString(),
           budget: Math.floor(Math.random() * 100000),
-          client_name: `Test Client ${i % 5 + 1}`,
-          priority: ['low', 'medium', 'high'][i % 3],
+          client_name: `Test Client ${(i % 5) + 1}`,
+          priority: ["low", "medium", "high"][i % 3],
         });
         break;
 
-      case 'materials':
+      case "materials":
         result.push({
           id,
           name: `Test Material ${i + 1}`,
-          dimension: `${Math.floor(Math.random() * 100)}x${Math.floor(Math.random() * 100)}`,
-          unit: ['buc', 'kg', 'm', 'm2', 'm3'][i % 5],
+          dimension: `${Math.floor(Math.random() * 100)}x${Math.floor(
+            Math.random() * 100
+          )}`,
+          unit: ["buc", "kg", "m", "m2", "m3"][i % 5],
           quantity: Math.floor(Math.random() * 1000),
-          manufacturer: `Manufacturer ${i % 8 + 1}`,
-          category: ['Construction', 'Electrical', 'Plumbing', 'Finishing', 'Tools'][i % 5],
+          manufacturer: `Manufacturer ${(i % 8) + 1}`,
+          category: [
+            "Construction",
+            "Electrical",
+            "Plumbing",
+            "Finishing",
+            "Tools",
+          ][i % 5],
           image_url: null,
           suplimentar: i % 3 === 0 ? Math.floor(Math.random() * 50) : 0,
           project_id: i < 5 ? `test-${i % 3}` : null,
-          project_name: i < 5 ? `Test Project ${i % 3 + 1}` : null,
+          project_name: i < 5 ? `Test Project ${(i % 3) + 1}` : null,
           created_at: new Date(Date.now() - i * 86400000).toISOString(),
           updated_at: new Date().toISOString(),
         });
         break;
 
-      case 'resources':
+      case "resources":
         result.push({
           id,
           name: `Test Resource ${i + 1}`,
-          type: ['Equipment', 'Vehicle', 'Tool', 'Space'][i % 4],
+          type: ["Equipment", "Vehicle", "Tool", "Space"][i % 4],
           description: `Test resource description #${i + 1}`,
-          status: ['available', 'in_use', 'maintenance', 'reserved'][i % 4],
-          location: `Location ${i % 5 + 1}`,
+          status: ["available", "in_use", "maintenance", "reserved"][i % 4],
+          location: `Location ${(i % 5) + 1}`,
           created_at: new Date(Date.now() - i * 86400000).toISOString(),
           updated_at: new Date().toISOString(),
         });
         break;
 
-      case 'teams':
+      case "teams":
         result.push({
           id,
           name: `Test Team ${i + 1}`,
@@ -329,7 +380,7 @@ function generateTestData<T>(table: string, count: number = 10): T[] {
         });
         break;
 
-      case 'suppliers':
+      case "suppliers":
         result.push({
           id,
           name: `Test Supplier ${i + 1}`,
@@ -363,5 +414,5 @@ export const dataLoader = {
   preloadData,
   invalidateCache,
   invalidateAllCache,
-  generateTestData
+  generateTestData,
 };

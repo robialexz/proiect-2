@@ -1,6 +1,8 @@
 /**
  * Utilitar pentru validarea datelor de intrare
  * Acest fișier conține funcții pentru validarea datelor de intrare pentru a preveni atacurile XSS și SQL injection
+ *
+ * @module input-validation
  */
 
 /**
@@ -10,20 +12,20 @@
  */
 export function validateText(input: string | null | undefined): boolean {
   if (input === null || input === undefined) return true;
-  
+
   // Verificăm dacă textul conține caractere potențial periculoase
   const dangerousPatterns = [
     /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, // Script tags
-    /javascript:/gi,                                       // JavaScript protocol
-    /on\w+\s*=/gi,                                         // Event handlers (onclick, onload, etc.)
-    /data:/gi,                                             // Data URI scheme
-    /<iframe/gi,                                           // iframes
-    /<embed/gi,                                            // embed tags
-    /<object/gi,                                           // object tags
-    /<img[^>]+\bonerror\b/gi,                              // img with onerror
+    /javascript:/gi, // JavaScript protocol
+    /on\w+\s*=/gi, // Event handlers (onclick, onload, etc.)
+    /data:/gi, // Data URI scheme
+    /<iframe/gi, // iframes
+    /<embed/gi, // embed tags
+    /<object/gi, // object tags
+    /<img[^>]+\bonerror\b/gi, // img with onerror
   ];
-  
-  return !dangerousPatterns.some(pattern => pattern.test(input));
+
+  return !dangerousPatterns.some((pattern) => pattern.test(input));
 }
 
 /**
@@ -33,7 +35,7 @@ export function validateText(input: string | null | undefined): boolean {
  */
 export function validateEmail(email: string | null | undefined): boolean {
   if (email === null || email === undefined) return true;
-  
+
   // Regex pentru validarea email-urilor
   const emailRegex = /^[A-Za-z0-9._%-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
   return emailRegex.test(email);
@@ -46,13 +48,13 @@ export function validateEmail(email: string | null | undefined): boolean {
  */
 export function validateUrl(url: string | null | undefined): boolean {
   if (url === null || url === undefined) return true;
-  
+
   try {
     // Verificăm dacă URL-ul este valid
     const urlObj = new URL(url);
-    
+
     // Verificăm dacă protocolul este http sau https
-    return urlObj.protocol === 'http:' || urlObj.protocol === 'https:';
+    return urlObj.protocol === "http:" || urlObj.protocol === "https:";
   } catch (error) {
     return false;
   }
@@ -65,7 +67,7 @@ export function validateUrl(url: string | null | undefined): boolean {
  */
 export function validateNumber(value: any): boolean {
   if (value === null || value === undefined) return true;
-  
+
   // Verificăm dacă valoarea este un număr valid
   return !isNaN(Number(value));
 }
@@ -77,7 +79,7 @@ export function validateNumber(value: any): boolean {
  */
 export function validateDate(date: string | Date | null | undefined): boolean {
   if (date === null || date === undefined) return true;
-  
+
   // Verificăm dacă data este validă
   const dateObj = new Date(date);
   return !isNaN(dateObj.getTime());
@@ -89,15 +91,15 @@ export function validateDate(date: string | Date | null | undefined): boolean {
  * @returns Textul sanitizat
  */
 export function sanitizeText(input: string | null | undefined): string {
-  if (input === null || input === undefined) return '';
-  
+  if (input === null || input === undefined) return "";
+
   // Înlocuim caracterele speciale cu entități HTML
   return input
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
 
 /**
@@ -107,22 +109,22 @@ export function sanitizeText(input: string | null | undefined): string {
  */
 export function sanitizeObject<T extends Record<string, any>>(obj: T): T {
   if (!obj) return obj;
-  
+
   const result = { ...obj };
-  
+
   // Parcurgem toate proprietățile obiectului
-  Object.keys(result).forEach(key => {
+  Object.keys(result).forEach((key) => {
     const value = result[key];
-    
-    if (typeof value === 'string') {
+
+    if (typeof value === "string") {
       // Sanitizăm valorile de tip string
       result[key] = sanitizeText(value);
-    } else if (typeof value === 'object' && value !== null) {
+    } else if (typeof value === "object" && value !== null) {
       // Sanitizăm recursiv obiectele imbricate
       result[key] = sanitizeObject(value);
     }
   });
-  
+
   return result;
 }
 
@@ -134,5 +136,5 @@ export const inputValidation = {
   validateNumber,
   validateDate,
   sanitizeText,
-  sanitizeObject
+  sanitizeObject,
 };

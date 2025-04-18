@@ -1,11 +1,15 @@
-import { supabase } from './supabase';
-import { PostgrestError } from '@supabase/supabase-js';
-import { supabaseService, SupabaseResponse, SupabaseErrorResponse } from './supabase-service';
-import { errorHandler } from './error-handler';
-import { inputValidation } from './input-validation';
-import { dataLoader } from './data-loader';
-import { SupabaseTables, SupabaseRpcFunctions } from '../types/supabase-tables';
-import { cacheService } from './cache-service';
+import { supabase } from "./supabase";
+import { PostgrestError } from "@supabase/supabase-js";
+import {
+  supabaseService,
+  SupabaseResponse,
+  SupabaseErrorResponse,
+} from "../services";
+import { errorHandler } from "./error-handler";
+import { inputValidation } from "./input-validation";
+import { dataLoader } from "./data-loader";
+import { SupabaseTables, SupabaseRpcFunctions } from "../types/supabase-tables";
+import { cacheService } from "./cache-service";
 
 /**
  * Versiune îmbunătățită a serviciului Supabase cu funcționalități avansate
@@ -13,43 +17,48 @@ import { cacheService } from './cache-service';
  */
 
 // Formatează erorile pentru a fi mai ușor de înțeles
-const formatError = (error: PostgrestError | Error | unknown): SupabaseErrorResponse => {
+const formatError = (
+  error: PostgrestError | Error | unknown
+): SupabaseErrorResponse => {
   if (error instanceof Error) {
     return {
       message: error.message,
-      details: error.stack || '',
-      code: 'client_error'
+      details: error.stack || "",
+      code: "client_error",
     };
   } else if ((error as PostgrestError)?.code) {
     const pgError = error as PostgrestError;
     return {
       message: pgError.message,
-      details: pgError.details || '',
-      hint: pgError.hint || '',
-      code: pgError.code
+      details: pgError.details || "",
+      hint: pgError.hint || "",
+      code: pgError.code,
     };
   } else {
     return {
-      message: 'Unknown error',
+      message: "Unknown error",
       details: JSON.stringify(error),
-      code: 'unknown'
+      code: "unknown",
     };
   }
 };
 
 // Gestionează răspunsurile de la Supabase
-const handleResponse = <T>(data: T | null, error: PostgrestError | null): SupabaseResponse<T> => {
+const handleResponse = <T>(
+  data: T | null,
+  error: PostgrestError | null
+): SupabaseResponse<T> => {
   if (error) {
     return {
       data: null,
       error: formatError(error),
-      status: 'error',
+      status: "error",
     };
   }
   return {
     data,
     error: null,
-    status: 'success',
+    status: "success",
   };
 };
 
@@ -63,7 +72,7 @@ const handlePromise = async <T>(promise: any): Promise<SupabaseResponse<T>> => {
     return {
       data: null,
       error: formatError(error),
-      status: 'error',
+      status: "error",
     };
   }
 };
@@ -83,14 +92,14 @@ export const enhancedSupabaseService = {
    * @returns Răspuns cu datele inserate/actualizate sau eroare
    */
   async upsert<T>(
-    table: SupabaseTables | string, 
-    data: Partial<T> | Partial<T>[], 
-    onConflictKeys: string[] = ['id']
+    table: SupabaseTables | string,
+    data: Partial<T> | Partial<T>[],
+    onConflictKeys: string[] = ["id"]
   ): Promise<SupabaseResponse<T>> {
     try {
       // Validare pentru securitate
       if (!inputValidation.validateText(table)) {
-        throw new Error('Invalid table name');
+        throw new Error("Invalid table name");
       }
 
       // Validăm cheile de conflict
@@ -101,27 +110,27 @@ export const enhancedSupabaseService = {
       }
 
       // Construim string-ul pentru onConflict
-      const onConflict = onConflictKeys.join(',');
+      const onConflict = onConflictKeys.join(",");
 
       // Executăm operațiunea upsert
       const result = await handlePromise<T>(
         (supabase.from(table as any) as any)
-          .upsert(data, { onConflict, returning: 'representation' })
+          .upsert(data, { onConflict, returning: "representation" })
           .select()
       );
 
       // Invalidăm cache-ul pentru acest tabel pentru a asigura date proaspete
-      if (result.status === 'success') {
+      if (result.status === "success") {
         dataLoader.invalidateCache(table);
       }
 
       return result;
     } catch (error) {
       errorHandler.handleError(error, false);
-      return { 
-        data: null, 
-        error: formatError(error), 
-        status: 'error' 
+      return {
+        data: null,
+        error: formatError(error),
+        status: "error",
       };
     }
   },
@@ -133,39 +142,37 @@ export const enhancedSupabaseService = {
    * @returns Răspuns cu datele inserate sau eroare
    */
   async bulkInsert<T>(
-    table: SupabaseTables | string, 
+    table: SupabaseTables | string,
     data: Partial<T>[]
   ): Promise<SupabaseResponse<T>> {
     try {
       // Validare pentru securitate
       if (!inputValidation.validateText(table)) {
-        throw new Error('Invalid table name');
+        throw new Error("Invalid table name");
       }
 
       // Verificăm dacă avem date de inserat
       if (!Array.isArray(data) || data.length === 0) {
-        throw new Error('No data to insert');
+        throw new Error("No data to insert");
       }
 
       // Executăm operațiunea de inserare în masă
       const result = await handlePromise<T>(
-        (supabase.from(table as any) as any)
-          .insert(data)
-          .select()
+        (supabase.from(table as any) as any).insert(data).select()
       );
 
       // Invalidăm cache-ul pentru acest tabel
-      if (result.status === 'success') {
+      if (result.status === "success") {
         dataLoader.invalidateCache(table);
       }
 
       return result;
     } catch (error) {
       errorHandler.handleError(error, false);
-      return { 
-        data: null, 
-        error: formatError(error), 
-        status: 'error' 
+      return {
+        data: null,
+        error: formatError(error),
+        status: "error",
       };
     }
   },
@@ -178,19 +185,19 @@ export const enhancedSupabaseService = {
    * @returns Răspuns cu datele actualizate sau eroare
    */
   async bulkUpdate<T>(
-    table: SupabaseTables | string, 
-    data: Partial<T>, 
+    table: SupabaseTables | string,
+    data: Partial<T>,
     filters: Record<string, any>
   ): Promise<SupabaseResponse<T>> {
     try {
       // Validare pentru securitate
       if (!inputValidation.validateText(table)) {
-        throw new Error('Invalid table name');
+        throw new Error("Invalid table name");
       }
 
       // Verificăm dacă avem date de actualizat
       if (!data || Object.keys(data).length === 0) {
-        throw new Error('No data to update');
+        throw new Error("No data to update");
       }
 
       // Inițiem query-ul de actualizare
@@ -206,7 +213,10 @@ export const enhancedSupabaseService = {
 
           if (value !== undefined && value !== null) {
             // Pentru valori de tip string, validăm pentru a preveni SQL injection
-            if (typeof value === 'string' && !inputValidation.validateText(value)) {
+            if (
+              typeof value === "string" &&
+              !inputValidation.validateText(value)
+            ) {
               throw new Error(`Invalid filter value for ${key}`);
             }
 
@@ -214,24 +224,24 @@ export const enhancedSupabaseService = {
           }
         });
       } else {
-        throw new Error('No filters provided for bulk update');
+        throw new Error("No filters provided for bulk update");
       }
 
       // Executăm operațiunea de actualizare
       const result = await handlePromise<T>(query.select());
 
       // Invalidăm cache-ul pentru acest tabel
-      if (result.status === 'success') {
+      if (result.status === "success") {
         dataLoader.invalidateCache(table);
       }
 
       return result;
     } catch (error) {
       errorHandler.handleError(error, false);
-      return { 
-        data: null, 
-        error: formatError(error), 
-        status: 'error' 
+      return {
+        data: null,
+        error: formatError(error),
+        status: "error",
       };
     }
   },
@@ -243,18 +253,18 @@ export const enhancedSupabaseService = {
    * @returns Răspuns cu datele șterse sau eroare
    */
   async bulkDelete<T>(
-    table: SupabaseTables | string, 
+    table: SupabaseTables | string,
     filters: Record<string, any>
   ): Promise<SupabaseResponse<T>> {
     try {
       // Validare pentru securitate
       if (!inputValidation.validateText(table)) {
-        throw new Error('Invalid table name');
+        throw new Error("Invalid table name");
       }
 
       // Verificăm dacă avem filtre
       if (!filters || Object.keys(filters).length === 0) {
-        throw new Error('No filters provided for bulk delete');
+        throw new Error("No filters provided for bulk delete");
       }
 
       // Inițiem query-ul de ștergere
@@ -269,7 +279,10 @@ export const enhancedSupabaseService = {
 
         if (value !== undefined && value !== null) {
           // Pentru valori de tip string, validăm pentru a preveni SQL injection
-          if (typeof value === 'string' && !inputValidation.validateText(value)) {
+          if (
+            typeof value === "string" &&
+            !inputValidation.validateText(value)
+          ) {
             throw new Error(`Invalid filter value for ${key}`);
           }
 
@@ -281,17 +294,17 @@ export const enhancedSupabaseService = {
       const result = await handlePromise<T>(query.select());
 
       // Invalidăm cache-ul pentru acest tabel
-      if (result.status === 'success') {
+      if (result.status === "success") {
         dataLoader.invalidateCache(table);
       }
 
       return result;
     } catch (error) {
       errorHandler.handleError(error, false);
-      return { 
-        data: null, 
-        error: formatError(error), 
-        status: 'error' 
+      return {
+        data: null,
+        error: formatError(error),
+        status: "error",
       };
     }
   },
@@ -306,41 +319,41 @@ export const enhancedSupabaseService = {
    * @returns Răspuns cu datele paginat, numărul total de înregistrări și informații despre pagină
    */
   async paginate<T>(
-    table: SupabaseTables | string, 
-    columns: string = '*', 
-    page: number = 1, 
-    pageSize: number = 10, 
-    options?: { 
-      filters?: Record<string, any>; 
-      order?: { column: string; ascending?: boolean } 
+    table: SupabaseTables | string,
+    columns: string = "*",
+    page: number = 1,
+    pageSize: number = 10,
+    options?: {
+      filters?: Record<string, any>;
+      order?: { column: string; ascending?: boolean };
     }
-  ): Promise<{ 
-    data: T[] | null; 
-    total: number | null; 
-    page: number; 
-    pageSize: number; 
+  ): Promise<{
+    data: T[] | null;
+    total: number | null;
+    page: number;
+    pageSize: number;
     totalPages: number | null;
-    error: SupabaseErrorResponse | null; 
-    status: 'success' | 'error';
+    error: SupabaseErrorResponse | null;
+    status: "success" | "error";
     fromCache?: boolean;
   }> {
     try {
       // Validare pentru securitate
       if (!inputValidation.validateText(table)) {
-        throw new Error('Invalid table name');
+        throw new Error("Invalid table name");
       }
 
       if (!inputValidation.validateText(columns)) {
-        throw new Error('Invalid columns');
+        throw new Error("Invalid columns");
       }
 
       // Validăm parametrii de paginare
       if (page < 1) {
-        throw new Error('Page number must be at least 1');
+        throw new Error("Page number must be at least 1");
       }
 
       if (pageSize < 1 || pageSize > 100) {
-        throw new Error('Page size must be between 1 and 100');
+        throw new Error("Page size must be between 1 and 100");
       }
 
       // Calculăm intervalul de înregistrări
@@ -348,20 +361,22 @@ export const enhancedSupabaseService = {
       const to = page * pageSize - 1;
 
       // Construim cheia de cache
-      const cacheKey = `paginate_${table}_${columns}_${page}_${pageSize}_${JSON.stringify(options || {})}`;
+      const cacheKey = `paginate_${table}_${columns}_${page}_${pageSize}_${JSON.stringify(
+        options || {}
+      )}`;
 
       // Verificăm dacă avem date în cache
       const cachedData = cacheService.get(cacheKey);
       if (cachedData) {
         return {
           ...cachedData,
-          fromCache: true
+          fromCache: true,
         };
       }
 
       // Inițiem query-ul
       let query: any = (supabase.from(table as any) as any)
-        .select(columns, { count: 'exact' })
+        .select(columns, { count: "exact" })
         .range(from, to);
 
       // Aplicăm filtrele cu validare
@@ -374,7 +389,10 @@ export const enhancedSupabaseService = {
 
           if (value !== undefined && value !== null) {
             // Pentru valori de tip string, validăm pentru a preveni SQL injection
-            if (typeof value === 'string' && !inputValidation.validateText(value)) {
+            if (
+              typeof value === "string" &&
+              !inputValidation.validateText(value)
+            ) {
               throw new Error(`Invalid filter value for ${key}`);
             }
 
@@ -390,7 +408,9 @@ export const enhancedSupabaseService = {
           throw new Error(`Invalid order column: ${options.order.column}`);
         }
 
-        query = query.order(options.order.column, { ascending: options.order.ascending ?? false });
+        query = query.order(options.order.column, {
+          ascending: options.order.ascending ?? false,
+        });
       }
 
       // Executăm query-ul
@@ -404,14 +424,14 @@ export const enhancedSupabaseService = {
       const totalPages = count ? Math.ceil(count / pageSize) : null;
 
       // Construim rezultatul
-      const result = { 
-        data: data as T[], 
-        total: count, 
-        page, 
-        pageSize, 
+      const result = {
+        data: data as T[],
+        total: count,
+        page,
+        pageSize,
         totalPages,
-        error: null, 
-        status: 'success' as const
+        error: null,
+        status: "success" as const,
       };
 
       // Salvăm în cache
@@ -420,14 +440,14 @@ export const enhancedSupabaseService = {
       return result;
     } catch (error) {
       errorHandler.handleError(error, false);
-      return { 
-        data: null, 
-        total: null, 
-        page, 
-        pageSize, 
+      return {
+        data: null,
+        total: null,
+        page,
+        pageSize,
         totalPages: null,
-        error: formatError(error), 
-        status: 'error' 
+        error: formatError(error),
+        status: "error",
       };
     }
   },
@@ -441,23 +461,23 @@ export const enhancedSupabaseService = {
    * @returns Obiectul de abonament care poate fi folosit pentru dezabonare
    */
   subscribe<T>(
-    table: SupabaseTables | string, 
-    event: 'INSERT' | 'UPDATE' | 'DELETE' | '*', 
-    callback: (payload: { 
-      new: T | null; 
-      old: T | null; 
-      eventType: 'INSERT' | 'UPDATE' | 'DELETE' 
-    }) => void, 
+    table: SupabaseTables | string,
+    event: "INSERT" | "UPDATE" | "DELETE" | "*",
+    callback: (payload: {
+      new: T | null;
+      old: T | null;
+      eventType: "INSERT" | "UPDATE" | "DELETE";
+    }) => void,
     filters?: Record<string, any>
   ) {
     try {
       // Validare pentru securitate
       if (!inputValidation.validateText(table)) {
-        throw new Error('Invalid table name');
+        throw new Error("Invalid table name");
       }
 
       // Inițiem query-ul de abonare
-      let realtime: any = (supabase.from(table as any) as any);
+      let realtime: any = supabase.from(table as any) as any;
 
       // Aplicăm filtrele cu validare
       if (filters) {
@@ -469,11 +489,14 @@ export const enhancedSupabaseService = {
 
           if (value !== undefined && value !== null) {
             // Pentru valori de tip string, validăm pentru a preveni SQL injection
-            if (typeof value === 'string' && !inputValidation.validateText(value)) {
+            if (
+              typeof value === "string" &&
+              !inputValidation.validateText(value)
+            ) {
               throw new Error(`Invalid filter value for ${key}`);
             }
 
-            realtime = realtime.filter(key, 'eq', value);
+            realtime = realtime.filter(key, "eq", value);
           }
         });
       }
@@ -485,12 +508,12 @@ export const enhancedSupabaseService = {
           const transformedPayload = {
             new: payload.new || null,
             old: payload.old || null,
-            eventType: payload.eventType as 'INSERT' | 'UPDATE' | 'DELETE'
+            eventType: payload.eventType as "INSERT" | "UPDATE" | "DELETE",
           };
-          
+
           // Apelăm callback-ul cu payload-ul transformat
           callback(transformedPayload);
-          
+
           // Invalidăm cache-ul pentru acest tabel
           dataLoader.invalidateCache(table);
         })
@@ -501,17 +524,17 @@ export const enhancedSupabaseService = {
         ...subscription,
         unsubscribe: () => {
           subscription.unsubscribe();
-        }
+        },
       };
 
       return enhancedSubscription;
     } catch (error) {
       errorHandler.handleError(error, false);
-      console.error('Error creating subscription:', error);
-      
+      console.error("Error creating subscription:", error);
+
       // Returnăm un obiect de abonament fals pentru a evita erorile
       return {
-        unsubscribe: () => {}
+        unsubscribe: () => {},
       };
     }
   },
@@ -521,7 +544,7 @@ export const enhancedSupabaseService = {
    * @param subscription - Obiectul de abonament returnat de metoda subscribe
    */
   unsubscribe(subscription: any) {
-    if (subscription && typeof subscription.unsubscribe === 'function') {
+    if (subscription && typeof subscription.unsubscribe === "function") {
       subscription.unsubscribe();
     }
   },
@@ -538,7 +561,7 @@ export const enhancedSupabaseService = {
     try {
       // Verificăm dacă avem operațiuni
       if (!Array.isArray(operations) || operations.length === 0) {
-        throw new Error('No operations provided for transaction');
+        throw new Error("No operations provided for transaction");
       }
 
       // Executăm operațiunile în ordine
@@ -556,14 +579,14 @@ export const enhancedSupabaseService = {
       return {
         data: results as T,
         error: null,
-        status: 'success'
+        status: "success",
       };
     } catch (error) {
       errorHandler.handleError(error, false);
-      return { 
-        data: null, 
-        error: formatError(error), 
-        status: 'error' 
+      return {
+        data: null,
+        error: formatError(error),
+        status: "error",
       };
     }
   },
@@ -582,10 +605,10 @@ export const enhancedSupabaseService = {
       return handlePromise<T>(query);
     } catch (error) {
       errorHandler.handleError(error, false);
-      return { 
-        data: null, 
-        error: formatError(error), 
-        status: 'error' 
+      return {
+        data: null,
+        error: formatError(error),
+        status: "error",
       };
     }
   },
@@ -599,7 +622,7 @@ export const enhancedSupabaseService = {
    */
   async export<T>(
     table: SupabaseTables | string,
-    format: 'csv' | 'json' = 'csv',
+    format: "csv" | "json" = "csv",
     options?: {
       filters?: Record<string, any>;
       columns?: string[];
@@ -609,11 +632,11 @@ export const enhancedSupabaseService = {
     try {
       // Validare pentru securitate
       if (!inputValidation.validateText(table)) {
-        throw new Error('Invalid table name');
+        throw new Error("Invalid table name");
       }
 
       // Construim query-ul
-      const columns = options?.columns?.join(',') || '*';
+      const columns = options?.columns?.join(",") || "*";
       let query: any = (supabase.from(table as any) as any).select(columns);
 
       // Aplicăm filtrele cu validare
@@ -626,7 +649,10 @@ export const enhancedSupabaseService = {
 
           if (value !== undefined && value !== null) {
             // Pentru valori de tip string, validăm pentru a preveni SQL injection
-            if (typeof value === 'string' && !inputValidation.validateText(value)) {
+            if (
+              typeof value === "string" &&
+              !inputValidation.validateText(value)
+            ) {
               throw new Error(`Invalid filter value for ${key}`);
             }
 
@@ -644,44 +670,51 @@ export const enhancedSupabaseService = {
 
       // Transformăm datele în formatul dorit
       let blob: Blob;
-      if (format === 'csv') {
+      if (format === "csv") {
         // Construim CSV
         const headers = options?.columns || Object.keys(data[0] || {});
         const csvRows = [
-          headers.join(','), // Header row
-          ...data.map((row: any) => 
-            headers.map(header => {
-              const value = row[header];
-              // Escapăm valorile care conțin virgule sau ghilimele
-              if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
-                return `"${value.replace(/"/g, '""')}"`;
-              }
-              return value !== null && value !== undefined ? value : '';
-            }).join(',')
-          )
+          headers.join(","), // Header row
+          ...data.map((row: any) =>
+            headers
+              .map((header) => {
+                const value = row[header];
+                // Escapăm valorile care conțin virgule sau ghilimele
+                if (
+                  typeof value === "string" &&
+                  (value.includes(",") || value.includes('"'))
+                ) {
+                  return `"${value.replace(/"/g, '""')}"`;
+                }
+                return value !== null && value !== undefined ? value : "";
+              })
+              .join(",")
+          ),
         ];
-        const csvContent = csvRows.join('\n');
-        blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const csvContent = csvRows.join("\n");
+        blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
       } else {
         // JSON format
         const jsonContent = JSON.stringify(data, null, 2);
-        blob = new Blob([jsonContent], { type: 'application/json;charset=utf-8;' });
+        blob = new Blob([jsonContent], {
+          type: "application/json;charset=utf-8;",
+        });
       }
 
       return {
         data: blob,
         error: null,
-        status: 'success'
+        status: "success",
       };
     } catch (error) {
       errorHandler.handleError(error, false);
-      return { 
-        data: null, 
-        error: formatError(error), 
-        status: 'error' 
+      return {
+        data: null,
+        error: formatError(error),
+        status: "error",
       };
     }
-  }
+  },
 };
 
 export default enhancedSupabaseService;
