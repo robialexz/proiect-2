@@ -1,4 +1,4 @@
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
 import { lazyPage } from "./lib/lazy-pages";
 
@@ -7,7 +7,28 @@ import AppLayout from "./components/layout/AppLayout";
 
 // Import pages that need to be available immediately for better performance
 import HomePage from "./pages/HomePage";
-// Paginile de autentificare au fost eliminate pentru noua implementare
+
+// Componente pentru redirecționare către paginile HTML statice
+const LoginRedirect = () => {
+  useEffect(() => {
+    window.location.href = "/login.html";
+  }, []);
+  return null;
+};
+
+const RegisterRedirect = () => {
+  useEffect(() => {
+    window.location.href = "/register.html";
+  }, []);
+  return null;
+};
+
+const ForgotPasswordRedirect = () => {
+  useEffect(() => {
+    window.location.href = "/forgot-password.html";
+  }, []);
+  return null;
+};
 
 // Lazy load pages with custom loading states
 const OverviewPage = lazyPage(() => import("./pages/OverviewPage"), {
@@ -97,7 +118,11 @@ export function AppRoutes() {
       <Route path="/terms" element={<TermsPage />} />
       <Route path="/pricing" element={<PricingPage />} />
       <Route path="/contact" element={<ContactPage />} />
-      {/* Rutele de autentificare au fost eliminate pentru noua implementare */}
+
+      {/* Rute pentru redirecționare către paginile HTML statice */}
+      <Route path="/login" element={<LoginRedirect />} />
+      <Route path="/register" element={<RegisterRedirect />} />
+      <Route path="/forgot-password" element={<ForgotPasswordRedirect />} />
 
       <Route path="/notifications-demo" element={<NotificationsDemo />} />
 
