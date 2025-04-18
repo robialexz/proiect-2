@@ -26,15 +26,12 @@ export default defineConfig({
     minify: 'terser',
     cssMinify: true,
     rollupOptions: {
-      external: [
-        '@splinetool/runtime'
-      ],
       output: {
         manualChunks: {
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
           'ui-components': ['@/components/ui'],
           'supabase': ['@supabase/supabase-js'],
-          'spline': ['@splinetool/react-spline', '@splinetool/runtime'],
+          'spline': ['@splinetool/react-spline'],
         },
       },
     },
