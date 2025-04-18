@@ -1,6 +1,22 @@
-# React + TypeScript + Vite
+# Proiect-2: Inventory Management System
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Acest proiect este un sistem de management al inventarului dezvoltat cu React, TypeScript și Vite. Aplicația permite gestionarea eficientă a stocurilor, materialelor și furnizorilor.
+
+## Caracteristici
+
+- Gestionarea inventarului și materialelor
+- Interfață modernă și responsivă
+- Autentificare și gestionare a utilizatorilor
+- Notificări în timp real
+- Suport multilingv (i18n)
+
+## Tehnologii utilizate
+
+- React 18
+- TypeScript
+- Vite
+- Tailwind CSS
+- Supabase pentru backend
 
 Currently, two official plugins are available:
 
