@@ -1,14 +1,10 @@
-import { supabase } from './supabase';
-import { PostgrestError } from '@supabase/supabase-js';
-import fallbackAuth from "./fallback-auth";
-import connectionService from './connection-service';
-import { errorHandler } from './error-handler';
-import { inputValidation } from './input-validation';
-import { dataLoader } from './data-loader';
-import { SupabaseTables, SupabaseRpcFunctions } from '../types/supabase-tables';
-
-// Flag pentru a activa autentificarea de rezervă - dezactivat în producție pentru securitate
-const USE_FALLBACK_AUTH = import.meta.env.DEV && import.meta.env.VITE_ENABLE_TEST_ACCOUNTS === 'true';
+import { supabase } from "./supabase";
+import { PostgrestError, AuthError } from "@supabase/supabase-js";
+import { errorHandler } from "./error-handler";
+import { inputValidation } from "./input-validation";
+import { dataLoader } from "./data-loader";
+import { SupabaseTables, SupabaseRpcFunctions } from "../types/supabase-tables";
+import { RealtimeChannel } from "@supabase/supabase-js"; // Keep RealtimeChannel
 
 // Flag pentru a activa cache-ul offline
 const USE_OFFLINE_CACHE = true; // Setați la false pentru a dezactiva cache-ul offline
@@ -25,811 +21,596 @@ export interface SupabaseErrorResponse {
 export interface SupabaseResponse<T> {
   data: T | null;
   error: SupabaseErrorResponse | null;
-  status: 'success' | 'error';
+  status: "success" | "error";
   fromCache?: boolean; // Indică dacă datele provin din cache
 }
 
-// Verifică conexiunea înainte de a face cereri la Supabase
-const checkConnectionBeforeRequest = async (): Promise<boolean> => {
-  // Verificăm conexiunea la internet și la Supabase
-  const { internet, supabase: hasSupabaseConnection } = await connectionService.checkConnections();
+// Funcție pentru a transforma erorile în SupabaseErrorResponse
+const formatError = (
+  error: PostgrestError | AuthError | Error | unknown
+): SupabaseErrorResponse => {
+  const isProduction = process.env.NODE_ENV === "production";
 
-  // Dacă nu există conexiune la internet sau la Supabase, returnează false
-  return internet && hasSupabaseConnection;
-};
-
-// Folosim checkConnectionBeforeRequest în handlePromise pentru a verifica conexiunea înainte de a face cereri
-
-// Funcție pentru a transforma erorile PostgrestError în SupabaseErrorResponse - îmbunătățită pentru securitate
-const formatError = (error: PostgrestError | Error | unknown): SupabaseErrorResponse => {
-  // Ascundem detaliile tehnice în producție pentru a preveni scurgerea de informații
-  const isProduction = process.env.NODE_ENV === 'production';
-
-  if (error instanceof Error) {
-    if ('code' in error && 'details' in error && 'hint' in error && 'message' in error) {
-      // Este un PostgrestError
+  if (error && typeof error === "object") {
+    if (error instanceof AuthError) {
+      return {
+        message: error.message,
+        details: isProduction ? undefined : error.stack,
+        code: String(error.status) || undefined,
+      };
+    }
+    if (
+      "details" in error &&
+      "hint" in error &&
+      "code" in error &&
+      "message" in error
+    ) {
       const pgError = error as PostgrestError;
       return {
         message: pgError.message,
-        // Ascundem detaliile în producție
         details: isProduction ? undefined : pgError.details || undefined,
         hint: isProduction ? undefined : pgError.hint || undefined,
         code: pgError.code,
       };
     }
-    // Este un Error standard
-    return {
-      message: error.message,
-      // Ascundem stack trace în producție
-      details: isProduction ? undefined : error.stack,
-    };
-  }
-  // Este un tip necunoscut de eroare
-  return {
-    message: 'An unknown error occurred',
-    // Ascundem detaliile în producție
-    details: isProduction ? undefined : (error ? JSON.stringify(error) : undefined),
-  };
-};
-
-// Funcție pentru a gestiona răspunsurile de la Supabase
-const handleResponse = <T>(data: T | null, error: PostgrestError | null): SupabaseResponse<T> => {
-  if (error) {
-    return {
-      data: null,
-      error: formatError(error),
-      status: 'error',
-    };
+    if (error instanceof Error) {
+      return {
+        message: error.message,
+        details: isProduction ? undefined : error.stack,
+      };
+    }
   }
   return {
-    data,
-    error: null,
-    status: 'success',
+    message: "An unknown error occurred",
+    details: isProduction
+      ? undefined
+      : error
+      ? JSON.stringify(error)
+      : undefined,
   };
-};
-
-// Funcție pentru a gestiona erorile în promisiuni
-const handlePromise = async <T>(promise: any): Promise<SupabaseResponse<T>> => {
-  try {
-    const { data, error } = await promise;
-    return handleResponse<T>(data as T | null, error);
-  } catch (error) {
-    return {
-      data: null,
-      error: formatError(error),
-      status: 'error',
-    };
-  }
 };
 
 // Serviciu pentru interacțiuni cu Supabase
 export const supabaseService = {
-  // Funcții generice CRUD
-  async select<T>(table: SupabaseTables | string, columns: string = '*', options?: {
-    filters?: Record<string, any>;
-    order?: { column: string; ascending?: boolean };
-    limit?: number;
-    single?: boolean;
-  }): Promise<SupabaseResponse<T>> {
+  // --- Funcții generice CRUD (PostgREST) ---
+  async select<T>(
+    table: SupabaseTables, // Use specific union type
+    columns: string = "*",
+    options?: {
+      filters?: Record<string, any>;
+      order?: { column: string; ascending?: boolean };
+      limit?: number;
+      single?: boolean;
+    }
+  ): Promise<SupabaseResponse<T>> {
     try {
-      // Validare pentru securitate
-      if (!inputValidation.validateText(table)) {
-        throw new Error('Invalid table name');
-      }
-
       if (!inputValidation.validateText(columns)) {
-        throw new Error('Invalid columns');
+        throw new Error("Invalid columns specified");
       }
 
-      // Verificăm dacă avem o sesiune validă
-      try {
-        const { data: sessionData } = await supabase.auth.getSession();
-        if (!sessionData?.session) {
-          console.warn(`No valid session when selecting from ${table}`);
+      let query = supabase.from(table).select(columns); // Use table directly
 
-          // În modul de dezvoltare, putem continua fără sesiune pentru tabele publice
-          if (!import.meta.env.DEV && !['public_data', 'settings'].includes(table)) {
-            return {
-              status: 'error',
-              error: {
-                message: 'Authentication required',
-                code: '401'
-              },
-              data: null
-            };
-          }
-        }
-      } catch (sessionError) {
-        console.warn(`Error checking session for ${table}:`, sessionError);
-        // Continuăm oricum, poate avem acces public la date
-      }
-
-      // Folosim cast pentru a evita erorile de tipizare
-      let query = (supabase.from(table as any) as any).select(columns);
-
-      // Aplicăm filtrele cu validare
       if (options?.filters) {
         Object.entries(options.filters).forEach(([key, value]) => {
-          // Validare pentru securitate
-          if (!inputValidation.validateText(key)) {
+          if (!inputValidation.validateText(key))
             throw new Error(`Invalid filter key: ${key}`);
-          }
-
-          if (value !== undefined && value !== null) {
-            // Pentru valori de tip string, validăm pentru a preveni SQL injection
-            if (typeof value === 'string' && !inputValidation.validateText(value)) {
-              throw new Error(`Invalid filter value for ${key}`);
-            }
-
+          if (value !== undefined && value !== null)
             query = query.eq(key, value);
-          }
         });
       }
-
-      // Aplicăm ordinea cu validare
       if (options?.order) {
-        // Validare pentru securitate
-        if (!inputValidation.validateText(options.order.column)) {
+        if (!inputValidation.validateText(options.order.column))
           throw new Error(`Invalid order column: ${options.order.column}`);
-        }
-
-        query = query.order(options.order.column, { ascending: options.order.ascending ?? false });
+        query = query.order(options.order.column, {
+          ascending: options.order.ascending ?? false,
+        });
       }
-
-      // Aplicăm limita
       if (options?.limit) {
-        if (options.limit < 0 || options.limit > 1000) {
-          throw new Error('Invalid limit value. Must be between 0 and 1000.');
-        }
-
+        if (options.limit < 0 || options.limit > 1000)
+          throw new Error("Invalid limit value.");
         query = query.limit(options.limit);
       }
 
-      // Executăm interogarea cu timeout
-      const timeoutPromise = new Promise<any>((_, reject) => {
-        setTimeout(() => reject(new Error('Query timeout')), 10000); // 10 secunde timeout
-      });
+      const { data, error } = options?.single
+        ? await query.single()
+        : await query;
 
-      const queryPromise = options?.single ? query.single() : query;
-
-      try {
-        // Folosim Promise.race pentru a implementa timeout
-        const result = await Promise.race([queryPromise, timeoutPromise]);
-
-        // Verificăm dacă avem eroare
-        if (result.error) {
-          console.error(`Error selecting from ${table}:`, result.error);
-
-          // Verificăm dacă eroarea este legată de autentificare
-          if (result.error.message?.includes('JWT') ||
-              result.error.message?.includes('auth') ||
-              result.error.code === '401') {
-            console.warn(`Authentication error for ${table}, trying to refresh session`);
-
-            try {
-              // Încercăm să reîmprospătăm sesiunea
-              const { data: refreshData } = await supabase.auth.refreshSession();
-
-              if (refreshData?.session) {
-                console.log(`Session refreshed, retrying fetch for ${table}`);
-                // Reîncercam după reîmprospătarea sesiunii
-                const retryQuery = options?.single ? query.single() : query;
-                const retryResult = await retryQuery;
-
-                if (!retryResult.error) {
-                  return {
-                    status: 'success',
-                    data: retryResult.data as T,
-                    error: null
-                  };
-                }
-              }
-            } catch (refreshError) {
-              console.error(`Error refreshing session:`, refreshError);
+      if (error) {
+        if (error.message?.includes("JWT") || error.code === "401") {
+          console.warn(`Auth error for ${table}, trying refresh...`);
+          try {
+            const { data: refreshData } = await supabase.auth.refreshSession();
+            if (refreshData?.session) {
+              console.log(`Session refreshed, retrying fetch for ${table}`);
+              const { data: retryData, error: retryError } = options?.single
+                ? await query.single()
+                : await query;
+              if (retryError)
+                return {
+                  data: null,
+                  error: formatError(retryError),
+                  status: "error",
+                };
+              return {
+                data: retryData as T | null,
+                error: null,
+                status: "success",
+              };
             }
+          } catch (refreshError) {
+            console.error(`Error refreshing session:`, refreshError);
           }
-
-          return {
-            status: 'error',
-            error: result.error,
-            data: null
-          };
         }
-
-        return {
-          status: 'success',
-          data: result.data,
-          error: null
-        };
-      } catch (queryError) {
-        console.error(`Query error or timeout for ${table}:`, queryError);
-
-        // În modul de dezvoltare, generam date de test ca ultim fallback
-        if (import.meta.env.DEV) {
-          console.log(`Using generated test data as fallback for ${table}`);
-          const testData = dataLoader.generateTestData(table, 10);
-          return {
-            status: 'success',
-            data: (options?.single ? testData[0] : testData) as T,
-            error: null
-          };
-        }
-
-        return {
-          status: 'error',
-          data: null,
-          error: formatError(queryError),
-        };
+        return { data: null, error: formatError(error), status: "error" };
       }
+      return { data: data as T | null, error: null, status: "success" };
     } catch (error) {
-      // Folosim errorHandler pentru o gestionare mai bună a erorilor
-      errorHandler.handleError(error, false);
-
-      // În modul de dezvoltare, generam date de test ca ultim fallback
+      console.error(`Error in select operation for table ${table}:`, error);
       if (import.meta.env.DEV) {
         console.log(`Using generated test data after error for ${table}`);
-        const testData = dataLoader.generateTestData(table, 10);
+        const testData = dataLoader.generateTestData(String(table), 10);
         return {
-          status: 'success',
+          status: "success",
           data: (options?.single ? testData[0] : testData) as T,
-          error: null
+          error: null,
         };
       }
-
-      return {
-        data: null,
-        error: formatError(error),
-        status: 'error',
-      };
+      return { data: null, error: formatError(error), status: "error" };
     }
   },
 
-  async insert<T>(table: SupabaseTables | string, data: Partial<T> | Partial<T>[]): Promise<SupabaseResponse<T>> {
+  async insert<T>(
+    table: SupabaseTables, // Use specific union type
+    data: Partial<T> | Partial<T>[]
+  ): Promise<SupabaseResponse<T[]>> {
     try {
-      return handlePromise<T>((supabase.from(table as any) as any).insert(data as any).select());
+      const { data: resultData, error } = await supabase
+        .from(table)
+        .insert(data as any)
+        .select();
+      if (error)
+        return { data: null, error: formatError(error), status: "error" };
+      return { data: resultData as T[], error: null, status: "success" };
     } catch (error) {
-      return {
-        data: null,
-        error: formatError(error),
-        status: 'error',
-      };
+      console.error(`Error in insert operation for table ${table}:`, error);
+      return { data: null, error: formatError(error), status: "error" };
     }
   },
 
-  async update<T>(table: SupabaseTables | string, data: Partial<T>, filters: Record<string, any>): Promise<SupabaseResponse<T>> {
+  async update<T>(
+    table: SupabaseTables, // Use specific union type
+    data: Partial<T>,
+    filters: Record<string, any>
+  ): Promise<SupabaseResponse<T[]>> {
     try {
-      let query: any = (supabase.from(table as any) as any).update(data as any);
-
-      // Aplicăm filtrele
+      let query = supabase.from(table).update(data as any);
       Object.entries(filters).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          query = query.eq(key, value);
-        }
+        if (value !== undefined && value !== null) query = query.eq(key, value);
       });
-
-      return handlePromise<T>(query.select());
+      const { data: resultData, error } = await query.select();
+      if (error)
+        return { data: null, error: formatError(error), status: "error" };
+      return { data: resultData as T[], error: null, status: "success" };
     } catch (error) {
-      return {
-        data: null,
-        error: formatError(error),
-        status: 'error',
-      };
+      console.error(`Error in update operation for table ${table}:`, error);
+      return { data: null, error: formatError(error), status: "error" };
     }
   },
 
-  async delete<T>(table: SupabaseTables | string, filters: Record<string, any>): Promise<SupabaseResponse<T>> {
+  async delete<T>(
+    table: SupabaseTables, // Use specific union type
+    filters: Record<string, any>
+  ): Promise<SupabaseResponse<T[]>> {
     try {
-      let query: any = (supabase.from(table as any) as any).delete();
-
-      // Aplicăm filtrele
+      let query = supabase.from(table).delete();
       Object.entries(filters).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          query = query.eq(key, value);
-        }
+        if (value !== undefined && value !== null) query = query.eq(key, value);
       });
-
-      return handlePromise<T>(query.select());
+      const { data: resultData, error } = await query.select();
+      if (error)
+        return { data: null, error: formatError(error), status: "error" };
+      return { data: resultData as T[], error: null, status: "success" };
     } catch (error) {
-      return {
-        data: null,
-        error: formatError(error),
-        status: 'error',
-      };
+      console.error(`Error in delete operation for table ${table}:`, error);
+      return { data: null, error: formatError(error), status: "error" };
     }
   },
 
-  // Funcții pentru autentificare
+  // --- Funcții pentru autentificare (Simplified) ---
   auth: {
     async signIn(email: string, password: string) {
-      try {
-        console.log('Starting authentication process for:', email);
-
-        // În mediul de dezvoltare, permitem autentificarea cu orice email/parolă pentru testare
-        // IMPORTANT: Acest cod nu va rula în producție pentru securitate
-        if (USE_FALLBACK_AUTH) {
-          console.log('Development mode detected, using test credentials');
-          // Verificăm dacă email-ul conține "test" sau "demo" pentru a permite autentificarea de test
-          if (email.includes('test') || email.includes('demo') || email.includes('admin')) {
-            console.log('Using test account authentication');
-            // Simulăm un răspuns de succes pentru conturile de test
-            // Creăm o sesiune de test
-            const testUser = {
-              id: 'test-user-id-' + Date.now().toString(36),  // ID unic pentru a evita conflictele
-              email: email,
-              user_metadata: {
-                name: email.split('@')[0] || 'Test User',
-                role: email.includes('admin') ? 'admin' : 'user',
-                avatar_url: `https://ui-avatars.com/api/?name=${encodeURIComponent(email.split('@')[0])}&background=random`
-              },
-              app_metadata: {
-                provider: 'email',
-                providers: ['email']
-              },
-              aud: 'authenticated',
-              created_at: new Date().toISOString(),
-              role: 'authenticated',
-              updated_at: new Date().toISOString(),
-              identities: [],
-              confirmed_at: new Date().toISOString(),
-              last_sign_in_at: new Date().toISOString(),
-              phone: '',
-              factors: null
-            };
-
-            const testSession = {
-              access_token: 'test-token-' + Date.now() + Math.random().toString(36).substring(2), // Token mai sigur
-              refresh_token: 'test-refresh-token-' + Date.now() + Math.random().toString(36).substring(2),
-              expires_at: Date.now() + 3600000, // Expiră în 1 oră
-              expires_in: 3600,
-              token_type: 'bearer',
-              user: testUser
-            };
-
-            // Salvăm sesiunea în sessionStorage și localStorage pentru compatibilitate
-            const tokenData = {
-              currentSession: testSession,
-              expiresAt: testSession.expires_at
-            };
-
-            // Folosim direct window.localStorage și window.sessionStorage pentru a evita probleme
-            window.sessionStorage.setItem('supabase.auth.token', JSON.stringify(tokenData));
-            window.localStorage.setItem('supabase.auth.token', JSON.stringify(tokenData));
-
-            // Emitem un eveniment pentru a notifica alte componente despre schimbarea sesiunii
-            window.dispatchEvent(new CustomEvent('supabase-session-update', {
-              detail: { session: testSession }
-            }));
-
-            // Emitem un eveniment pentru a notifica alte componente despre sesiunea nouă
-            window.dispatchEvent(new CustomEvent('supabase-session-update', {
-              detail: { session: testSession }
-            }));
-
-            return {
-              data: {
-                user: testUser,
-                session: testSession
-              },
-              error: null,
-              status: 'success'
-            };
-          }
-        }
-
-        // Dacă autentificarea de rezervă este activată, o folosim
-        if (USE_FALLBACK_AUTH) {
-          console.log('Using fallback authentication due to Supabase connectivity issues');
-
-          try {
-            // Încercăm autentificarea de rezervă
-            const fallbackResult = await fallbackAuth.signIn(email, password);
-
-            if (fallbackResult.status === 'success' && fallbackResult.data) {
-              console.log('Fallback authentication successful');
-
-              // Salvăm sesiunea în localStorage pentru a o putea recupera mai târziu
-              localStorage.setItem('fallback_session', JSON.stringify(fallbackResult.data.session));
-
-              // Salvăm și în formatul Supabase pentru compatibilitate
-              const tokenData = {
-                currentSession: fallbackResult.data.session,
-                expiresAt: Date.now() + 3600000 // 1 oră valabilitate
-              };
-
-              window.localStorage.setItem('supabase.auth.token', JSON.stringify(tokenData));
-              window.sessionStorage.setItem('supabase.auth.token', JSON.stringify(tokenData));
-
-              // Emitem un eveniment pentru a notifica alte componente despre sesiunea nouă
-              window.dispatchEvent(new CustomEvent('supabase-session-update', {
-                detail: { session: fallbackResult.data.session }
-              }));
-
-              return {
-                data: {
-                  session: fallbackResult.data.session,
-                  user: fallbackResult.data.user
-                },
-                error: null,
-                status: 'success'
-              };
-            } else {
-              console.error('Fallback authentication failed:', fallbackResult.error);
-              return {
-                data: null,
-                error: fallbackResult.error,
-                status: 'error'
-              };
-            }
-          } catch (fallbackError) {
-            console.error('Error in fallback authentication:', fallbackError);
-          }
-        }
-
-        // Dacă autentificarea de rezervă nu este activată sau a eșuat, încercăm autentificarea normală
-        // Adăugăm un timeout explicit pentru autentificare - mărim la 30 secunde
-        const timeoutPromise = new Promise<{data: null, error: Error}>((_, reject) => {
-          setTimeout(() => {
-            console.log('Authentication timeout reached after 30 seconds');
-            reject(new Error('Authentication timeout after 30 seconds. Please check your internet connection and try again.'));
-          }, 30000); // 30 secunde
-        });
-
-        // Promisiunea pentru autentificare
-        const authPromise = supabase.auth.signInWithPassword({
-          email,
-          password,
-          options: {
-            // Adăugăm opțiuni suplimentare pentru autentificare
-            captchaToken: null,
-          }
-        });
-
-        console.log('Auth request sent, waiting for response...');
-
-        // Folosim Promise.race pentru a implementa timeout
-        const result = await Promise.race([
-          authPromise,
-          timeoutPromise
-        ]);
-
-        console.log('Auth response received:', {
-          success: !!result.data?.session,
-          error: result.error ? 'Error present' : 'No error'
-        });
-
-        // Dacă autentificarea a reușit, salvăm sesiunea manual pentru a ne asigura că este disponibilă
-        if (result.data?.session) {
-          try {
-            const tokenData = {
-              currentSession: result.data.session,
-              expiresAt: Date.now() + 3600000 // 1 oră valabilitate
-            };
-
-            // Folosim direct window.localStorage și window.sessionStorage pentru a evita probleme
-            window.localStorage.setItem('supabase.auth.token', JSON.stringify(tokenData));
-            window.sessionStorage.setItem('supabase.auth.token', JSON.stringify(tokenData));
-
-            // Emitem un eveniment pentru a notifica alte componente despre sesiunea nouă
-            window.dispatchEvent(new CustomEvent('supabase-session-update', {
-              detail: { session: result.data.session }
-            }));
-
-            console.log('Session saved manually after successful authentication');
-          } catch (storageError) {
-            console.error('Error saving session to storage:', storageError);
-          }
-        }
-
-        return handleResponse(result.data, result.error as unknown as PostgrestError);
-      } catch (error) {
-        console.error('Auth error caught:', error);
+      console.log("Starting sign in for:", email);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error)
         return {
           data: null,
           error: formatError(error),
-          status: 'error',
+          status: "error" as const,
         };
+      // Manual session saving might still be needed depending on how storage wrapper interacts
+      if (data?.session) {
+        try {
+          const tokenData = {
+            currentSession: data.session,
+            expiresAt: Date.now() + 3600000,
+          };
+          window.localStorage.setItem(
+            "supabase.auth.token",
+            JSON.stringify(tokenData)
+          );
+          window.sessionStorage.setItem(
+            "supabase.auth.token",
+            JSON.stringify(tokenData)
+          );
+          window.dispatchEvent(
+            new CustomEvent("supabase-session-update", {
+              detail: { session: data.session },
+            })
+          );
+          console.log("Session saved manually after successful authentication");
+        } catch (storageError) {
+          console.error("Error saving session to storage:", storageError);
+        }
       }
+      return { data: data, error: null, status: "success" as const };
     },
-
     async signUp(email: string, password: string) {
-      try {
-        const { data, error } = await supabase.auth.signUp({ email, password });
-        return handleResponse(data, error as unknown as PostgrestError);
-      } catch (error) {
+      console.log("Starting sign up for:", email);
+      const { data, error } = await supabase.auth.signUp({ email, password });
+      if (error)
         return {
           data: null,
           error: formatError(error),
-          status: 'error',
+          status: "error" as const,
         };
-      }
+      return { data: data, error: null, status: "success" as const };
     },
-
     async signOut() {
-      try {
-        // Dacă autentificarea de rezervă este activată, ștergem sesiunea de rezervă
-        if (USE_FALLBACK_AUTH) {
-          try {
-            await fallbackAuth.signOut();
-            console.log('Fallback session cleared');
-          } catch (fallbackError) {
-            console.error('Error clearing fallback session:', fallbackError);
-          }
-        }
-
-        // Încercăm să deconectăm utilizatorul de la Supabase
-        const { error } = await supabase.auth.signOut();
-        return handleResponse(null, error as unknown as PostgrestError);
-      } catch (error) {
+      console.log("Starting sign out");
+      const { error } = await supabase.auth.signOut();
+      if (error)
         return {
           data: null,
           error: formatError(error),
-          status: 'error',
+          status: "error" as const,
         };
-      }
+      return { data: null, error: null, status: "success" as const };
     },
-
     async getSession() {
-      try {
-        // În modul de dezvoltare, verificăm dacă există o sesiune de test în sessionStorage
-        if (import.meta.env.DEV && process.env.NODE_ENV !== 'production') {
-          try {
-            // Folosim sessionStorage în loc de localStorage pentru securitate mai bună
-            const tokenStr = sessionStorage.getItem('supabase.auth.token');
-
-            if (tokenStr) {
-              const tokenData = JSON.parse(tokenStr);
-
-              if (tokenData && tokenData.currentSession) {
-                // Verificăm dacă sesiunea nu a expirat
-                if (tokenData.expiresAt > Date.now()) {
-                  console.log('Using test session from sessionStorage');
-
-                  // Creăm un răspuns similar cu cel de la Supabase
-                  return {
-                    data: {
-                      session: tokenData.currentSession
-                    },
-                    error: null,
-                    status: 'success'
-                  };
-                } else {
-                  console.log('Test session expired, removing from sessionStorage');
-                  sessionStorage.removeItem('supabase.auth.token');
-                }
-              }
-            }
-          } catch (testSessionError) {
-            console.error('Error getting test session:', testSessionError);
-          }
-        }
-
-        // Dacă autentificarea de rezervă este activată, încercăm să recuperăm sesiunea din localStorage
-        if (USE_FALLBACK_AUTH) {
-          try {
-            const fallbackResult = await fallbackAuth.getSession();
-
-            if (fallbackResult.status === 'success' && fallbackResult.data?.session) {
-              console.log('Using fallback session');
-              return {
-                data: {
-                  session: fallbackResult.data.session
-                },
-                error: null,
-                status: 'success'
-              };
-            }
-          } catch (fallbackError) {
-            console.error('Error getting fallback session:', fallbackError);
-          }
-        }
-
-        // Dacă nu există sesiune de rezervă, încercăm să recuperăm sesiunea de la Supabase
-        const { data, error } = await supabase.auth.getSession();
-        return handleResponse(data, error as unknown as PostgrestError);
-      } catch (error) {
+      console.log("Getting session");
+      const { data, error } = await supabase.auth.getSession();
+      if (error)
         return {
           data: null,
           error: formatError(error),
-          status: 'error',
+          status: "error" as const,
         };
-      }
+      return { data: data, error: null, status: "success" as const };
     },
-
     async getUser() {
-      try {
-        // În modul de dezvoltare, verificăm dacă există o sesiune de test în localStorage
-        if (import.meta.env.DEV) {
-          try {
-            const tokenStr = localStorage.getItem('supabase.auth.token');
-
-            if (tokenStr) {
-              const tokenData = JSON.parse(tokenStr);
-
-              if (tokenData && tokenData.currentSession && tokenData.currentSession.user) {
-                // Verificăm dacă sesiunea nu a expirat
-                if (tokenData.expiresAt > Date.now()) {
-                  console.log('Using test user from localStorage');
-
-                  // Creăm un răspuns similar cu cel de la Supabase
-                  return {
-                    data: {
-                      id: tokenData.currentSession.user.id,
-                      email: tokenData.currentSession.user.email,
-                      user_metadata: {
-                        name: 'Test User'
-                      }
-                    },
-                    error: null,
-                    status: 'success'
-                  };
-                } else {
-                  console.log('Test session expired, removing from localStorage');
-                  localStorage.removeItem('supabase.auth.token');
-                }
-              }
-            }
-          } catch (testSessionError) {
-            console.error('Error getting test user:', testSessionError);
-          }
-        }
-
-        // Dacă autentificarea de rezervă este activată, încercăm să recuperăm utilizatorul din sesiunea de rezervă
-        if (USE_FALLBACK_AUTH) {
-          try {
-            const sessionStr = localStorage.getItem('fallback_session');
-
-            if (sessionStr) {
-              const session = JSON.parse(sessionStr);
-
-              if (session && session.user) {
-                console.log('Using fallback user');
-                return {
-                  data: session.user,
-                  error: null,
-                  status: 'success'
-                };
-              }
-            }
-          } catch (fallbackError) {
-            console.error('Error getting fallback user:', fallbackError);
-          }
-        }
-
-        // Dacă nu există utilizator de rezervă, încercăm să recuperăm utilizatorul de la Supabase
-        const { data, error } = await supabase.auth.getUser();
-        return handleResponse(data.user, error as unknown as PostgrestError);
-      } catch (error) {
+      console.log("Getting user");
+      const {
+        data: { user },
+        error,
+      } = await supabase.auth.getUser();
+      if (error)
         return {
           data: null,
           error: formatError(error),
-          status: 'error',
+          status: "error" as const,
         };
-      }
+      return { data: user, error: null, status: "success" as const };
     },
   },
 
-  // Funcții pentru storage
+  // --- Funcții pentru storage (Simplified) ---
   storage: {
     async upload(bucket: string, path: string, file: File) {
-      try {
-        const { data, error } = await supabase.storage.from(bucket).upload(path, file);
-        return handleResponse(data, error as unknown as PostgrestError);
-      } catch (error) {
+      console.log(`Uploading to ${bucket}/${path}`);
+      const { data, error } = await supabase.storage
+        .from(bucket)
+        .upload(path, file);
+      if (error)
         return {
           data: null,
           error: formatError(error),
-          status: 'error',
+          status: "error" as const,
         };
-      }
+      return { data: data, error: null, status: "success" as const };
     },
-
     async download(bucket: string, path: string) {
-      try {
-        const { data, error } = await supabase.storage.from(bucket).download(path);
-        return handleResponse(data, error as unknown as PostgrestError);
-      } catch (error) {
+      console.log(`Downloading from ${bucket}/${path}`);
+      const { data, error } = await supabase.storage
+        .from(bucket)
+        .download(path);
+      if (error)
         return {
           data: null,
           error: formatError(error),
-          status: 'error',
+          status: "error" as const,
         };
-      }
+      return { data: data, error: null, status: "success" as const };
     },
-
     async remove(bucket: string, paths: string[]) {
-      try {
-        const { data, error } = await supabase.storage.from(bucket).remove(paths);
-        return handleResponse(data, error as unknown as PostgrestError);
-      } catch (error) {
+      console.log(`Removing from ${bucket}: ${paths.join(", ")}`);
+      const { data, error } = await supabase.storage.from(bucket).remove(paths);
+      if (error)
         return {
           data: null,
           error: formatError(error),
-          status: 'error',
+          status: "error" as const,
         };
-      }
+      return { data: data, error: null, status: "success" as const };
     },
-
     getPublicUrl(bucket: string, path: string) {
-      return supabase.storage.from(bucket).getPublicUrl(path);
+      const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+      return data; // Return the object directly { publicUrl: string }
     },
   },
 
-  // Funcții pentru RPC (Remote Procedure Call)
-  async rpc<T>(functionName: SupabaseRpcFunctions | string, params?: Record<string, any>): Promise<SupabaseResponse<T>> {
+  // --- Funcții pentru RPC (Remote Procedure Call) (Simplified) ---
+  async rpc<T>(
+    functionName: SupabaseRpcFunctions, // Use specific union type
+    params?: Record<string, any>
+  ): Promise<SupabaseResponse<T>> {
+    console.log(`Calling RPC function: ${String(functionName)}`);
     try {
-      // Folosim tipul corect pentru funcția RPC
-      return handlePromise<T>(supabase.rpc(functionName as string, params));
-    } catch (error) {
+      const { data, error } = await supabase.rpc(functionName, params); // Use specific type
+      if (error)
+        return {
+          data: null,
+          error: formatError(error),
+          status: "error" as const,
+        };
       return {
-        data: null,
-        error: formatError(error),
-        status: 'error',
+        data: data as T | null,
+        error: null,
+        status: "success" as const,
       };
+    } catch (error) {
+      console.error(
+        `Error calling RPC function ${String(functionName)}:`,
+        error
+      );
+      return { data: null, error: formatError(error), status: "error" };
     }
   },
 
-  // Extindere supabaseService cu metode suplimentare
-  async upsert<T>(table: SupabaseTables | string, data: Partial<T> | Partial<T>[], onConflict?: string[]): Promise<SupabaseResponse<T>> {
+  // --- Extindere supabaseService cu metode suplimentare (Simplified) ---
+  async upsert<T>(
+    table: SupabaseTables, // Use specific union type
+    data: Partial<T> | Partial<T>[],
+    onConflict?: string[]
+  ): Promise<SupabaseResponse<T[]>> {
     try {
-      const conflict = Array.isArray(onConflict) ? onConflict.join(',') : onConflict;
-      return handlePromise<T>((supabase.from(table as any) as any).upsert(data, { onConflict: conflict }));
+      const conflict = Array.isArray(onConflict)
+        ? onConflict.join(",")
+        : onConflict;
+      const { data: resultData, error } = await supabase
+        .from(table) // Use table directly
+        .upsert(data as any, { onConflict: conflict })
+        .select();
+      if (error)
+        return { data: null, error: formatError(error), status: "error" };
+      return { data: resultData as T[], error: null, status: "success" };
     } catch (error) {
-      return { data: null, error: formatError(error), status: 'error' };
+      console.error(`Error in upsert operation for table ${table}:`, error);
+      return { data: null, error: formatError(error), status: "error" };
     }
   },
-  async bulkInsert<T>(table: SupabaseTables | string, data: Partial<T>[]): Promise<SupabaseResponse<T>> {
+
+  async bulkInsert<T>(
+    table: SupabaseTables, // Use specific union type
+    data: Partial<T>[]
+  ): Promise<SupabaseResponse<T[]>> {
     try {
-      return handlePromise<T>((supabase.from(table as any) as any).insert(data));
+      const { data: resultData, error } = await supabase
+        .from(table) // Use table directly
+        .insert(data as any)
+        .select();
+      if (error)
+        return { data: null, error: formatError(error), status: "error" };
+      return { data: resultData as T[], error: null, status: "success" };
     } catch (error) {
-      return { data: null, error: formatError(error), status: 'error' };
+      console.error(
+        `Error in bulk insert operation for table ${table}:`,
+        error
+      );
+      return { data: null, error: formatError(error), status: "error" };
     }
   },
-  async bulkUpdate<T>(table: SupabaseTables | string, data: Partial<T>[], filters: Record<string, any>): Promise<SupabaseResponse<T>> {
+
+  async bulkUpdate<T>(
+    table: SupabaseTables, // Use specific union type
+    data: Partial<T>[],
+    filters: Record<string, any>
+  ): Promise<SupabaseResponse<T[]>> {
     try {
-      let query: any = (supabase.from(table as any) as any).update(data);
-      Object.entries(filters).forEach(([col, val]) => { query = query.eq(col, val as any); });
-      return handlePromise<T>(query);
+      let query: any = supabase.from(table).update(data as any); // Use table directly
+      Object.entries(filters).forEach(([col, val]) => {
+        query = query.eq(col, val as any);
+      });
+      const { data: resultData, error } = await query.select();
+      if (error)
+        return { data: null, error: formatError(error), status: "error" };
+      return { data: resultData as T[], error: null, status: "success" };
     } catch (error) {
-      return { data: null, error: formatError(error), status: 'error' };
+      console.error(
+        `Error in bulk update operation for table ${table}:`,
+        error
+      );
+      return { data: null, error: formatError(error), status: "error" };
     }
   },
-  async bulkDelete<T>(table: SupabaseTables | string, filters: Record<string, any>[]): Promise<SupabaseResponse<T>> {
+  async bulkDelete<T>(
+    table: SupabaseTables, // Use specific union type
+    filters: Record<string, any>[]
+  ): Promise<SupabaseResponse<T[]>> {
     try {
-      let query: any = (supabase.from(table as any) as any).delete();
-      filters.forEach(filt => Object.entries(filt).forEach(([col, val]) => { query = query.eq(col, val as any); }));
-      return handlePromise<T>(query);
+      let query: any = supabase.from(table).delete(); // Use table directly
+      filters.forEach((filt) =>
+        Object.entries(filt).forEach(([col, val]) => {
+          query = query.eq(col, val as any);
+        })
+      );
+      const { data: resultData, error } = await query.select();
+      if (error)
+        return { data: null, error: formatError(error), status: "error" };
+      return { data: resultData as T[], error: null, status: "success" };
     } catch (error) {
-      return { data: null, error: formatError(error), status: 'error' };
+      console.error(
+        `Error in bulk delete operation for table ${table}:`,
+        error
+      );
+      return { data: null, error: formatError(error), status: "error" };
     }
   },
-  async paginate<T>(table: SupabaseTables | string, columns: string = '*', page: number = 1, pageSize: number = 10, options?: { filters?: Record<string, any>; order?: { column: string; ascending?: boolean } }): Promise<{ data: T[] | null; total: number | null; page: number; pageSize: number; error: SupabaseErrorResponse | null; status: 'success' | 'error' }> {
+
+  async paginate<T>(
+    table: SupabaseTables, // Use specific union type
+    columns: string = "*",
+    page: number = 1,
+    pageSize: number = 10,
+    options?: {
+      filters?: Record<string, any>;
+      order?: { column: string; ascending?: boolean };
+    }
+  ): Promise<{
+    data: T[] | null;
+    total: number | null;
+    page: number;
+    pageSize: number;
+    error: SupabaseErrorResponse | null;
+    status: "success" | "error";
+  }> {
     try {
       const from = (page - 1) * pageSize;
       const to = page * pageSize - 1;
-      let query: any = (supabase.from(table as any) as any).select(columns, { count: 'exact' }).range(from, to);
-      if (options?.filters) Object.entries(options.filters).forEach(([col, val]) => { query = query.eq(col, val as any); });
-      if (options?.order) query = query.order(options.order.column, { ascending: options.order.ascending });
+      let query = supabase
+        .from(table) // Use table directly
+        .select(columns, { count: "exact" })
+        .range(from, to);
+
+      if (options?.filters) {
+        Object.entries(options.filters).forEach(([key, value]) => {
+          if (value !== undefined && value !== null)
+            query = query.eq(key, value);
+        });
+      }
+      if (options?.order) {
+        query = query.order(options.order.column, {
+          ascending: options.order.ascending,
+        });
+      }
+
       const { data, error, count } = await query;
-      if (error) throw error;
-      return { data: data as T[], total: count, page, pageSize, error: null, status: 'success' };
+
+      if (error) {
+        console.error(`Error paginating table ${table}:`, error);
+        return {
+          data: null,
+          total: null,
+          page,
+          pageSize,
+          error: formatError(error),
+          status: "error",
+        };
+      }
+      return {
+        data: data as T[],
+        total: count,
+        page,
+        pageSize,
+        error: null,
+        status: "success",
+      };
     } catch (error) {
-      return { data: null, total: null, page, pageSize, error: formatError(error), status: 'error' };
+      console.error(
+        `Unexpected error during pagination for table ${table}:`,
+        error
+      );
+      return {
+        data: null,
+        total: null,
+        page,
+        pageSize,
+        error: formatError(error),
+        status: "error",
+      };
     }
   },
-  subscribe<T>(table: SupabaseTables | string, event: 'INSERT' | 'UPDATE' | 'DELETE', callback: (payload: any) => void, filters?: Record<string, any>) {
-    let realtime: any = (supabase.from(table as any) as any);
-    if (filters) Object.entries(filters).forEach(([col, val]) => { realtime = realtime.filter(col, 'eq', val as any); });
-    return realtime.on(event, payload => callback(payload)).subscribe();
+
+  // Subscribe using channels
+  subscribe(
+    table: SupabaseTables, // Use specific union type
+    event: "INSERT" | "UPDATE" | "DELETE" | "*",
+    callback: (payload: any) => void, // Use any for payload flexibility
+    filters?: Record<string, string>
+  ): RealtimeChannel {
+    const channelName = `supabase-service:${table}:${
+      filters ? JSON.stringify(filters) : "all"
+    }`;
+    const channel = supabase.channel(channelName);
+    let filterString = "";
+    if (filters) {
+      filterString = Object.entries(filters)
+        .map(([key, value]) => `${key}=eq.${value}`)
+        .join("&");
+    }
+    channel
+      .on(
+        "postgres_changes", // Correct event type for table changes
+        {
+          event: event === "*" ? "*" : event,
+          schema: "public",
+          table: table,
+          filter: filterString || undefined,
+        },
+        (payload: any) => callback(payload) // Use any for payload
+      )
+      .subscribe((status, err) => {
+        if (err) console.error(`Error subscribing to ${channelName}:`, err);
+        else console.log(`Subscribed to ${channelName} with status: ${status}`);
+      });
+    return channel;
   },
-  unsubscribe(subscription: any) {
-    subscription.unsubscribe();
+
+  unsubscribe(channel: RealtimeChannel) {
+    if (channel) {
+      supabase
+        .removeChannel(channel)
+        .then(() => console.log(`Unsubscribed from channel: ${channel.topic}`))
+        .catch((err) => console.error("Error unsubscribing:", err));
+    } else {
+      console.warn("Attempted to unsubscribe from an invalid channel object.");
+    }
   },
-  async custom<T>(queryFn: (client: any) => any): Promise<SupabaseResponse<T>> {
+
+  async custom<T>(
+    queryFn: (client: any) => Promise<any>
+  ): Promise<SupabaseResponse<T>> {
     try {
-      const query = queryFn(supabase);
-      return handlePromise<T>(query);
+      const result = await queryFn(supabase);
+      if (result && typeof result === "object" && "error" in result) {
+        if (result.error)
+          return {
+            data: null,
+            error: formatError(result.error),
+            status: "error",
+          };
+        return {
+          data: result.data as T | null,
+          error: null,
+          status: "success",
+        };
+      }
+      return { data: result as T | null, error: null, status: "success" };
     } catch (error) {
-      return { data: null, error: formatError(error), status: 'error' };
+      console.error("Error executing custom query function:", error);
+      return { data: null, error: formatError(error), status: "error" };
     }
   },
 };
