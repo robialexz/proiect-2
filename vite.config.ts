@@ -51,5 +51,18 @@ export default defineConfig({
     hmr: {
       overlay: false, // Disable error overlay for better performance
     },
+    watch: {
+      usePolling: false,
+      // Reduce file system watching overhead
+      ignored: ['**/node_modules/**', '**/dist/**', '**/.git/**', '**/reports/**']
+    }
+  },
+  // Disable constant dependency pre-bundling
+  cacheDir: '.vite',
+  // Disable constant file analysis
+  esbuild: {
+    logOverride: {
+      'this-is-undefined-in-esm': 'silent'
+    }
   }
 });
