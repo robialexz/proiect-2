@@ -24,7 +24,7 @@ const emitConnectionStateChange = (state: {
   supabase: boolean;
 }) => {
   window.dispatchEvent(
-    new CustomEvent(CONNECTION_STATE_CHANGE_EVENT, { detail: state }),
+    new CustomEvent(CONNECTION_STATE_CHANGE_EVENT, { detail: state })
   );
 };
 
@@ -41,7 +41,7 @@ const connectionService = {
       // În modul de dezvoltare, considerăm întotdeauna că există conexiune la Supabase
       if (import.meta.env.DEV) {
         console.log(
-          "Development mode: assuming Supabase connection is available",
+          "Development mode: assuming Supabase connection is available"
         );
         lastConnectionState.supabase = true;
         lastConnectionState.lastChecked = Date.now();
@@ -96,7 +96,7 @@ const connectionService = {
             .catch((altError) => {
               console.error(
                 "Alternative connection to Supabase failed:",
-                altError,
+                altError
               );
               lastConnectionState.lastError =
                 altError instanceof Error
@@ -177,7 +177,7 @@ const connectionService = {
       // În modul de dezvoltare, considerăm întotdeauna că există conexiune la internet
       if (import.meta.env.DEV) {
         console.log(
-          "Development mode: assuming internet connection is available",
+          "Development mode: assuming internet connection is available"
         );
         lastConnectionState.internet = true;
         lastConnectionState.lastChecked = Date.now();
@@ -208,8 +208,8 @@ const connectionService = {
         "https://www.cloudflare.com",
         "https://www.google.com",
         "https://www.microsoft.com",
-        "https://cdn.jsdelivr.net/npm/react/umd/react.production.min.js", // CDN JavaScript
-        "https://unpkg.com/react/umd/react.production.min.js", // Alt CDN JavaScript
+        "https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js", // CDN JavaScript cu versiune specifică
+        "https://unpkg.com/react@18.2.0/umd/react.production.min.js", // Alt CDN JavaScript cu versiune specifică
       ];
 
       // Creăm promisiuni pentru fiecare serviciu cu un timeout individual
@@ -244,7 +244,7 @@ const connectionService = {
           console.log(
             hasConnection
               ? "Internet connection successful"
-              : "Internet connection failed",
+              : "Internet connection failed"
           );
 
           // Resetăm contorul de reîncercări în caz de succes
@@ -359,7 +359,7 @@ const connectionService = {
    * @param callback Funcția care va fi apelată când se schimbă starea conexiunii
    */
   addConnectionStateChangeListener(
-    callback: (state: { internet: boolean; supabase: boolean }) => void,
+    callback: (state: { internet: boolean; supabase: boolean }) => void
   ): void {
     const handler = (event: Event) => {
       const customEvent = event as CustomEvent<{

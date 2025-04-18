@@ -16,15 +16,34 @@ const GlassAnimatedBackground = () => (
     {/* Efect glassmorphism subtil */}
     <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-blue-300/10 to-purple-400/10 backdrop-blur-2xl" />
     {/* Particule animate SVG foarte subtile */}
-    <svg className="absolute top-0 left-0 w-full h-full opacity-20 pointer-events-none" width="100%" height="100%">
+    <svg
+      className="absolute top-0 left-0 w-full h-full opacity-20 pointer-events-none"
+      width="100%"
+      height="100%"
+    >
       <circle cx="15%" cy="30%" r="60" fill="#7dd3fc" fillOpacity="0.15">
-        <animate attributeName="cy" values="30%;40%;30%" dur="8s" repeatCount="indefinite" />
+        <animate
+          attributeName="cy"
+          values="30%;40%;30%"
+          dur="8s"
+          repeatCount="indefinite"
+        />
       </circle>
       <circle cx="80%" cy="70%" r="70" fill="#818cf8" fillOpacity="0.12">
-        <animate attributeName="cy" values="70%;60%;70%" dur="10s" repeatCount="indefinite" />
+        <animate
+          attributeName="cy"
+          values="70%;60%;70%"
+          dur="10s"
+          repeatCount="indefinite"
+        />
       </circle>
       <circle cx="50%" cy="10%" r="40" fill="#f472b6" fillOpacity="0.10">
-        <animate attributeName="cy" values="10%;20%;10%" dur="12s" repeatCount="indefinite" />
+        <animate
+          attributeName="cy"
+          values="10%;20%;10%"
+          dur="12s"
+          repeatCount="indefinite"
+        />
       </circle>
     </svg>
   </div>
@@ -36,7 +55,7 @@ const GlassCard = ({ children }) => (
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.8 }}
     className="glass-card bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl rounded-2xl p-8 w-full max-w-md relative overflow-hidden"
-    style={{ boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.25)' }}
+    style={{ boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.25)" }}
   >
     {children}
   </motion.div>
@@ -77,10 +96,17 @@ const AnimatedCheckbox = (props: AnimatedCheckboxProps) => (
 // Logo animat stilizat, SVG subtil
 const AnimatedLogo = () => (
   <motion.svg
-    width="64" height="64" viewBox="0 0 64 64"
+    width="64"
+    height="64"
+    viewBox="0 0 64 64"
     initial={{ opacity: 0, scale: 0.8 }}
     animate={{ opacity: 1, scale: 1, rotate: [0, 10, -10, 0] }}
-    transition={{ duration: 2, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" }}
+    transition={{
+      duration: 2,
+      repeat: Infinity,
+      repeatType: "reverse",
+      ease: "easeInOut",
+    }}
     className="mx-auto mb-4 drop-shadow-xl"
   >
     <defs>
@@ -90,7 +116,12 @@ const AnimatedLogo = () => (
       </radialGradient>
     </defs>
     <circle cx="32" cy="32" r="28" fill="url(#grad1)" />
-    <path d="M24 36 Q32 28 40 36" stroke="#f472b6" strokeWidth="2.5" fill="none" />
+    <path
+      d="M24 36 Q32 28 40 36"
+      stroke="#f472b6"
+      strokeWidth="2.5"
+      fill="none"
+    />
     <circle cx="28" cy="28" r="2.5" fill="#7dd3fc" />
     <circle cx="36" cy="28" r="2.5" fill="#f472b6" />
   </motion.svg>
@@ -141,10 +172,10 @@ const LoginPage = () => {
 
   // La mount, preia emailul dacă există rememberMe
   React.useEffect(() => {
-    const remembered = localStorage.getItem('rememberMe');
+    const remembered = localStorage.getItem("rememberMe");
     if (remembered) {
       setRememberMe(true);
-      const rememberedEmail = localStorage.getItem('rememberedEmail');
+      const rememberedEmail = localStorage.getItem("rememberedEmail");
       if (rememberedEmail) setEmail(rememberedEmail);
     }
   }, []);
@@ -155,7 +186,7 @@ const LoginPage = () => {
       toast({
         variant: "destructive",
         title: "Eroare",
-        description: error
+        description: error,
       });
     }
   }, [error, toast]);
@@ -164,7 +195,7 @@ const LoginPage = () => {
     if (loading) {
       toast({
         title: "Se autentifică...",
-        description: "Vă rugăm să așteptați"
+        description: "Vă rugăm să așteptați",
       });
     }
   }, [loading, toast]);
@@ -173,11 +204,11 @@ const LoginPage = () => {
     e.preventDefault();
     setError(null);
     if (rememberMe) {
-      localStorage.setItem('rememberMe', 'true');
-      localStorage.setItem('rememberedEmail', email);
+      localStorage.setItem("rememberMe", "true");
+      localStorage.setItem("rememberedEmail", email);
     } else {
-      localStorage.removeItem('rememberMe');
-      localStorage.removeItem('rememberedEmail');
+      localStorage.removeItem("rememberMe");
+      localStorage.removeItem("rememberedEmail");
     }
 
     // Verifică dacă email-ul și parola sunt completate
@@ -189,7 +220,7 @@ const LoginPage = () => {
     // În modul de dezvoltare, ignorăm verificarea conexiunii
     if (!import.meta.env.DEV && connectionStatus === "offline") {
       setError(
-        "Nu există conexiune la internet sau la server. Vă rugăm să verificați conexiunea și să încercați din nou.",
+        "Nu există conexiune la internet sau la server. Vă rugăm să verificați conexiunea și să încercați din nou."
       );
       return;
     }
@@ -197,14 +228,14 @@ const LoginPage = () => {
     setLoading(true);
 
     // Set session flag for welcome message
-    sessionStorage.setItem('newLoginDetected', 'true');
+    sessionStorage.setItem("newLoginDetected", "true");
 
     // Adăugăm un timeout pentru întreaga operațiune de login - mărim la 20 secunde pentru a da mai mult timp
     const loginTimeout = setTimeout(() => {
       if (loading) {
         setLoading(false);
         setError(
-          "Timpul de autentificare a expirat. Vă rugăm să verificați conexiunea la internet și să încercați din nou.",
+          "Timpul de autentificare a expirat. Vă rugăm să verificați conexiunea la internet și să încercați din nou."
         );
         console.error("Login timeout reached");
       }
@@ -218,18 +249,18 @@ const LoginPage = () => {
         console.log("LoginPage: Received session update event");
         if (event.detail?.session) {
           console.log(
-            "LoginPage: Session update detected, navigating to dashboard",
+            "LoginPage: Session update detected, navigating to dashboard"
           );
           // Curățăm timeout-ul
           clearTimeout(loginTimeout);
           // Eliminăm listener-ul
           window.removeEventListener(
             "supabase-session-update",
-            sessionUpdateHandler,
+            sessionUpdateHandler
           );
           window.removeEventListener(
             "force-session-refresh",
-            sessionUpdateHandler,
+            sessionUpdateHandler
           );
           // Navigăm către pagina principală
           navigate("/dashboard");
@@ -243,7 +274,7 @@ const LoginPage = () => {
       // Autentificare normală
       const { data: sessionData, error: signInError } = await signIn(
         email,
-        password,
+        password
       );
       console.log("LoginPage: signIn function returned:", {
         success: !!sessionData,
@@ -259,11 +290,11 @@ const LoginPage = () => {
         // Eliminăm listener-ul în caz de eroare
         window.removeEventListener(
           "supabase-session-update",
-          sessionUpdateHandler,
+          sessionUpdateHandler
         );
         window.removeEventListener(
           "force-session-refresh",
-          sessionUpdateHandler,
+          sessionUpdateHandler
         );
         throw signInError;
       }
@@ -271,30 +302,30 @@ const LoginPage = () => {
       // Verificăm dacă avem date de sesiune
       if (sessionData) {
         console.log(
-          "LoginPage: Authentication successful, navigating to dashboard",
+          "LoginPage: Authentication successful, navigating to dashboard"
         );
         // Navigație directă către pagina principală
         navigate("/dashboard");
       } else {
         // Așteptăm evenimentul de actualizare a sesiunii
         console.log(
-          "LoginPage: No session data returned, waiting for session update event",
+          "LoginPage: No session data returned, waiting for session update event"
         );
         // Adăugăm un timeout suplimentar pentru a aștepta evenimentul
         setTimeout(() => {
           // Verificăm dacă încă mai suntem pe pagina de login
           if (window.location.pathname.includes("login")) {
             console.log(
-              "LoginPage: No session update event received, navigating to dashboard anyway",
+              "LoginPage: No session update event received, navigating to dashboard anyway"
             );
             // Eliminăm listener-ul
             window.removeEventListener(
               "supabase-session-update",
-              sessionUpdateHandler,
+              sessionUpdateHandler
             );
             window.removeEventListener(
               "force-session-refresh",
-              sessionUpdateHandler,
+              sessionUpdateHandler
             );
             // Navigăm către pagina principală
             navigate("/dashboard");
@@ -399,8 +430,11 @@ const LoginPage = () => {
                 type="email"
                 placeholder="name@example.com"
                 value={email}
-                onChange={(e: ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
+                onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                  setEmail(e.target.value)
+                }
                 required
+                autoComplete="username"
               />
             </div>
 
@@ -421,13 +455,17 @@ const LoginPage = () => {
                   id="password"
                   type={showPassword ? "text" : "password"}
                   value={password}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                    setPassword(e.target.value)
+                  }
                   required
                   autoComplete="current-password"
                 />
                 <button
                   type="button"
-                  aria-label={showPassword ? "Ascunde parola" : "Afișează parola"}
+                  aria-label={
+                    showPassword ? "Ascunde parola" : "Afișează parola"
+                  }
                   className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-300 hover:text-indigo-400 focus:outline-none"
                   onClick={() => setShowPassword((v) => !v)}
                   tabIndex={0}
@@ -441,7 +479,9 @@ const LoginPage = () => {
               <AnimatedCheckbox
                 id="remember"
                 checked={rememberMe}
-                onChange={(e: ChangeEvent<HTMLInputElement>) => setRememberMe(e.target.checked)}
+                onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                  setRememberMe(e.target.checked)
+                }
               />
               <Label
                 htmlFor="remember"
