@@ -32,6 +32,7 @@ export default defineConfig({
           'supabase': ['@supabase/supabase-js'],
         },
       },
+      external: [],
     },
   },
   plugins: [
