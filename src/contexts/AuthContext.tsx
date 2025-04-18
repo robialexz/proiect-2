@@ -55,22 +55,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             restoreSession(parsedBackup.currentSession);
 
             // Încercăm să reîmprospătăm sesiunea cu Supabase
-            supabase.auth
-              .refreshSession()
-              .then(({ data }) => {
-                if (data?.session) {
-                  console.log(
-                    "Session refreshed successfully after restore from backup"
-                  );
-                  restoreSession(data.session);
-                }
-              })
-              .catch((error) => {
-                console.error(
-                  "Error refreshing session after restore from backup:",
-                  error
-                );
-              });
+            // Folosim un timeout pentru a ne asigura că sesiunea este salvată înainte de a încerca să o reîmprospătăm
+            setTimeout(() => {
+              try {
+                supabase.auth
+                  .refreshSession()
+                  .then(({ data }) => {
+                    if (data?.session) {
+                      console.log(
+                        "Session refreshed successfully after restore from backup"
+                      );
+                      restoreSession(data.session);
+
+                      // Resetăm contorul de încercări după o reîmprospătare reușită
+                      window.sessionStorage.removeItem(
+                        "session_restore_attempts"
+                      );
+                    }
+                  })
+                  .catch((error) => {
+                    console.error(
+                      "Error refreshing session after restore from backup:",
+                      error
+                    );
+                  });
+              } catch (refreshError) {
+                console.error("Error during session refresh:", refreshError);
+              }
+            }, 500);
           }
         } catch (error) {
           console.error("Error parsing session backup:", error);
@@ -93,6 +105,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               currentSession: sessionData,
               expiresAt: Date.now() + 3600 * 1000, // 1 oră valabilitate
             };
+
+            // Salvăm sesiunea în format compatibil cu Supabase
             localStorage.setItem(
               "supabase.auth.token",
               JSON.stringify(sessionDataToStore)
@@ -101,6 +115,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               "supabase.auth.token",
               JSON.stringify(sessionDataToStore)
             );
+
+            // Salvăm și sesiunea direct pentru compatibilitate cu versiuni mai noi de Supabase
+            try {
+              localStorage.setItem(
+                "sb-" +
+                  import.meta.env.VITE_SUPABASE_PROJECT_ID +
+                  "-auth-token",
+                JSON.stringify(sessionData)
+              );
+            } catch (e) {
+              console.error("Error saving direct session format:", e);
+            }
+
             console.log("Session saved to storage from event");
           } catch (storageError) {
             console.error(
