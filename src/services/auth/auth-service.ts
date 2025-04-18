@@ -235,8 +235,9 @@ export const authService = {
         status: "success",
       };
     } catch (error) {
+      console.error("Error getting session:", error);
       return {
-        data: null,
+        data: { session: null },
         error: formatError(error),
         status: "error",
       };

@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -62,12 +61,7 @@ const RegisterPage = () => {
 
   return (
     <div className="min-h-screen flex flex-col justify-center items-center px-4 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl rounded-2xl p-8 w-full max-w-md"
-      >
+      <div className="bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl rounded-2xl p-8 w-full max-w-md">
         <div className="text-center mb-6">
           <Link to="/" className="inline-block">
             <div className="flex items-center justify-center gap-2 mb-2">
@@ -230,7 +224,7 @@ const RegisterPage = () => {
             </p>
           </div>
         </form>
-      </motion.div>
+      </div>
     </div>
   );
 };
