@@ -38,12 +38,13 @@ import {
   Bot,
   Sparkles,
 } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useNotification } from "@/components/ui/notification";
 import { fadeInLeft, fadeInRight } from "@/lib/animation-variants";
-import { useAdvancedRole } from "@/contexts/AdvancedRoleContext";
+
+// Importăm hook-uri personalizate
+import { useAuth, useUI } from "@/store";
 
 interface NavItem {
   title: string;
@@ -53,7 +54,7 @@ interface NavItem {
   badgeColor?: string;
 }
 
-interface NavItemWithItems extends Omit<NavItem, 'href'> {
+interface NavItemWithItems extends Omit<NavItem, "href"> {
   items: NavItem[];
   expanded?: boolean;
 }
@@ -67,111 +68,121 @@ interface NavGroup {
 
 const Sidebar = () => {
   const { t } = useTranslation();
-  const { userProfile, signOut } = useAuth();
+  const { userProfile, logout, role } = useAuth();
+  const {
+    sidebarCollapsed: collapsed,
+    setSidebarCollapsed: setCollapsed,
+    addNotification,
+  } = useUI();
   const location = useLocation();
   const navigate = useNavigate();
-  const { addNotification } = useNotification();
-  const { hasPermission } = useAdvancedRole();
 
   // Verificăm dacă utilizatorul are permisiunea de a administra rolurile
-  const isAdmin = hasPermission('assign_role');
-  const [collapsed, setCollapsed] = useState(false);
-  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
-    dashboard: true,
-    management: true,
-    reports: true,
-  });
+  const isAdmin = role === "admin";
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(
+    {
+      dashboard: true,
+      management: true,
+      reports: true,
+    }
+  );
 
   // Definim grupurile de navigare - optimizat cu memoizare
-  const navGroups: NavGroup[] = useMemo(() => [
-    {
-      title: t("sidebar.dashboardGroup"),
-      icon: <LayoutDashboard size={20} />,
-      items: [
-        {
-          title: t("sidebar.dashboard"),
-          icon: <Home size={20} />,
-          href: "/dashboard",
-        },
-        // Eliminăm "sidebar overview" care nu ar trebui să existe
-        // {
-        //   title: t("sidebar.overview"),
-        //   icon: <BarChart size={20} />,
-        //   href: "/overview",
-        // },
-      ],
-    },
-    {
-      title: t("sidebar.managementGroup"),
-      icon: <Briefcase size={20} />,
-      items: [
-        {
-          title: t("sidebar.projects"),
-          icon: <Briefcase size={20} />,
-          href: "/projects",
-          badge: 3,
-          badgeColor: "bg-blue-500",
-        },
-        {
-          title: t("sidebar.inventory"),
-          icon: <Package size={20} />,
-          href: "/inventory-management",
-          badge: 12,
-          badgeColor: "bg-green-500",
-        },
-        {
-          title: t("sidebar.companyInventory", "Company Inventory"),
-          icon: <Package size={20} />,
-          href: "/company-inventory",
-        },
-        {
-          title: t("sidebar.suppliers"),
-          icon: <Building size={20} />,
-          href: "/suppliers",
-        },
-        {
-          title: t("sidebar.teams"),
-          icon: <Users size={20} />,
-          href: "/teams",
-        },
-        {
-          title: t("sidebar.budget"),
-          icon: <DollarSign size={20} />,
-          href: "/budget",
-        },
-      ],
-    },
-    {
-      title: t("sidebar.reportsGroup"),
-      icon: <FileSpreadsheet size={20} />,
-      items: [
-        {
-          title: t("sidebar.reports"),
-          icon: <FileSpreadsheet size={20} />,
-          href: "/reports",
-        },
-        {
-          title: t("sidebar.schedule"),
-          icon: <Calendar size={20} />,
-          href: "/schedule",
-        },
-        {
-          title: t("sidebar.documents"),
-          icon: <FileText size={20} />,
-          href: "/documents",
-        },
-        {
-          title: t("sidebar.resources"),
-          icon: <FolderArchive size={20} />,
-          href: "/resources",
-        },
-        // Eliminat elementul sidebar.task care nu ar trebui să existe
-      ],
-    },
-  ], [t]);
+  const navGroups: NavGroup[] = useMemo(
+    () => [
+      {
+        title: t("sidebar.dashboardGroup"),
+        icon: <LayoutDashboard size={20} />,
+        items: [
+          {
+            title: t("sidebar.dashboard"),
+            icon: <Home size={20} />,
+            href: "/dashboard",
+          },
+          // Eliminăm "sidebar overview" care nu ar trebui să existe
+          // {
+          //   title: t("sidebar.overview"),
+          //   icon: <BarChart size={20} />,
+          //   href: "/overview",
+          // },
+        ],
+      },
+      {
+        title: t("sidebar.managementGroup"),
+        icon: <Briefcase size={20} />,
+        items: [
+          {
+            title: t("sidebar.projects"),
+            icon: <Briefcase size={20} />,
+            href: "/projects",
+            badge: 3,
+            badgeColor: "bg-blue-500",
+          },
+          {
+            title: t("sidebar.inventory"),
+            icon: <Package size={20} />,
+            href: "/inventory-management",
+            badge: 12,
+            badgeColor: "bg-green-500",
+          },
+          {
+            title: t("sidebar.companyInventory", "Company Inventory"),
+            icon: <Package size={20} />,
+            href: "/company-inventory",
+          },
+          {
+            title: t("sidebar.suppliers"),
+            icon: <Building size={20} />,
+            href: "/suppliers",
+          },
+          {
+            title: t("sidebar.teams"),
+            icon: <Users size={20} />,
+            href: "/teams",
+          },
+          {
+            title: t("sidebar.budget"),
+            icon: <DollarSign size={20} />,
+            href: "/budget",
+          },
+        ],
+      },
+      {
+        title: t("sidebar.reportsGroup"),
+        icon: <FileSpreadsheet size={20} />,
+        items: [
+          {
+            title: t("sidebar.reports"),
+            icon: <FileSpreadsheet size={20} />,
+            href: "/reports",
+          },
+          {
+            title: t("sidebar.schedule"),
+            icon: <Calendar size={20} />,
+            href: "/schedule",
+          },
+          {
+            title: t("sidebar.documents"),
+            icon: <FileText size={20} />,
+            href: "/documents",
+          },
+          {
+            title: t("sidebar.resources"),
+            icon: <FolderArchive size={20} />,
+            href: "/resources",
+          },
+          // Eliminat elementul sidebar.task care nu ar trebui să existe
+        ],
+      },
+    ],
+    [t]
+  );
 
   // Verificăm dacă un item este activ - optimizat cu memoizare
-  const isActive = useMemoizedCallback((href: string) => location.pathname === href, [location.pathname]);
+  const isActive = useMemoizedCallback(
+    (href: string) => location.pathname === href,
+    [location.pathname]
+  );
 
   // Gestionăm expandarea/colapsarea grupurilor - optimizat cu memoizare
   const toggleGroup = useMemoizedCallback((groupTitle: string) => {
@@ -183,7 +194,7 @@ const Sidebar = () => {
 
   // Gestionăm deconectarea - optimizat cu memoizare
   const handleSignOut = useMemoizedCallback(async () => {
-    await signOut();
+    await logout();
     addNotification({
       type: "success",
       title: "Deconectat",
@@ -191,7 +202,7 @@ const Sidebar = () => {
       duration: 3000,
     });
     navigate("/login");
-  }, [signOut, addNotification, navigate]);
+  }, [logout, addNotification, navigate]);
 
   // Când se schimbă ruta, expandăm automat grupul corespunzător
   useEffect(() => {
@@ -241,7 +252,9 @@ const Sidebar = () => {
         <div className="flex items-center">
           <Avatar className="h-10 w-10">
             <AvatarImage
-              src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${userProfile?.displayName || "user"}`}
+              src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${
+                userProfile?.displayName || "user"
+              }`}
               alt={userProfile?.displayName || "User"}
             />
             <AvatarFallback>
@@ -345,7 +358,9 @@ const Sidebar = () => {
                                 )}
                               </span>
                               {!collapsed && (
-                                <span className="ml-3 flex-1">{item.title}</span>
+                                <span className="ml-3 flex-1">
+                                  {item.title}
+                                </span>
                               )}
                               {!collapsed && item.badge && (
                                 <span
@@ -402,7 +417,11 @@ const Sidebar = () => {
                     onClick={() => navigate("/role-management")}
                   >
                     <Shield size={20} />
-                    {!collapsed && <span className="ml-3">{t("sidebar.roleManagement", "Role Management")}</span>}
+                    {!collapsed && (
+                      <span className="ml-3">
+                        {t("sidebar.roleManagement", "Role Management")}
+                      </span>
+                    )}
                   </Button>
                 </TooltipTrigger>
                 {collapsed && (
@@ -447,7 +466,8 @@ const Sidebar = () => {
                   className={cn(
                     "w-full text-slate-400 hover:text-white hover:bg-slate-800 justify-start",
                     collapsed && "justify-center",
-                    location.pathname === "/ai-assistant" && "bg-slate-800 text-white"
+                    location.pathname === "/ai-assistant" &&
+                      "bg-slate-800 text-white"
                   )}
                   onClick={() => navigate("/ai-assistant")}
                 >
@@ -467,8 +487,6 @@ const Sidebar = () => {
               )}
             </Tooltip>
           </TooltipProvider>
-
-
 
           {/* Link către dashboard-ul de testare */}
           <TooltipProvider>
@@ -507,7 +525,11 @@ const Sidebar = () => {
                   onClick={() => navigate("/tutorial")}
                 >
                   <BookOpen size={20} />
-                  {!collapsed && <span className="ml-3">{t("sidebar.tutorial", "Tutoriale & Ajutor")}</span>}
+                  {!collapsed && (
+                    <span className="ml-3">
+                      {t("sidebar.tutorial", "Tutoriale & Ajutor")}
+                    </span>
+                  )}
                 </Button>
               </TooltipTrigger>
               {collapsed && (
@@ -530,7 +552,9 @@ const Sidebar = () => {
                   onClick={() => navigate("/settings")}
                 >
                   <Settings size={20} />
-                  {!collapsed && <span className="ml-3">{t("sidebar.settings")}</span>}
+                  {!collapsed && (
+                    <span className="ml-3">{t("sidebar.settings")}</span>
+                  )}
                 </Button>
               </TooltipTrigger>
               {collapsed && (
@@ -553,7 +577,9 @@ const Sidebar = () => {
                   onClick={handleSignOut}
                 >
                   <LogOut size={20} />
-                  {!collapsed && <span className="ml-3">{t("sidebar.logout")}</span>}
+                  {!collapsed && (
+                    <span className="ml-3">{t("sidebar.logout")}</span>
+                  )}
                 </Button>
               </TooltipTrigger>
               {collapsed && (

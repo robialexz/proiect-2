@@ -3,12 +3,14 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
 import { AlertCircle, Eye, EyeOff } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import connectionService from "@/lib/connection-service";
 import { useToast } from "@/components/ui/use-toast";
 import { Toaster } from "@/components/ui/toaster";
+
+// Importăm hook-uri personalizate
+import { useAuth } from "@/store";
 
 // Fundal animat cu glassmorphism subtil și particule soft
 const GlassAnimatedBackground = () => (
@@ -137,7 +139,7 @@ const LoginPage = () => {
   const [connectionStatus, setConnectionStatus] = useState<
     "checking" | "online" | "offline"
   >("checking");
-  const { signIn } = useAuth();
+  const { login, isLoading: authLoading, error: authError } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -191,14 +193,24 @@ const LoginPage = () => {
     }
   }, [error, toast]);
 
+  // Monitorizăm erorile din store
   useEffect(() => {
-    if (loading) {
+    if (authError) {
+      setError(authError);
+    }
+  }, [authError]);
+
+  // Monitorizăm starea de loading din store
+  useEffect(() => {
+    setLoading(authLoading);
+
+    if (authLoading) {
       toast({
         title: "Se autentifică...",
         description: "Vă rugăm să așteptați",
       });
     }
-  }, [loading, toast]);
+  }, [authLoading, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -230,112 +242,15 @@ const LoginPage = () => {
     // Set session flag for welcome message
     sessionStorage.setItem("newLoginDetected", "true");
 
-    // Adăugăm un timeout pentru întreaga operațiune de login - mărim la 20 secunde pentru a da mai mult timp
-    const loginTimeout = setTimeout(() => {
-      if (loading) {
-        setLoading(false);
-        setError(
-          "Timpul de autentificare a expirat. Vă rugăm să verificați conexiunea la internet și să încercați din nou."
-        );
-        console.error("Login timeout reached");
-      }
-    }, 20000); // 20 secunde timeout
-
     try {
-      console.log("LoginPage: Calling signIn function with email:", email);
+      // Folosim noul serviciu de autentificare
+      const success = await login(email, password);
 
-      // Adăugăm un eveniment pentru a asculta actualizările de sesiune
-      const sessionUpdateHandler = (event: any) => {
-        console.log("LoginPage: Received session update event");
-        if (event.detail?.session) {
-          console.log(
-            "LoginPage: Session update detected, navigating to dashboard"
-          );
-          // Curățăm timeout-ul
-          clearTimeout(loginTimeout);
-          // Eliminăm listener-ul
-          window.removeEventListener(
-            "supabase-session-update",
-            sessionUpdateHandler
-          );
-          window.removeEventListener(
-            "force-session-refresh",
-            sessionUpdateHandler
-          );
-          // Navigăm către pagina principală
-          navigate("/dashboard");
-        }
-      };
-
-      // Adăugăm listener pentru ambele evenimente
-      window.addEventListener("supabase-session-update", sessionUpdateHandler);
-      window.addEventListener("force-session-refresh", sessionUpdateHandler);
-
-      // Autentificare normală
-      const { data: sessionData, error: signInError } = await signIn(
-        email,
-        password
-      );
-      console.log("LoginPage: signIn function returned:", {
-        success: !!sessionData,
-        error: signInError ? signInError.message : null,
-        redirecting: signInError ? false : true,
-      });
-
-      // Curățăm timeout-ul deoarece am primit un răspuns
-      clearTimeout(loginTimeout);
-
-      if (signInError) {
-        console.log("signIn returned an error, throwing...");
-        // Eliminăm listener-ul în caz de eroare
-        window.removeEventListener(
-          "supabase-session-update",
-          sessionUpdateHandler
-        );
-        window.removeEventListener(
-          "force-session-refresh",
-          sessionUpdateHandler
-        );
-        throw signInError;
-      }
-
-      // Verificăm dacă avem date de sesiune
-      if (sessionData) {
-        console.log(
-          "LoginPage: Authentication successful, navigating to dashboard"
-        );
-        // Navigație directă către pagina principală
+      if (success) {
+        // Navigăm către pagina principală
         navigate("/dashboard");
-      } else {
-        // Așteptăm evenimentul de actualizare a sesiunii
-        console.log(
-          "LoginPage: No session data returned, waiting for session update event"
-        );
-        // Adăugăm un timeout suplimentar pentru a aștepta evenimentul
-        setTimeout(() => {
-          // Verificăm dacă încă mai suntem pe pagina de login
-          if (window.location.pathname.includes("login")) {
-            console.log(
-              "LoginPage: No session update event received, navigating to dashboard anyway"
-            );
-            // Eliminăm listener-ul
-            window.removeEventListener(
-              "supabase-session-update",
-              sessionUpdateHandler
-            );
-            window.removeEventListener(
-              "force-session-refresh",
-              sessionUpdateHandler
-            );
-            // Navigăm către pagina principală
-            navigate("/dashboard");
-          }
-        }, 2000); // 2 secunde de așteptare
       }
     } catch (err: any) {
-      // Curățăm timeout-ul în caz de eroare
-      clearTimeout(loginTimeout);
-
       console.log("Caught error during login:", err);
       // Gestionăm mai bine mesajele de eroare cu mesaje mai prietenoase și în limba română
       let errorMessage =

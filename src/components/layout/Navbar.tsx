@@ -28,9 +28,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/contexts/AuthContext";
-import { useRole } from "@/contexts/RoleContext";
-import { useTheme } from "@/contexts/ThemeContext";
 import { useNotification } from "@/components/ui/notification";
 import { fadeIn, fadeInDown } from "@/lib/animation-variants";
 import { useTranslation } from "react-i18next"; // Import useTranslation
@@ -38,20 +35,21 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { GlobalSearch } from "@/components/ui/global-search";
 import { NotificationCenter } from "@/components/ui/notification-center";
 
+// Importăm hook-uri personalizate
+import { useAuth, useUI } from "@/store";
+
 interface NavbarProps {
   onMenuToggle: () => void;
 }
 
 const Navbar: React.FC<NavbarProps> = ({ onMenuToggle }) => {
   const { t } = useTranslation();
-  const { user, userProfile, signOut } = useAuth();
-  const { userRole, getRoleColor } = useRole();
+  const { user, userProfile, logout, role } = useAuth();
+  const { theme, setTheme, currentPage, addNotification } = useUI();
   const navigate = useNavigate();
   const location = useLocation();
-  const { addNotification } = useNotification();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const { theme, toggleTheme } = useTheme();
   const [notifications, setNotifications] = useState([
     {
       id: "1",
@@ -69,17 +67,23 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuToggle }) => {
     },
   ]);
 
-  // Obținem titlul paginii curente
+  // Obținem titlul paginii curente din store
   const getPageTitle = () => {
-    const path = location.pathname.split("/")[1];
+    return currentPage || "Acasă";
+  };
 
-    if (!path) return "Acasă";
-
-    // Transformăm path în titlu (ex: "inventory-management" -> "Inventory Management")
-    return path
-      .split("-")
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(" ");
+  // Funcție pentru a obține culoarea rolului
+  const getRoleColor = () => {
+    switch (role) {
+      case "admin":
+        return "text-red-400";
+      case "manager":
+        return "text-blue-400";
+      case "director":
+        return "text-purple-400";
+      default:
+        return "text-green-400";
+    }
   };
 
   // Gestionăm căutarea
@@ -105,7 +109,7 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuToggle }) => {
 
   // Gestionăm deconectarea
   const handleSignOut = async () => {
-    await signOut();
+    await logout();
     addNotification({
       type: "success",
       title: "Deconectat",
@@ -117,18 +121,22 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuToggle }) => {
 
   // Gestionăm schimbarea temei
   const handleThemeToggle = () => {
-    toggleTheme();
+    const newTheme = theme === "dark" ? "light" : "dark";
+    setTheme(newTheme);
     addNotification({
       type: "info",
       title: "Temă schimbată",
-      message: theme === 'dark' ? "Temă deschisă activată" : "Temă întunecată activată",
+      message:
+        newTheme === "light"
+          ? "Temă deschisă activată"
+          : "Temă întunecată activată",
       duration: 3000,
     });
   };
 
   // Gestionăm citirea notificărilor
   const markAllNotificationsAsRead = () => {
-    setNotifications(notifications.map(n => ({ ...n, read: true })));
+    setNotifications(notifications.map((n) => ({ ...n, read: true })));
     addNotification({
       type: "success",
       title: "Notificări",
@@ -138,7 +146,7 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuToggle }) => {
   };
 
   // Numărul de notificări necitite
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
     <header className="bg-slate-800 border-b border-slate-700 py-3 px-4 flex items-center justify-between">
@@ -190,23 +198,44 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuToggle }) => {
             >
               <Avatar className="h-7 w-7">
                 <AvatarImage
-                  src={`https://api.dicebear.com/7.x/micah/svg?seed=${userProfile?.displayName || user?.email?.split('@')[0] || "user"}`}
-                  alt={userProfile?.displayName || user?.email?.split('@')[0] || "User"}
+                  src={`https://api.dicebear.com/7.x/micah/svg?seed=${
+                    userProfile?.displayName ||
+                    user?.email?.split("@")[0] ||
+                    "user"
+                  }`}
+                  alt={
+                    userProfile?.displayName ||
+                    user?.email?.split("@")[0] ||
+                    "User"
+                  }
                 />
                 <AvatarFallback className={getRoleColor()}>
-                  {userProfile?.displayName?.charAt(0) || user?.email?.charAt(0).toUpperCase() || "U"}
+                  {userProfile?.displayName?.charAt(0) ||
+                    user?.email?.charAt(0).toUpperCase() ||
+                    "U"}
                 </AvatarFallback>
               </Avatar>
-              <span className={`hidden md:inline-block text-sm font-medium max-w-[100px] truncate ${getRoleColor()}`}>
-                {userProfile?.displayName || user?.email?.split('@')[0] || "Utilizator"}
+              <span
+                className={`hidden md:inline-block text-sm font-medium max-w-[100px] truncate ${getRoleColor()}`}
+              >
+                {userProfile?.displayName ||
+                  user?.email?.split("@")[0] ||
+                  "Utilizator"}
               </span>
               <ChevronDown className="h-4 w-4 text-slate-400" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56 bg-slate-800 border-slate-700">
+          <DropdownMenuContent
+            align="end"
+            className="w-56 bg-slate-800 border-slate-700"
+          >
             <div className="flex items-center justify-start p-2 border-b border-slate-700">
               <div className="flex flex-col space-y-1 leading-none">
-                <p className={`font-medium ${getRoleColor()}`}>{userProfile?.displayName || user?.email?.split('@')[0] || "Utilizator"}</p>
+                <p className={`font-medium ${getRoleColor()}`}>
+                  {userProfile?.displayName ||
+                    user?.email?.split("@")[0] ||
+                    "Utilizator"}
+                </p>
                 <p className="text-sm text-slate-400 truncate">
                   {userProfile?.email || user?.email || ""}
                 </p>
@@ -218,7 +247,9 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuToggle }) => {
             >
               <User className="mr-2 h-4 w-4" />
               <span>Profil</span>
-              <span className="ml-auto text-xs text-slate-500 bg-slate-700 px-1.5 py-0.5 rounded">P</span>
+              <span className="ml-auto text-xs text-slate-500 bg-slate-700 px-1.5 py-0.5 rounded">
+                P
+              </span>
             </DropdownMenuItem>
             <DropdownMenuItem
               className="cursor-pointer hover:bg-slate-700 flex items-center"
@@ -226,7 +257,9 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuToggle }) => {
             >
               <Settings className="mr-2 h-4 w-4" />
               <span>Setări</span>
-              <span className="ml-auto text-xs text-slate-500 bg-slate-700 px-1.5 py-0.5 rounded">S</span>
+              <span className="ml-auto text-xs text-slate-500 bg-slate-700 px-1.5 py-0.5 rounded">
+                S
+              </span>
             </DropdownMenuItem>
             <DropdownMenuSeparator className="bg-slate-700" />
             <DropdownMenuItem
