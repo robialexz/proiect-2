@@ -50,7 +50,9 @@ export const preloadRoute = (route: string): void => {
  */
 export const preloadComponent = (componentPath: string): void => {
   try {
-    import(`../pages/${componentPath}`).catch((err) => {
+    // Folosim o abordare mai robustă pentru importul dinamic
+    const pagePath = `../pages/${componentPath}.tsx`;
+    import(/* @vite-ignore */ pagePath).catch((err) => {
       console.warn(`Failed to preload component ${componentPath}:`, err);
     });
   } catch (err) {

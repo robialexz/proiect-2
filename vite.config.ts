@@ -20,6 +20,8 @@ export default defineConfig({
       "@splinetool/runtime",
       "@splinetool/react-spline",
       "@tanstack/react-query",
+      "zustand",
+      "zustand/middleware",
     ],
     esbuildOptions: {
       target: "es2020",
@@ -30,17 +32,28 @@ export default defineConfig({
     minify: "terser",
     cssMinify: true,
     rollupOptions: {
+      input: {
+        main: "./src/main.tsx",
+      },
       output: {
         manualChunks: {
           "react-vendor": ["react", "react-dom", "react-router-dom"],
           supabase: ["@supabase/supabase-js"],
           query: ["@tanstack/react-query"],
+          state: ["zustand", "zustand/middleware"],
         },
       },
-      external: [],
+      external: [
+        // Excludeăm pachetele care cauzează probleme la build
+      ],
     },
   },
   plugins: [react(), tempo()],
+  // Opțiuni pentru commonjs
+  commonjsOptions: {
+    include: [/node_modules/],
+    transformMixedEsModules: true,
+  },
   resolve: {
     preserveSymlinks: true,
     alias: {
