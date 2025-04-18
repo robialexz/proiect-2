@@ -1,13 +1,20 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import supabaseService from '../lib/supabase-service';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, Edit, Trash2 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
+import React, { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabaseService } from "../services";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ArrowLeft, Edit, Trash2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 
 interface ItemDetail {
   id: string;
@@ -30,40 +37,44 @@ const ItemDetailPage: React.FC = () => {
   const navigate = useNavigate();
 
   // Folosim React Query pentru a gestiona starea și cache-ul
-  const { data: item, isLoading, error } = useQuery<ItemDetail>({
-    queryKey: ['item', id],
+  const {
+    data: item,
+    isLoading,
+    error,
+  } = useQuery<ItemDetail>({
+    queryKey: ["item", id],
     queryFn: async () => {
-      if (!id) throw new Error('ID is required');
-      const res = await supabaseService.select<ItemDetail>('resources', '*', {
+      if (!id) throw new Error("ID is required");
+      const res = await supabaseService.select<ItemDetail>("resources", "*", {
         filters: { id },
-        single: true
+        single: true,
       });
       if (res.error) throw res.error;
-      if (!res.data) throw new Error('Item not found');
+      if (!res.data) throw new Error("Item not found");
       return res.data;
     },
     staleTime: 5 * 60 * 1000, // 5 minute cache
-    retry: 1
+    retry: 1,
   });
 
   // Formatare preț
   const formatPrice = (price?: number) => {
-    if (price === undefined || price === null) return '-';
-    return new Intl.NumberFormat('ro-RO', {
-      style: 'currency',
-      currency: 'RON'
+    if (price === undefined || price === null) return "-";
+    return new Intl.NumberFormat("ro-RO", {
+      style: "currency",
+      currency: "RON",
     }).format(price);
   };
 
   // Formatare dată
   const formatDate = (dateString?: string) => {
-    if (!dateString) return '-';
-    return new Date(dateString).toLocaleDateString('ro-RO', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    if (!dateString) return "-";
+    return new Date(dateString).toLocaleDateString("ro-RO", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -74,14 +85,15 @@ const ItemDetailPage: React.FC = () => {
 
   // Handler pentru ștergere
   const handleDelete = async () => {
-    if (!id || !window.confirm('Sigur doriți să ștergeți acest element?')) return;
+    if (!id || !window.confirm("Sigur doriți să ștergeți acest element?"))
+      return;
 
     try {
-      await supabaseService.delete('resources', id);
-      navigate('/inventory-list');
+      await supabaseService.delete("resources", { id });
+      navigate("/inventory-list");
     } catch (error) {
-      console.error('Error deleting item:', error);
-      alert('A apărut o eroare la ștergerea elementului.');
+      console.error("Error deleting item:", error);
+      alert("A apărut o eroare la ștergerea elementului.");
     }
   };
 
@@ -127,11 +139,14 @@ const ItemDetailPage: React.FC = () => {
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
-              {error instanceof Error ? error.message : 'Eroare necunoscută'}
+              {error instanceof Error ? error.message : "Eroare necunoscută"}
             </p>
           </CardContent>
           <CardFooter>
-            <Button variant="outline" onClick={() => navigate('/inventory-list')}>
+            <Button
+              variant="outline"
+              onClick={() => navigate("/inventory-list")}
+            >
               <ArrowLeft className="mr-2 h-4 w-4" /> Înapoi la listă
             </Button>
           </CardFooter>
@@ -153,11 +168,15 @@ const ItemDetailPage: React.FC = () => {
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
-              Verificați dacă ID-ul este corect sau dacă elementul nu a fost șters.
+              Verificați dacă ID-ul este corect sau dacă elementul nu a fost
+              șters.
             </p>
           </CardContent>
           <CardFooter>
-            <Button variant="outline" onClick={() => navigate('/inventory-list')}>
+            <Button
+              variant="outline"
+              onClick={() => navigate("/inventory-list")}
+            >
               <ArrowLeft className="mr-2 h-4 w-4" /> Înapoi la listă
             </Button>
           </CardFooter>
@@ -174,7 +193,7 @@ const ItemDetailPage: React.FC = () => {
           <Button
             variant="outline"
             size="icon"
-            onClick={() => navigate('/inventory-list')}
+            onClick={() => navigate("/inventory-list")}
             className="mr-4"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -205,9 +224,7 @@ const ItemDetailPage: React.FC = () => {
               </Badge>
             )}
             {item.location && (
-              <Badge variant="secondary">
-                Locație: {item.location}
-              </Badge>
+              <Badge variant="secondary">Locație: {item.location}</Badge>
             )}
           </div>
         </CardHeader>
@@ -216,14 +233,18 @@ const ItemDetailPage: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
               <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-1">Cantitate</h3>
+                <h3 className="text-sm font-medium text-muted-foreground mb-1">
+                  Cantitate
+                </h3>
                 <p className="text-lg font-semibold">
-                  {item.quantity} {item.unit || 'buc'}
+                  {item.quantity} {item.unit || "buc"}
                 </p>
               </div>
 
               <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-1">Preț unitar</h3>
+                <h3 className="text-sm font-medium text-muted-foreground mb-1">
+                  Preț unitar
+                </h3>
                 <p className="text-lg font-semibold">
                   {formatPrice(item.cost_per_unit)}
                 </p>
@@ -231,7 +252,9 @@ const ItemDetailPage: React.FC = () => {
 
               {item.supplier_name && (
                 <div>
-                  <h3 className="text-sm font-medium text-muted-foreground mb-1">Furnizor</h3>
+                  <h3 className="text-sm font-medium text-muted-foreground mb-1">
+                    Furnizor
+                  </h3>
                   <p className="text-lg">{item.supplier_name}</p>
                 </div>
               )}
@@ -239,17 +262,25 @@ const ItemDetailPage: React.FC = () => {
 
             <div className="space-y-4">
               <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-1">ID</h3>
-                <p className="text-sm font-mono bg-muted p-2 rounded">{item.id}</p>
+                <h3 className="text-sm font-medium text-muted-foreground mb-1">
+                  ID
+                </h3>
+                <p className="text-sm font-mono bg-muted p-2 rounded">
+                  {item.id}
+                </p>
               </div>
 
               <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-1">Creat la</h3>
+                <h3 className="text-sm font-medium text-muted-foreground mb-1">
+                  Creat la
+                </h3>
                 <p>{formatDate(item.created_at)}</p>
               </div>
 
               <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-1">Ultima actualizare</h3>
+                <h3 className="text-sm font-medium text-muted-foreground mb-1">
+                  Ultima actualizare
+                </h3>
                 <p>{formatDate(item.updated_at)}</p>
               </div>
             </div>
@@ -258,7 +289,9 @@ const ItemDetailPage: React.FC = () => {
           <Separator />
 
           <div>
-            <h3 className="text-sm font-medium text-muted-foreground mb-3">Toate proprietățile</h3>
+            <h3 className="text-sm font-medium text-muted-foreground mb-3">
+              Toate proprietățile
+            </h3>
             <pre className="whitespace-pre-wrap bg-muted p-4 rounded text-xs overflow-auto max-h-60">
               {JSON.stringify(item, null, 2)}
             </pre>
