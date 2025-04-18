@@ -41,16 +41,11 @@ export default defineConfig({
         main: "./index.html",
       },
       output: {
-        format: "iife", // Folosim IIFE în loc de ES modules
+        format: "es", // Folosim ES modules pentru compatibilitate
         entryFileNames: "assets/[name].[hash].js",
         chunkFileNames: "assets/[name].[hash].js",
         assetFileNames: "assets/[name].[hash].[ext]",
-        manualChunks: {
-          "react-vendor": ["react", "react-dom", "react-router-dom"],
-          supabase: ["@supabase/supabase-js"],
-          query: ["@tanstack/react-query"],
-          state: ["zustand", "zustand/middleware"],
-        },
+        // Am eliminat manualChunks pentru a evita conflictul cu inlineDynamicImports
       },
       external: [
         // Excludeăm pachetele care cauzează probleme la build
