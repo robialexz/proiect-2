@@ -5,7 +5,10 @@ import { tempo } from "tempo-devtools/dist/vite";
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: process.env.NODE_ENV === "development" ? "/" : process.env.VITE_BASE_PATH || "/",
+  base:
+    process.env.NODE_ENV === "development"
+      ? "/"
+      : process.env.VITE_BASE_PATH || "/",
   optimizeDeps: {
     entries: ["src/main.tsx"],
     include: [
@@ -15,30 +18,29 @@ export default defineConfig({
       "@supabase/supabase-js",
       "framer-motion",
       "@splinetool/runtime",
-      "@splinetool/react-spline"
+      "@splinetool/react-spline",
+      "@tanstack/react-query",
     ],
     esbuildOptions: {
-      target: 'es2020',
+      target: "es2020",
     },
   },
   build: {
-    target: 'es2020',
-    minify: 'terser',
+    target: "es2020",
+    minify: "terser",
     cssMinify: true,
     rollupOptions: {
       output: {
         manualChunks: {
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'supabase': ['@supabase/supabase-js'],
+          "react-vendor": ["react", "react-dom", "react-router-dom"],
+          supabase: ["@supabase/supabase-js"],
+          query: ["@tanstack/react-query"],
         },
       },
       external: [],
     },
   },
-  plugins: [
-    react(),
-    tempo(),
-  ],
+  plugins: [react(), tempo()],
   resolve: {
     preserveSymlinks: true,
     alias: {
@@ -54,15 +56,20 @@ export default defineConfig({
     watch: {
       usePolling: false,
       // Reduce file system watching overhead
-      ignored: ['**/node_modules/**', '**/dist/**', '**/.git/**', '**/reports/**']
-    }
+      ignored: [
+        "**/node_modules/**",
+        "**/dist/**",
+        "**/.git/**",
+        "**/reports/**",
+      ],
+    },
   },
   // Disable constant dependency pre-bundling
-  cacheDir: '.vite',
+  cacheDir: ".vite",
   // Disable constant file analysis
   esbuild: {
     logOverride: {
-      'this-is-undefined-in-esm': 'silent'
-    }
-  }
+      "this-is-undefined-in-esm": "silent",
+    },
+  },
 });
