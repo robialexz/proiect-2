@@ -1,20 +1,25 @@
-import { supabase } from '../api/supabase-client';
-import { PostgrestError } from '@supabase/supabase-js';
-import { SupabaseResponse, SupabaseErrorResponse } from '../api/supabase-service';
+import { supabase } from "../api/supabase-client";
+import { PostgrestError } from "@supabase/supabase-js";
+import {
+  SupabaseResponse,
+  SupabaseErrorResponse,
+} from "../api/supabase-service";
 
 /**
  * Formatează erorile pentru a fi mai ușor de înțeles
  * @param error Eroarea de formatat
  * @returns Eroarea formatată
  */
-const formatError = (error: PostgrestError | Error | unknown): SupabaseErrorResponse => {
+const formatError = (
+  error: PostgrestError | Error | unknown
+): SupabaseErrorResponse => {
   if (error instanceof Error) {
     return {
       message: error.message,
-      code: 'client_error'
+      code: "client_error",
     };
   }
-  
+
   // Verificăm dacă este o eroare PostgrestError
   const pgError = error as PostgrestError;
   if (pgError && pgError.code) {
@@ -22,14 +27,14 @@ const formatError = (error: PostgrestError | Error | unknown): SupabaseErrorResp
       message: pgError.message,
       details: pgError.details,
       hint: pgError.hint,
-      code: pgError.code
+      code: pgError.code,
     };
   }
-  
+
   // Eroare generică
   return {
-    message: 'An unknown error occurred',
-    code: 'unknown_error'
+    message: "An unknown error occurred",
+    code: "unknown_error",
   };
 };
 
@@ -39,19 +44,22 @@ const formatError = (error: PostgrestError | Error | unknown): SupabaseErrorResp
  * @param error Eroarea din răspuns
  * @returns Răspunsul formatat
  */
-const handleResponse = <T>(data: T, error: PostgrestError | null): SupabaseResponse<T> => {
+const handleResponse = <T>(
+  data: T,
+  error: PostgrestError | null
+): SupabaseResponse<T> => {
   if (error) {
     return {
       data: null,
       error: formatError(error),
-      status: 'error'
+      status: "error",
     };
   }
-  
+
   return {
     data,
     error: null,
-    status: 'success'
+    status: "success",
   };
 };
 
@@ -66,15 +74,24 @@ export const authService = {
    * @param password Parola utilizatorului
    * @returns Sesiunea și utilizatorul sau eroarea
    */
-  async signIn(email: string, password: string): Promise<SupabaseResponse<{ session: any; user: any }>> {
+  async signIn(
+    email: string,
+    password: string
+  ): Promise<SupabaseResponse<{ session: any; user: any }>> {
     try {
       // Adăugăm un timeout explicit pentru autentificare - mărim la 30 secunde
-      const timeoutPromise = new Promise<{data: null, error: Error}>((_, reject) => {
-        setTimeout(() => {
-          console.log('Authentication timeout reached after 30 seconds');
-          reject(new Error('Authentication timeout after 30 seconds. Please check your internet connection and try again.'));
-        }, 30000); // 30 secunde
-      });
+      const timeoutPromise = new Promise<{ data: null; error: Error }>(
+        (_, reject) => {
+          setTimeout(() => {
+            console.log("Authentication timeout reached after 30 seconds");
+            reject(
+              new Error(
+                "Authentication timeout after 30 seconds. Please check your internet connection and try again."
+              )
+            );
+          }, 30000); // 30 secunde
+        }
+      );
 
       // Promisiunea pentru autentificare
       const authPromise = supabase.auth.signInWithPassword({
@@ -83,22 +100,19 @@ export const authService = {
         options: {
           // Adăugăm opțiuni suplimentare pentru autentificare
           captchaToken: null,
-        }
+        },
       });
 
       // Folosim Promise.race pentru a implementa timeout-ul
-      const result = await Promise.race([
-        authPromise,
-        timeoutPromise
-      ]) as any;
+      const result = (await Promise.race([authPromise, timeoutPromise])) as any;
 
       // Verificăm dacă autentificarea a reușit
       if (result.error) {
-        console.error('Authentication error:', result.error);
+        console.error("Authentication error:", result.error);
         return {
           data: null,
           error: formatError(result.error),
-          status: 'error'
+          status: "error",
         };
       }
 
@@ -110,21 +124,30 @@ export const authService = {
             expiresAt: Date.now() + 3600 * 1000, // 1 oră valabilitate
           };
 
-          localStorage.setItem('supabase.auth.token', JSON.stringify(sessionData));
-          sessionStorage.setItem('supabase.auth.token', JSON.stringify(sessionData));
-          console.log('Session saved manually after successful authentication');
+          localStorage.setItem(
+            "supabase.auth.token",
+            JSON.stringify(sessionData)
+          );
+          sessionStorage.setItem(
+            "supabase.auth.token",
+            JSON.stringify(sessionData)
+          );
+          console.log("Session saved manually after successful authentication");
         } catch (storageError) {
-          console.error('Error saving session to storage:', storageError);
+          console.error("Error saving session to storage:", storageError);
         }
       }
 
-      return handleResponse(result.data, result.error as unknown as PostgrestError);
+      return handleResponse(
+        result.data,
+        result.error as unknown as PostgrestError
+      );
     } catch (error) {
-      console.error('Auth error caught:', error);
+      console.error("Auth error caught:", error);
       return {
         data: null,
         error: formatError(error),
-        status: 'error',
+        status: "error",
       };
     }
   },
@@ -135,22 +158,25 @@ export const authService = {
    * @param password Parola utilizatorului
    * @returns Sesiunea și utilizatorul sau eroarea
    */
-  async signUp(email: string, password: string): Promise<SupabaseResponse<{ session: any; user: any }>> {
+  async signUp(
+    email: string,
+    password: string
+  ): Promise<SupabaseResponse<{ session: any; user: any }>> {
     try {
-      const { data, error } = await supabase.auth.signUp({ 
-        email, 
+      const { data, error } = await supabase.auth.signUp({
+        email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`
-        }
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
       });
-      
+
       return handleResponse(data, error as unknown as PostgrestError);
     } catch (error) {
       return {
         data: null,
         error: formatError(error),
-        status: 'error',
+        status: "error",
       };
     }
   },
@@ -162,31 +188,31 @@ export const authService = {
   async signOut(): Promise<SupabaseResponse<null>> {
     try {
       // Setăm flag-ul pentru a indica o deconectare intenționată
-      sessionStorage.setItem('intentional_signout', 'true');
-      
+      sessionStorage.setItem("intentional_signout", "true");
+
       const { error } = await supabase.auth.signOut();
-      
+
       if (error) {
         throw error;
       }
-      
+
       // Ștergem sesiunea din localStorage și sessionStorage
-      localStorage.removeItem('supabase.auth.token');
-      sessionStorage.removeItem('supabase.auth.token');
-      
+      localStorage.removeItem("supabase.auth.token");
+      sessionStorage.removeItem("supabase.auth.token");
+
       // Resetăm flag-ul
-      sessionStorage.removeItem('intentional_signout');
-      
+      sessionStorage.removeItem("intentional_signout");
+
       return {
         data: null,
         error: null,
-        status: 'success'
+        status: "success",
       };
     } catch (error) {
       return {
         data: null,
         error: formatError(error),
-        status: 'error',
+        status: "error",
       };
     }
   },
@@ -198,21 +224,21 @@ export const authService = {
   async getSession(): Promise<SupabaseResponse<any>> {
     try {
       const { data, error } = await supabase.auth.getSession();
-      
+
       if (error) {
         throw error;
       }
-      
+
       return {
-        data: data.session,
+        data,
         error: null,
-        status: 'success'
+        status: "success",
       };
     } catch (error) {
       return {
         data: null,
         error: formatError(error),
-        status: 'error',
+        status: "error",
       };
     }
   },
@@ -224,21 +250,21 @@ export const authService = {
   async getUser(): Promise<SupabaseResponse<any>> {
     try {
       const { data, error } = await supabase.auth.getUser();
-      
+
       if (error) {
         throw error;
       }
-      
+
       return {
         data: data.user,
         error: null,
-        status: 'success'
+        status: "success",
       };
     } catch (error) {
       return {
         data: null,
         error: formatError(error),
-        status: 'error',
+        status: "error",
       };
     }
   },
@@ -253,21 +279,21 @@ export const authService = {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/reset-password`,
       });
-      
+
       if (error) {
         throw error;
       }
-      
+
       return {
         data: null,
         error: null,
-        status: 'success'
+        status: "success",
       };
     } catch (error) {
       return {
         data: null,
         error: formatError(error),
-        status: 'error',
+        status: "error",
       };
     }
   },
@@ -282,21 +308,21 @@ export const authService = {
       const { data, error } = await supabase.auth.updateUser({
         password,
       });
-      
+
       if (error) {
         throw error;
       }
-      
+
       return {
         data: data.user,
         error: null,
-        status: 'success'
+        status: "success",
       };
     } catch (error) {
       return {
         data: null,
         error: formatError(error),
-        status: 'error',
+        status: "error",
       };
     }
   },
@@ -321,11 +347,11 @@ export const authService = {
   async refreshSession(): Promise<SupabaseResponse<any>> {
     try {
       const { data, error } = await supabase.auth.refreshSession();
-      
+
       if (error) {
         throw error;
       }
-      
+
       // Salvăm sesiunea reîmprospătată
       if (data.session) {
         try {
@@ -334,27 +360,36 @@ export const authService = {
             expiresAt: Date.now() + 3600 * 1000, // 1 oră valabilitate
           };
 
-          localStorage.setItem('supabase.auth.token', JSON.stringify(sessionData));
-          sessionStorage.setItem('supabase.auth.token', JSON.stringify(sessionData));
-          console.log('Session refreshed and saved to storage');
+          localStorage.setItem(
+            "supabase.auth.token",
+            JSON.stringify(sessionData)
+          );
+          sessionStorage.setItem(
+            "supabase.auth.token",
+            JSON.stringify(sessionData)
+          );
+          console.log("Session refreshed and saved to storage");
         } catch (storageError) {
-          console.error('Error saving refreshed session to storage:', storageError);
+          console.error(
+            "Error saving refreshed session to storage:",
+            storageError
+          );
         }
       }
-      
+
       return {
         data: data.session,
         error: null,
-        status: 'success'
+        status: "success",
       };
     } catch (error) {
       return {
         data: null,
         error: formatError(error),
-        status: 'error',
+        status: "error",
       };
     }
-  }
+  },
 };
 
 export default authService;
