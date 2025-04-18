@@ -30,7 +30,8 @@ dist-ssr
 
 core
 
-.github/
+.github/*
+!.github/workflows/
 
 # Environment variables
 .env
