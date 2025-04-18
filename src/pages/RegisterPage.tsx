@@ -1,11 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { authService } from "@/services/auth/auth-service";
-import { Mail, Lock, User, Building, ArrowRight, Check } from "lucide-react";
-import "../styles/auth-pages.css";
 
 const RegisterPage = () => {
   const [firstName, setFirstName] = useState("");
@@ -53,133 +48,265 @@ const RegisterPage = () => {
     }
   };
 
+  // Stiluri inline pentru a evita probleme cu importul CSS
+  const styles = {
+    container: {
+      minHeight: "100vh",
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      background: "linear-gradient(135deg, #1e293b, #0f172a)",
+      padding: "1rem"
+    },
+    card: {
+      backgroundColor: "rgba(255, 255, 255, 0.05)",
+      backdropFilter: "blur(10px)",
+      border: "1px solid rgba(255, 255, 255, 0.1)",
+      borderRadius: "1rem",
+      padding: "2rem",
+      width: "100%",
+      maxWidth: "450px",
+      boxShadow: "0 10px 25px rgba(0, 0, 0, 0.2)"
+    },
+    logo: {
+      display: "flex",
+      flexDirection: "column" as const,
+      alignItems: "center",
+      marginBottom: "1.5rem"
+    },
+    logoCircle: {
+      width: "3.5rem",
+      height: "3.5rem",
+      backgroundColor: "#6366f1",
+      borderRadius: "50%",
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      fontWeight: "bold",
+      fontSize: "1.5rem",
+      color: "white",
+      marginBottom: "0.5rem",
+      boxShadow: "0 0 15px rgba(99, 102, 241, 0.5)"
+    },
+    logoText: {
+      fontSize: "1.5rem",
+      fontWeight: "bold",
+      color: "white",
+      margin: 0
+    },
+    title: {
+      fontSize: "1.75rem",
+      fontWeight: "bold",
+      color: "white",
+      textAlign: "center" as const,
+      marginBottom: "1rem"
+    },
+    error: {
+      backgroundColor: "rgba(239, 68, 68, 0.15)",
+      border: "1px solid rgba(239, 68, 68, 0.3)",
+      color: "#fca5a5",
+      padding: "0.75rem",
+      borderRadius: "0.5rem",
+      marginBottom: "1rem"
+    },
+    form: {
+      display: "flex",
+      flexDirection: "column" as const,
+      gap: "1.25rem"
+    },
+    formRow: {
+      display: "grid",
+      gridTemplateColumns: "1fr 1fr",
+      gap: "1rem"
+    },
+    formGroup: {
+      display: "flex",
+      flexDirection: "column" as const,
+      gap: "0.5rem"
+    },
+    label: {
+      color: "#e2e8f0",
+      fontSize: "0.875rem",
+      fontWeight: "500"
+    },
+    input: {
+      width: "100%",
+      padding: "0.75rem",
+      backgroundColor: "rgba(255, 255, 255, 0.05)",
+      border: "1px solid rgba(255, 255, 255, 0.1)",
+      borderRadius: "0.5rem",
+      color: "white",
+      fontSize: "0.875rem",
+      outline: "none"
+    },
+    checkboxContainer: {
+      display: "flex",
+      alignItems: "center",
+      gap: "0.75rem",
+      marginTop: "0.5rem"
+    },
+    checkbox: {
+      width: "1.25rem",
+      height: "1.25rem",
+      backgroundColor: agreedToTerms ? "#6366f1" : "rgba(255, 255, 255, 0.05)",
+      border: agreedToTerms ? "1px solid #6366f1" : "1px solid rgba(255, 255, 255, 0.2)",
+      borderRadius: "0.25rem",
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      cursor: "pointer",
+      flexShrink: 0
+    },
+    checkboxLabel: {
+      color: "#94a3b8",
+      fontSize: "0.875rem"
+    },
+    button: {
+      backgroundColor: "#6366f1",
+      color: "white",
+      fontWeight: "600",
+      padding: "0.75rem",
+      borderRadius: "0.5rem",
+      border: "none",
+      cursor: "pointer",
+      fontSize: "0.875rem",
+      marginTop: "0.5rem"
+    },
+    buttonDisabled: {
+      opacity: 0.7,
+      cursor: "not-allowed"
+    },
+    footer: {
+      textAlign: "center" as const,
+      marginTop: "1rem",
+      color: "#94a3b8",
+      fontSize: "0.875rem"
+    },
+    link: {
+      color: "#6366f1",
+      textDecoration: "none",
+      fontWeight: "500"
+    }
+  };
+
   return (
-    <div className="auth-container">
-      <div className="auth-card">
-        <div className="auth-logo">
-          <div className="logo-circle">IM</div>
-          <h1 className="logo-text">InventoryMaster</h1>
+    <div style={styles.container}>
+      <div style={styles.card}>
+        <div style={styles.logo}>
+          <div style={styles.logoCircle}>IM</div>
+          <h1 style={styles.logoText}>InventoryMaster</h1>
         </div>
 
-        <h2 className="auth-title">Înregistrare</h2>
+        <h2 style={styles.title}>Înregistrare</h2>
         
         {error && (
-          <div className="auth-error">
+          <div style={styles.error}>
             <p>{error}</p>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="auth-form">
-          <div className="form-row">
-            <div className="form-group">
-              <Label htmlFor="firstName">Prenume</Label>
-              <div className="input-with-icon">
-                <User className="input-icon" />
-                <Input
-                  id="firstName"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  placeholder="Prenume"
-                  required
-                  className="auth-input"
-                />
-              </div>
+        <form onSubmit={handleSubmit} style={styles.form}>
+          <div style={styles.formRow}>
+            <div style={styles.formGroup}>
+              <label htmlFor="firstName" style={styles.label}>Prenume</label>
+              <input
+                id="firstName"
+                type="text"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                placeholder="Prenume"
+                required
+                style={styles.input}
+              />
             </div>
             
-            <div className="form-group">
-              <Label htmlFor="lastName">Nume</Label>
-              <div className="input-with-icon">
-                <User className="input-icon" />
-                <Input
-                  id="lastName"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  placeholder="Nume"
-                  required
-                  className="auth-input"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="form-group">
-            <Label htmlFor="email">Email</Label>
-            <div className="input-with-icon">
-              <Mail className="input-icon" />
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="nume@exemplu.com"
+            <div style={styles.formGroup}>
+              <label htmlFor="lastName" style={styles.label}>Nume</label>
+              <input
+                id="lastName"
+                type="text"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                placeholder="Nume"
                 required
-                className="auth-input"
+                style={styles.input}
               />
             </div>
           </div>
 
-          <div className="form-group">
-            <Label htmlFor="company">Companie (opțional)</Label>
-            <div className="input-with-icon">
-              <Building className="input-icon" />
-              <Input
-                id="company"
-                value={company}
-                onChange={(e) => setCompany(e.target.value)}
-                placeholder="Numele companiei"
-                className="auth-input"
-              />
-            </div>
+          <div style={styles.formGroup}>
+            <label htmlFor="email" style={styles.label}>Email</label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="nume@exemplu.com"
+              required
+              style={styles.input}
+            />
           </div>
 
-          <div className="form-group">
-            <Label htmlFor="password">Parolă</Label>
-            <div className="input-with-icon">
-              <Lock className="input-icon" />
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-                className="auth-input"
-              />
-            </div>
+          <div style={styles.formGroup}>
+            <label htmlFor="company" style={styles.label}>Companie (opțional)</label>
+            <input
+              id="company"
+              type="text"
+              value={company}
+              onChange={(e) => setCompany(e.target.value)}
+              placeholder="Numele companiei"
+              style={styles.input}
+            />
           </div>
 
-          <div className="terms-checkbox">
-            <div 
-              className={`custom-checkbox ${agreedToTerms ? 'checked' : ''}`}
-              onClick={() => setAgreedToTerms(!agreedToTerms)}
-            >
-              {agreedToTerms && <Check className="check-icon" />}
+          <div style={styles.formGroup}>
+            <label htmlFor="password" style={styles.label}>Parolă</label>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              required
+              style={styles.input}
+            />
+          </div>
+
+          <div style={styles.checkboxContainer} onClick={() => setAgreedToTerms(!agreedToTerms)}>
+            <div style={styles.checkbox}>
+              {agreedToTerms && (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M20 6L9 17L4 12" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              )}
             </div>
-            <span>
+            <span style={styles.checkboxLabel}>
               Sunt de acord cu{" "}
-              <Link to="/terms" className="auth-link">
+              <Link to="/terms" style={styles.link}>
                 Termenii și Condițiile
               </Link>{" "}
               și{" "}
-              <Link to="/privacy" className="auth-link">
+              <Link to="/privacy" style={styles.link}>
                 Politica de Confidențialitate
               </Link>
             </span>
           </div>
 
-          <Button 
+          <button 
             type="submit" 
-            className="auth-button" 
+            style={{
+              ...styles.button,
+              ...(loading ? styles.buttonDisabled : {})
+            }}
             disabled={loading}
           >
             {loading ? "Se creează contul..." : "Creează cont"}
-            {!loading && <ArrowRight className="button-icon" />}
-          </Button>
+          </button>
 
-          <div className="auth-footer">
+          <div style={styles.footer}>
             <p>
               Ai deja un cont?{" "}
-              <Link to="/login" className="auth-link">
+              <Link to="/login" style={styles.link}>
                 Autentifică-te
               </Link>
             </p>
