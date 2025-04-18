@@ -29,9 +29,7 @@ export default defineConfig({
       output: {
         manualChunks: {
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'ui-components': ['@/components/ui'],
           'supabase': ['@supabase/supabase-js'],
-          'spline': ['@splinetool/react-spline'],
         },
       },
     },

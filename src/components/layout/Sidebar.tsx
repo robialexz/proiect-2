@@ -468,29 +468,7 @@ const Sidebar = () => {
             </Tooltip>
           </TooltipProvider>
 
-          {/* Link către pagina de demo Spline */}
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className={cn(
-                    "w-full text-slate-400 hover:text-white hover:bg-slate-800 justify-start",
-                    collapsed && "justify-center"
-                  )}
-                  onClick={() => navigate("/spline-demo")}
-                >
-                  <Box size={20} />
-                  {!collapsed && <span className="ml-3">Spline 3D Demo</span>}
-                </Button>
-              </TooltipTrigger>
-              {collapsed && (
-                <TooltipContent side="right">
-                  <p>Spline 3D Demo</p>
-                </TooltipContent>
-              )}
-            </Tooltip>
-          </TooltipProvider>
+
 
           {/* Link către dashboard-ul de testare */}
           <TooltipProvider>

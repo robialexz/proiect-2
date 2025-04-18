@@ -24,7 +24,7 @@ const TermsPage = lazy(() => import("./pages/TermsPage"));
 const PricingPage = lazy(() => import("./pages/PricingPage"));
 const ContactPage = lazy(() => import("./pages/ContactPage"));
 const DashboardPage = lazy(() => import("./pages/DashboardPage"));
-const SplineDemo = lazy(() => import("./pages/SplineDemo"));
+
 const NotificationsDemo = lazy(() => import("./pages/NotificationsDemo"));
 const TestDashboardPage = lazy(() => import("./pages/TestDashboardPage"));
 
@@ -88,7 +88,7 @@ function App() {
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
-            <Route path="/spline-demo" element={<SplineDemo />} />
+
             <Route path="/notifications-demo" element={<NotificationsDemo />} />
 
             {/* Protected routes inside AppLayout */}

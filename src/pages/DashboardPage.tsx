@@ -5,7 +5,7 @@ import { Navigate, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Upload, BarChart2, Package, Users, AlertCircle, Sun, Moon, Coffee } from "lucide-react";
-import SplineWidget from "@/components/dashboard/SplineWidget";
+
 
 const DashboardPage = () => {
   const { user, loading, userProfile } = useAuth();
@@ -297,18 +297,8 @@ const DashboardPage = () => {
               ))}
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Spline 3D Widget */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: 0.2 }}
-              >
-                <SplineWidget className="h-full" />
-              </motion.div>
-
-              <motion.div
-                className="col-span-1 lg:col-span-2"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: 0.2 }}
