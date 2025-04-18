@@ -17,8 +17,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 // import { TempoDevtools } from "tempo-devtools";
 // TempoDevtools.init();
 
-// Preîncărcăm rutele frecvent accesate la pornirea aplicației
+// Preîncărcăm rutele și paginile frecvent accesate la pornirea aplicației
 routePreloader.preloadFrequentRoutes();
+routePreloader.preloadFrequentPages();
 
 // Create a client
 const queryClient = new QueryClient({
