@@ -1,0 +1,28 @@
+# Setăm tipurile MIME corecte pentru toate fișierele
+/*
+  X-Content-Type-Options: nosniff
+
+# JavaScript files
+/*.js
+  Content-Type: application/javascript; charset=utf-8
+
+# CSS files
+/*.css
+  Content-Type: text/css; charset=utf-8
+
+# SVG files
+/*.svg
+  Content-Type: image/svg+xml
+
+# JSON files
+/*.json
+  Content-Type: application/json
+
+# HTML files
+/*.html
+  Content-Type: text/html; charset=utf-8
+
+# TypeScript files
+/*.ts
+/*.tsx
+  Content-Type: application/javascript; charset=utf-8

@@ -33,12 +33,15 @@ export default defineConfig({
     minify: "terser",
     cssMinify: true,
     assetsInlineLimit: 0, // Dezactivăm inlining-ul pentru a asigura că toate fișierele sunt servite corect
+    outDir: "dist",
+    emptyOutDir: true,
+    sourcemap: false,
     rollupOptions: {
       input: {
-        main: "./src/main.tsx",
+        main: "./index.html",
       },
       output: {
-        format: "es",
+        format: "iife", // Folosim IIFE în loc de ES modules
         entryFileNames: "assets/[name].[hash].js",
         chunkFileNames: "assets/[name].[hash].js",
         assetFileNames: "assets/[name].[hash].[ext]",
