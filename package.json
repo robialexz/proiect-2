@@ -22,7 +22,11 @@
     "generate-report": "node scripts/generate-test-report.js",
     "generate-pdf-report": "node scripts/generate-pdf-report.js",
     "generate-simple-pdf": "node scripts/generate-simple-pdf.js",
-    "test:report": "npm run test && npm run generate-report && npm run generate-pdf-report"
+    "test:report": "npm run test && npm run generate-report && npm run generate-pdf-report",
+    "db:reset": "node scripts/reset-database.js",
+    "db:seed": "node scripts/seed-database.js",
+    "db:fresh": "npm run db:reset && npm run db:seed",
+    "db:check": "ts-node src/scripts/check-db.ts"
   },
   "dependencies": {
     "@azure/msal-browser": "^4.8.0",

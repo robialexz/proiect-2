@@ -62,6 +62,8 @@ const RoleManagementPage = lazyPage(() => import("./pages/RoleManagementPage"));
 const TutorialPage = lazyPage(() => import("./pages/TutorialPage"));
 const TasksPage = lazyPage(() => import("./pages/TasksPage"));
 const EditProfilePage = lazyPage(() => import("./pages/EditProfilePage"));
+// Pagină de debug pentru dezvoltatori
+const DebugPage = lazyPage(() => import("./pages/DebugPage"));
 // Paginile de autentificare au fost eliminate pentru noua implementare
 const PreferencesPage = lazyPage(() => import("./pages/PreferencesPage"));
 const InventoryListPage = lazyPage(() => import("./pages/InventoryListPage"));
@@ -138,6 +140,7 @@ export function AppRoutes() {
         <Route path="forecast" element={<ForecastPage />} />
         <Route path="scan" element={<ScanPage />} />
         <Route path="test-dashboard" element={<TestDashboardPage />} />
+        <Route path="debug" element={<DebugPage />} />
       </Route>
       {/* Add tempobook route to prevent catchall from capturing it */}
       {import.meta.env.VITE_TEMPO === "true" && <Route path="/tempobook/*" />}

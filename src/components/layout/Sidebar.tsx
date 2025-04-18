@@ -540,6 +540,36 @@ const Sidebar = () => {
             </Tooltip>
           </TooltipProvider>
 
+          {/* Link către pagina de debug - vizibil doar în modul de dezvoltare */}
+          {import.meta.env.DEV && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className={cn(
+                      "w-full text-slate-400 hover:text-white hover:bg-slate-800 justify-start",
+                      collapsed && "justify-center"
+                    )}
+                    onClick={() => navigate("/debug")}
+                  >
+                    <Bug size={20} />
+                    {!collapsed && (
+                      <span className="ml-3">
+                        {t("sidebar.debug", "Debug & Dezvoltare")}
+                      </span>
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                {collapsed && (
+                  <TooltipContent side="right">
+                    <p>{t("sidebar.debug", "Debug & Dezvoltare")}</p>
+                  </TooltipContent>
+                )}
+              </Tooltip>
+            </TooltipProvider>
+          )}
+
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>

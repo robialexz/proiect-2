@@ -5,10 +5,12 @@ import LanguageDetector from "i18next-browser-languagedetector";
 // import HttpApi from 'i18next-http-backend';
 
 // Import translation files
-import enTeams from './locales/en/teams.json';
-import roTeams from './locales/ro/teams.json';
-import enInventory from './locales/en/inventory.json';
-import roInventory from './locales/ro/inventory.json';
+import enTeams from "./locales/en/teams.json";
+import roTeams from "./locales/ro/teams.json";
+import enInventory from "./locales/en/inventory.json";
+import roInventory from "./locales/ro/inventory.json";
+import enDebug from "./locales/en/debug.json";
+import roDebug from "./locales/ro/debug.json";
 
 // Define resources directly for simplicity initially
 // Later, you might switch to HttpApi to load from public/locales
@@ -45,6 +47,7 @@ const resources = {
         dashboardGroup: "Dashboard",
         managementGroup: "Management",
         reportsGroup: "Reports & Resources",
+        debug: "Debug & Development",
       },
       overview: {
         title: "Overview",
@@ -262,6 +265,7 @@ const resources = {
         dashboardGroup: "Panou de Control",
         managementGroup: "Management",
         reportsGroup: "Rapoarte & Resurse",
+        debug: "Debug & Dezvoltare",
       },
       common: {
         save: "Salvează",
@@ -278,6 +282,7 @@ const resources = {
       },
       teams: roTeams,
       inventory: roInventory,
+      debug: roDebug,
       // Vechea definiție a inventarului - înlocuită cu fișierul de traducere
       /*inventory: {
         pageTitle: "Management Inventar",
@@ -404,12 +409,14 @@ const resources = {
         notifications: "Notificări",
         advanced: "Avansat",
         profileSettings: "Setări Profil",
-        profileDescription: "Gestionează informațiile personale și setările contului",
+        profileDescription:
+          "Gestionează informațiile personale și setările contului",
         displayName: "Nume afișat",
         enterName: "Introduceți numele",
         email: "Adresă Email",
         enterEmail: "Introduceți adresa de email",
-        emailChangeRestricted: "Doar administratorii pot schimba adresele de email",
+        emailChangeRestricted:
+          "Doar administratorii pot schimba adresele de email",
         role: "Rol",
         roleDescription: "Rolul tău determină ce poți accesa în aplicație",
         appearanceSettings: "Setări Aspect",
@@ -423,15 +430,18 @@ const resources = {
         notificationSettings: "Setări Notificări",
         notificationDescription: "Controlează cum și când primești notificări",
         enableNotifications: "Activează Notificările",
-        enableNotificationsDescription: "Primește notificări despre actualizări importante",
+        enableNotificationsDescription:
+          "Primește notificări despre actualizări importante",
         emailNotifications: "Notificări Email",
         emailNotificationsDescription: "Primește notificări prin email",
         pushNotifications: "Notificări Push",
         pushNotificationsDescription: "Primește notificări pe dispozitivul tău",
         advancedSettings: "Setări Avansate",
-        advancedDescription: "Configurează setări avansate (doar pentru administratori)",
+        advancedDescription:
+          "Configurează setări avansate (doar pentru administratori)",
         autoSave: "Salvare automată",
-        autoSaveDescription: "Salvează automat modificările pe măsură ce le faci",
+        autoSaveDescription:
+          "Salvează automat modificările pe măsură ce le faci",
         dangerZone: "Zonă Periculoasă",
         dangerZoneDescription: "Acțiuni care pot avea consecințe grave",
         resetApplication: "Resetează Aplicația",
@@ -440,11 +450,14 @@ const resources = {
         appearanceSaved: "Aspect Salvat",
         appearanceSavedMessage: "Setările de aspect au fost actualizate",
         notificationsSaved: "Notificări Salvate",
-        notificationsSavedMessage: "Preferințele tale de notificare au fost actualizate",
+        notificationsSavedMessage:
+          "Preferințele tale de notificare au fost actualizate",
         error: "Eroare",
         errorSavingProfile: "A apărut o eroare la salvarea profilului",
-        errorSavingAppearance: "A apărut o eroare la salvarea setărilor de aspect",
-        errorSavingNotifications: "A apărut o eroare la salvarea setărilor de notificare",
+        errorSavingAppearance:
+          "A apărut o eroare la salvarea setărilor de aspect",
+        errorSavingNotifications:
+          "A apărut o eroare la salvarea setărilor de notificare",
       },
       roles: {
         director: "Director",
@@ -461,7 +474,7 @@ const resources = {
         furnizor: "Furnizor",
         contractor: "Contractor",
         vizitator: "Vizitator",
-        user: "Utilizator"
+        user: "Utilizator",
       },
     },
   },
@@ -494,6 +507,7 @@ const resources = {
         dashboardGroup: "Tableau de Bord",
         managementGroup: "Gestion",
         reportsGroup: "Rapports & Ressources",
+        debug: "Debug & Développement",
       },
       common: {
         save: "Enregistrer",
@@ -624,6 +638,7 @@ const resources = {
         dashboardGroup: "Dashboard",
         managementGroup: "Verwaltung",
         reportsGroup: "Berichte & Ressourcen",
+        debug: "Debug & Entwicklung",
       },
       common: {
         save: "Speichern",
@@ -724,6 +739,7 @@ const resources = {
       },*/
       teams: enTeams,
       inventory: enInventory,
+      debug: enDebug,
       settings: {
         pageTitle: "Settings",
         title: "Settings",
@@ -732,14 +748,16 @@ const resources = {
         notifications: "Notifications",
         advanced: "Advanced",
         profileSettings: "Profile Settings",
-        profileDescription: "Manage your personal information and account settings",
+        profileDescription:
+          "Manage your personal information and account settings",
         displayName: "Display Name",
         enterName: "Enter your name",
         email: "Email Address",
         enterEmail: "Enter your email address",
         emailChangeRestricted: "Only administrators can change email addresses",
         role: "Role",
-        roleDescription: "Your role determines what you can access in the application",
+        roleDescription:
+          "Your role determines what you can access in the application",
         appearanceSettings: "Appearance Settings",
         appearanceDescription: "Customize the look and feel of the application",
         theme: "Theme",
@@ -749,9 +767,11 @@ const resources = {
         language: "Language",
         selectLanguage: "Select a language",
         notificationSettings: "Notification Settings",
-        notificationDescription: "Control how and when you receive notifications",
+        notificationDescription:
+          "Control how and when you receive notifications",
         enableNotifications: "Enable Notifications",
-        enableNotificationsDescription: "Receive notifications about important updates",
+        enableNotificationsDescription:
+          "Receive notifications about important updates",
         emailNotifications: "Email Notifications",
         emailNotificationsDescription: "Receive notifications via email",
         pushNotifications: "Push Notifications",
@@ -768,11 +788,14 @@ const resources = {
         appearanceSaved: "Appearance Saved",
         appearanceSavedMessage: "Your appearance settings have been updated",
         notificationsSaved: "Notifications Saved",
-        notificationsSavedMessage: "Your notification preferences have been updated",
+        notificationsSavedMessage:
+          "Your notification preferences have been updated",
         error: "Error",
         errorSavingProfile: "There was an error saving your profile",
-        errorSavingAppearance: "There was an error saving your appearance settings",
-        errorSavingNotifications: "There was an error saving your notification settings",
+        errorSavingAppearance:
+          "There was an error saving your appearance settings",
+        errorSavingNotifications:
+          "There was an error saving your notification settings",
       },
       roles: {
         director: "Director",
@@ -789,11 +812,10 @@ const resources = {
         furnizor: "Supplier",
         contractor: "Contractor",
         vizitator: "Visitor",
-        user: "User"
+        user: "User",
       },
     },
   },
-
 };
 
 i18n
@@ -821,19 +843,19 @@ i18n
     // Force Romanian language
     lng: "ro",
     // Performance optimizations
-    load: 'languageOnly', // Only load language, not country specific (e.g. 'en' instead of 'en-US')
-    ns: ['translation'], // Only use the 'translation' namespace
-    defaultNS: 'translation',
-    keySeparator: '.', // Use dot notation for keys
-    nsSeparator: ':', // Use colon for namespace separation
+    load: "languageOnly", // Only load language, not country specific (e.g. 'en' instead of 'en-US')
+    ns: ["translation"], // Only use the 'translation' namespace
+    defaultNS: "translation",
+    keySeparator: ".", // Use dot notation for keys
+    nsSeparator: ":", // Use colon for namespace separation
     returnEmptyString: false, // Don't return empty strings for missing translations
     returnNull: false, // Don't return null for missing translations
     react: {
       useSuspense: false, // Disable Suspense for i18next
-      bindI18n: 'languageChanged loaded', // Only trigger re-render on language change and loaded
-      bindI18nStore: '', // Don't trigger re-render on store changes
-      transEmptyNodeValue: '', // Empty value for empty nodes
-    }
+      bindI18n: "languageChanged loaded", // Only trigger re-render on language change and loaded
+      bindI18nStore: "", // Don't trigger re-render on store changes
+      transEmptyNodeValue: "", // Empty value for empty nodes
+    },
   });
 
 export default i18n;
