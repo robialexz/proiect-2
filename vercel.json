@@ -4,16 +4,8 @@
   "installCommand": "npm install",
   "framework": "vite",
   "outputDirectory": "dist",
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/node",
-      "config": {
-        "nodeVersion": "20.x"
-      }
-    }
-  ],
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+  "routes": [
+    { "handle": "filesystem" },
+    { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
