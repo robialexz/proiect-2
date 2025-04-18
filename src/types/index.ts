@@ -54,15 +54,26 @@ export interface Material {
   description?: string;
   quantity: number;
   unit: string;
-  price?: number;
+  dimension?: string;
+  manufacturer?: string;
+  cost_per_unit?: number;
   supplier_id?: string;
   project_id?: string;
   category?: string;
   location?: string;
-  min_quantity?: number;
+  min_stock_level?: number;
+  max_stock_level?: number;
+  suplimentar?: number;
+  notes?: string;
   image_url?: string;
   created_at: string;
   updated_at?: string;
+  created_by?: string;
+}
+
+export interface LowStockItem extends Material {
+  deficit?: number;
+  reorderQuantity?: number;
 }
 
 // Supplier types

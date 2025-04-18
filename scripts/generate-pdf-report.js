@@ -7,7 +7,8 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import markdownpdf from 'markdown-pdf';
-import glob from 'glob';
+import * as globModule from 'glob';
+const glob = globModule.glob;
 
 // Obținem directorul curent
 const __filename = fileURLToPath(import.meta.url);
@@ -23,27 +24,27 @@ if (!fs.existsSync(REPORTS_DIR)) {
 
 // Funcție pentru a găsi cel mai recent raport Markdown
 function findLatestMarkdownReport() {
-  const mdFiles = glob.sync(path.join(REPORTS_DIR, 'test-report-*.md'));
-  
+  const mdFiles = glob(path.join(REPORTS_DIR, 'test-report-*.md'), { sync: true });
+
   if (mdFiles.length === 0) {
     console.error('Nu a fost găsit niciun raport Markdown. Rulați mai întâi "npm run generate-report".');
     process.exit(1);
   }
-  
+
   // Sortăm fișierele după data modificării (cel mai recent primul)
   mdFiles.sort((a, b) => {
     return fs.statSync(b).mtime.getTime() - fs.statSync(a).mtime.getTime();
   });
-  
+
   return mdFiles[0];
 }
 
 // Funcție pentru a converti Markdown în PDF
 function convertToPdf(markdownPath) {
   const pdfPath = markdownPath.replace('.md', '.pdf');
-  
+
   console.log(`Convertire ${path.basename(markdownPath)} în PDF...`);
-  
+
   // Opțiuni pentru markdown-pdf
   const options = {
     cssPath: path.join(__dirname, 'report-style.css'),
@@ -52,7 +53,7 @@ function convertToPdf(markdownPath) {
     paperBorder: '1cm',
     runningsPath: path.join(__dirname, 'report-header-footer.js')
   };
-  
+
   // Creăm un fișier CSS simplu pentru stilizare
   const cssContent = `
     body {
@@ -122,9 +123,9 @@ function convertToPdf(markdownPath) {
       background-color: #f9f9f9;
     }
   `;
-  
+
   fs.writeFileSync(path.join(__dirname, 'report-style.css'), cssContent);
-  
+
   // Creăm un fișier JS pentru header și footer
   const headerFooterContent = `
     exports.header = {
@@ -133,7 +134,7 @@ function convertToPdf(markdownPath) {
         return '<div style="text-align: center; font-size: 10px; color: #777;">Raport de testare</div>';
       }
     };
-    
+
     exports.footer = {
       height: '1cm',
       contents: function(pageNum, numPages) {
@@ -141,9 +142,9 @@ function convertToPdf(markdownPath) {
       }
     };
   `;
-  
+
   fs.writeFileSync(path.join(__dirname, 'report-header-footer.js'), headerFooterContent);
-  
+
   // Convertim Markdown în PDF
   return new Promise((resolve, reject) => {
     markdownpdf(options)
@@ -166,14 +167,14 @@ async function main() {
     // Găsim cel mai recent raport Markdown
     const latestMarkdownReport = findLatestMarkdownReport();
     console.log(`Cel mai recent raport Markdown: ${latestMarkdownReport}`);
-    
+
     // Convertim în PDF
     await convertToPdf(latestMarkdownReport);
-    
+
     // Curățăm fișierele temporare
     fs.unlinkSync(path.join(__dirname, 'report-style.css'));
     fs.unlinkSync(path.join(__dirname, 'report-header-footer.js'));
-    
+
     console.log('Procesul de generare a raportului PDF a fost finalizat cu succes.');
   } catch (error) {
     console.error('Eroare:', error);

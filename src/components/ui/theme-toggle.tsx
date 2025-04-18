@@ -9,8 +9,27 @@ interface ThemeToggleProps {
   className?: string;
 }
 
-export function ThemeToggle({ className }: ThemeToggleProps) {
+export const ThemeToggle = React.memo(function ThemeToggle({ className }: ThemeToggleProps) {
   const { theme, toggleTheme } = useTheme();
+
+  // Memoize the tooltip content to prevent unnecessary re-renders
+  const tooltipContent = React.useMemo(() => {
+    return theme === 'dark' ? 'Activează modul luminos' : 'Activează modul întunecat';
+  }, [theme]);
+
+  // Memoize the icon to prevent unnecessary re-renders
+  const themeIcon = React.useMemo(() => {
+    return theme === 'dark' ? (
+      <Moon className="h-5 w-5 text-yellow-300" />
+    ) : (
+      <Sun className="h-5 w-5 text-yellow-500" />
+    );
+  }, [theme]);
+
+  // Memoize the onClick handler
+  const handleToggleTheme = React.useCallback(() => {
+    toggleTheme();
+  }, [toggleTheme]);
 
   return (
     <TooltipProvider>
@@ -19,7 +38,7 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
           <Button
             variant="ghost"
             size="icon"
-            onClick={toggleTheme}
+            onClick={handleToggleTheme}
             className={`rounded-full ${className}`}
             aria-label="Toggle theme"
           >
@@ -30,18 +49,14 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
               transition={{ duration: 0.3 }}
               key={theme}
             >
-              {theme === 'dark' ? (
-                <Moon className="h-5 w-5 text-yellow-300" />
-              ) : (
-                <Sun className="h-5 w-5 text-yellow-500" />
-              )}
+              {themeIcon}
             </motion.div>
           </Button>
         </TooltipTrigger>
         <TooltipContent>
-          <p>{theme === 'dark' ? 'Activează modul luminos' : 'Activează modul întunecat'}</p>
+          <p>{tooltipContent}</p>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
   );
-}
+})

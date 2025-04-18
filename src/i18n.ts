@@ -7,6 +7,8 @@ import LanguageDetector from "i18next-browser-languagedetector";
 // Import translation files
 import enTeams from './locales/en/teams.json';
 import roTeams from './locales/ro/teams.json';
+import enInventory from './locales/en/inventory.json';
+import roInventory from './locales/ro/inventory.json';
 
 // Define resources directly for simplicity initially
 // Later, you might switch to HttpApi to load from public/locales
@@ -80,7 +82,8 @@ const resources = {
         loading: "Loading...",
         noResults: "No results.",
       },
-      inventory: {
+      // Vechea definiție a inventarului - înlocuită cu fișierul de traducere
+      /*inventory: {
         pageTitle: "Inventory Management",
         projectInventory: "Project Inventory",
         companyInventory: "Company Inventory",
@@ -225,7 +228,7 @@ const resources = {
           confirmSuplimentar: "Confirm Suplimentar",
           adjustTooltip: "Click to adjust supplementary quantity",
         },
-      },
+      },*/
     },
   },
   ro: {
@@ -274,7 +277,9 @@ const resources = {
         noResults: "Niciun rezultat.",
       },
       teams: roTeams,
-      inventory: {
+      inventory: roInventory,
+      // Vechea definiție a inventarului - înlocuită cu fișierul de traducere
+      /*inventory: {
         pageTitle: "Management Inventar",
         projectInventory: "Inventar Proiect",
         companyInventory: "Inventar Companie",
@@ -390,7 +395,7 @@ const resources = {
           confirmSuplimentar: "Confirmă Suplimentar",
           adjustTooltip: "Click pentru a ajusta cantitatea suplimentară",
         },
-      },
+      },*/
       settings: {
         pageTitle: "Setări",
         title: "Setări",
@@ -503,8 +508,8 @@ const resources = {
         loading: "Chargement...",
         noResults: "Aucun résultat.",
       },
-      // Add French translations for inventory section (example, needs proper translation)
-      inventory: {
+      // Vechea definiție a inventarului - înlocuită cu fișierul de traducere
+      /*inventory: {
         pageTitle: "Gestion d'Inventaire",
         uploadExcel: "Télécharger Excel",
         addMaterial: "Ajouter Matériel",
@@ -587,7 +592,7 @@ const resources = {
           confirmSuplimentar: "Confirmer Supplémentaire",
           adjustTooltip: "Cliquer pour ajuster la quantité supplémentaire",
         },
-      },
+      },*/
     },
   },
   de: {
@@ -633,8 +638,8 @@ const resources = {
         loading: "Wird geladen...",
         noResults: "Keine Ergebnisse.",
       },
-      // Add German translations for inventory section (example, needs proper translation)
-      inventory: {
+      // Vechea definiție a inventarului - înlocuită cu fișierul de traducere
+      /*inventory: {
         pageTitle: "Inventarverwaltung",
         uploadExcel: "Excel Hochladen",
         addMaterial: "Material Hinzufügen",
@@ -716,8 +721,9 @@ const resources = {
           confirmSuplimentar: "Zusatzmenge bestätigen",
           adjustTooltip: "Klicken, um Zusatzmenge anzupassen",
         },
-      },
+      },*/
       teams: enTeams,
+      inventory: enInventory,
       settings: {
         pageTitle: "Settings",
         title: "Settings",

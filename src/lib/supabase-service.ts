@@ -145,7 +145,7 @@ export const supabaseService = {
       }
 
       // Folosim cast pentru a evita erorile de tipizare
-      let query = supabase.from(table as any).select(columns);
+      let query = (supabase.from(table as any) as any).select(columns);
 
       // Aplicăm filtrele cu validare
       if (options?.filters) {
@@ -286,7 +286,7 @@ export const supabaseService = {
 
   async insert<T>(table: SupabaseTables | string, data: Partial<T> | Partial<T>[]): Promise<SupabaseResponse<T>> {
     try {
-      return handlePromise<T>(supabase.from(table as any).insert(data as any).select());
+      return handlePromise<T>((supabase.from(table as any) as any).insert(data as any).select());
     } catch (error) {
       return {
         data: null,
@@ -298,7 +298,7 @@ export const supabaseService = {
 
   async update<T>(table: SupabaseTables | string, data: Partial<T>, filters: Record<string, any>): Promise<SupabaseResponse<T>> {
     try {
-      let query = supabase.from(table as any).update(data as any);
+      let query: any = (supabase.from(table as any) as any).update(data as any);
 
       // Aplicăm filtrele
       Object.entries(filters).forEach(([key, value]) => {
@@ -319,7 +319,7 @@ export const supabaseService = {
 
   async delete<T>(table: SupabaseTables | string, filters: Record<string, any>): Promise<SupabaseResponse<T>> {
     try {
-      let query = supabase.from(table as any).delete();
+      let query: any = (supabase.from(table as any) as any).delete();
 
       // Aplicăm filtrele
       Object.entries(filters).forEach(([key, value]) => {
@@ -765,6 +765,71 @@ export const supabaseService = {
         error: formatError(error),
         status: 'error',
       };
+    }
+  },
+
+  // Extindere supabaseService cu metode suplimentare
+  async upsert<T>(table: SupabaseTables | string, data: Partial<T> | Partial<T>[], onConflict?: string[]): Promise<SupabaseResponse<T>> {
+    try {
+      const conflict = Array.isArray(onConflict) ? onConflict.join(',') : onConflict;
+      return handlePromise<T>((supabase.from(table as any) as any).upsert(data, { onConflict: conflict }));
+    } catch (error) {
+      return { data: null, error: formatError(error), status: 'error' };
+    }
+  },
+  async bulkInsert<T>(table: SupabaseTables | string, data: Partial<T>[]): Promise<SupabaseResponse<T>> {
+    try {
+      return handlePromise<T>((supabase.from(table as any) as any).insert(data));
+    } catch (error) {
+      return { data: null, error: formatError(error), status: 'error' };
+    }
+  },
+  async bulkUpdate<T>(table: SupabaseTables | string, data: Partial<T>[], filters: Record<string, any>): Promise<SupabaseResponse<T>> {
+    try {
+      let query: any = (supabase.from(table as any) as any).update(data);
+      Object.entries(filters).forEach(([col, val]) => { query = query.eq(col, val as any); });
+      return handlePromise<T>(query);
+    } catch (error) {
+      return { data: null, error: formatError(error), status: 'error' };
+    }
+  },
+  async bulkDelete<T>(table: SupabaseTables | string, filters: Record<string, any>[]): Promise<SupabaseResponse<T>> {
+    try {
+      let query: any = (supabase.from(table as any) as any).delete();
+      filters.forEach(filt => Object.entries(filt).forEach(([col, val]) => { query = query.eq(col, val as any); }));
+      return handlePromise<T>(query);
+    } catch (error) {
+      return { data: null, error: formatError(error), status: 'error' };
+    }
+  },
+  async paginate<T>(table: SupabaseTables | string, columns: string = '*', page: number = 1, pageSize: number = 10, options?: { filters?: Record<string, any>; order?: { column: string; ascending?: boolean } }): Promise<{ data: T[] | null; total: number | null; page: number; pageSize: number; error: SupabaseErrorResponse | null; status: 'success' | 'error' }> {
+    try {
+      const from = (page - 1) * pageSize;
+      const to = page * pageSize - 1;
+      let query: any = (supabase.from(table as any) as any).select(columns, { count: 'exact' }).range(from, to);
+      if (options?.filters) Object.entries(options.filters).forEach(([col, val]) => { query = query.eq(col, val as any); });
+      if (options?.order) query = query.order(options.order.column, { ascending: options.order.ascending });
+      const { data, error, count } = await query;
+      if (error) throw error;
+      return { data: data as T[], total: count, page, pageSize, error: null, status: 'success' };
+    } catch (error) {
+      return { data: null, total: null, page, pageSize, error: formatError(error), status: 'error' };
+    }
+  },
+  subscribe<T>(table: SupabaseTables | string, event: 'INSERT' | 'UPDATE' | 'DELETE', callback: (payload: any) => void, filters?: Record<string, any>) {
+    let realtime: any = (supabase.from(table as any) as any);
+    if (filters) Object.entries(filters).forEach(([col, val]) => { realtime = realtime.filter(col, 'eq', val as any); });
+    return realtime.on(event, payload => callback(payload)).subscribe();
+  },
+  unsubscribe(subscription: any) {
+    subscription.unsubscribe();
+  },
+  async custom<T>(queryFn: (client: any) => any): Promise<SupabaseResponse<T>> {
+    try {
+      const query = queryFn(supabase);
+      return handlePromise<T>(query);
+    } catch (error) {
+      return { data: null, error: formatError(error), status: 'error' };
     }
   },
 };

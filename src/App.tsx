@@ -45,6 +45,23 @@ const RoleManagementPage = lazy(() => import("./pages/RoleManagementPage"));
 const TutorialPage = lazy(() => import("./pages/TutorialPage"));
 const TasksPage = lazy(() => import("./pages/TasksPage"));
 
+// Lazy load new pages
+const EditProfilePage = lazy(() => import("./pages/EditProfilePage"));
+const ChangePasswordPage = lazy(() => import("./pages/ChangePasswordPage"));
+const VerifyEmailPage = lazy(() => import("./pages/VerifyEmailPage"));
+const PreferencesPage = lazy(() => import("./pages/PreferencesPage"));
+const InventoryListPage = lazy(() => import("./pages/InventoryListPage"));
+const ItemDetailPage = lazy(() => import("./pages/ItemDetailPage"));
+const CreateItemPage = lazy(() => import("./pages/CreateItemPage"));
+const CategoryManagementPage = lazy(() => import("./pages/CategoryManagementPage"));
+const ImportExportPage = lazy(() => import("./pages/ImportExportPage"));
+const NotificationsPage = lazy(() => import("./pages/NotificationsPage"));
+const UsersManagementPage = lazy(() => import("./pages/UsersManagementPage"));
+const AuditLogsPage = lazy(() => import("./pages/AuditLogsPage"));
+const AIInventoryAssistantPage = lazy(() => import("./pages/AIInventoryAssistantPage"));
+const ForecastPage = lazy(() => import("./pages/ForecastPage"));
+const ScanPage = lazy(() => import("./pages/ScanPage"));
+
 import ChatBotWidget from "./components/ai/ChatBotWidget";
 
 function App() {
@@ -95,6 +112,21 @@ function App() {
               <Route path="role-management" element={<RoleManagementPage />} />
               <Route path="tutorial" element={<TutorialPage />} />
               <Route path="tasks" element={<TasksPage />} />
+              <Route path="edit-profile" element={<EditProfilePage />} />
+              <Route path="change-password" element={<ChangePasswordPage />} />
+              <Route path="verify-email" element={<VerifyEmailPage />} />
+              <Route path="preferences" element={<PreferencesPage />} />
+              <Route path="inventory-list" element={<InventoryListPage />} />
+              <Route path="item/:id" element={<ItemDetailPage />} />
+              <Route path="create-item" element={<CreateItemPage />} />
+              <Route path="categories" element={<CategoryManagementPage />} />
+              <Route path="import-export" element={<ImportExportPage />} />
+              <Route path="notifications" element={<NotificationsPage />} />
+              <Route path="users" element={<UsersManagementPage />} />
+              <Route path="audit-logs" element={<AuditLogsPage />} />
+              <Route path="ai-assistant" element={<AIInventoryAssistantPage />} />
+              <Route path="forecast" element={<ForecastPage />} />
+              <Route path="scan" element={<ScanPage />} />
               <Route path="test-dashboard" element={<TestDashboardPage />} />
             </Route>
             {/* Add tempobook route to prevent catchall from capturing it */}
