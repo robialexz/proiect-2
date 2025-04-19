@@ -15,8 +15,10 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { RoleProvider } from "./contexts/RoleContext";
 import { AdvancedRoleProvider } from "./contexts/AdvancedRoleContext";
 import { OfflineProvider } from "./contexts/OfflineContext";
-import { EnhancedOfflineProvider } from "./contexts/EnhancedOfflineContext";
 import ErrorBoundary from "./components/ErrorBoundary";
+// Importăm sistemul de gestionare a erorilor
+import { errorRecovery } from "./lib/error-recovery";
+import { authErrorHandler } from "./lib/auth-error-handler";
 // Preîncărcăm rutele frecvent accesate pentru performanță mai bună
 import { routePreloader } from "./lib/route-preloader";
 // Import React Query
@@ -29,6 +31,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 // Preîncărcăm rutele și paginile frecvent accesate la pornirea aplicației
 routePreloader.preloadFrequentRoutes();
 routePreloader.preloadFrequentPages();
+
+// Inițializăm interceptorul pentru erorile de autentificare
+authErrorHandler.initAuthErrorInterceptor();
 
 // Create a client
 const queryClient = new QueryClient({
@@ -50,7 +55,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
         <AuthProvider>
           <RoleProvider>
             <AdvancedRoleProvider>
-              <EnhancedOfflineProvider>
+              <OfflineProvider>
                 <EnhancedThemeProvider>
                   <EnhancedNotificationProvider>
                     <NotificationProvider>
@@ -59,7 +64,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
                     </NotificationProvider>
                   </EnhancedNotificationProvider>
                 </EnhancedThemeProvider>
-              </EnhancedOfflineProvider>
+              </OfflineProvider>
             </AdvancedRoleProvider>
           </RoleProvider>
         </AuthProvider>
