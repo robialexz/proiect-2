@@ -1,4 +1,4 @@
-import { Suspense, useEffect } from "react";
+import { Suspense } from "react";
 import { Routes, Route } from "react-router-dom";
 import { lazyPage } from "./lib/lazy-pages";
 
@@ -8,27 +8,21 @@ import AppLayout from "./components/layout/AppLayout";
 // Import pages that need to be available immediately for better performance
 import HomePage from "./pages/HomePage";
 
-// Componente pentru redirecționare către paginile HTML statice
-const LoginRedirect = () => {
-  useEffect(() => {
-    window.location.href = "/login.html";
-  }, []);
-  return null;
-};
+// Import pagini de autentificare
+const LoginPage = lazyPage(() => import("./pages/LoginPage"), {
+  preload: true,
+});
 
-const RegisterRedirect = () => {
-  useEffect(() => {
-    window.location.href = "/register.html";
-  }, []);
-  return null;
-};
+const RegisterPage = lazyPage(() => import("./pages/RegisterPage"), {
+  preload: true,
+});
 
-const ForgotPasswordRedirect = () => {
-  useEffect(() => {
-    window.location.href = "/forgot-password.html";
-  }, []);
-  return null;
-};
+const ForgotPasswordPage = lazyPage(
+  () => import("./pages/ForgotPasswordPage"),
+  {
+    preload: true,
+  }
+);
 
 // Lazy load pages with custom loading states
 const OverviewPage = lazyPage(() => import("./pages/OverviewPage"), {
@@ -119,10 +113,10 @@ export function AppRoutes() {
       <Route path="/pricing" element={<PricingPage />} />
       <Route path="/contact" element={<ContactPage />} />
 
-      {/* Rute pentru redirecționare către paginile HTML statice */}
-      <Route path="/login" element={<LoginRedirect />} />
-      <Route path="/register" element={<RegisterRedirect />} />
-      <Route path="/forgot-password" element={<ForgotPasswordRedirect />} />
+      {/* Rute pentru autentificare */}
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
       <Route path="/notifications-demo" element={<NotificationsDemo />} />
 

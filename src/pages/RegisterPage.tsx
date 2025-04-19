@@ -1,7 +1,18 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { authService } from "@/services/auth/auth-service";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Loader2, AlertCircle } from "lucide-react";
 
+/**
+ * Pagină de înregistrare
+ * Permite utilizatorilor să își creeze un cont nou
+ */
 const RegisterPage = () => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -11,6 +22,7 @@ const RegisterPage = () => {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { signUp } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -25,7 +37,7 @@ const RegisterPage = () => {
     setLoading(true);
 
     try {
-      const { error } = await authService.signUp(email, password);
+      const { error } = await signUp(email, password);
 
       if (error) {
         throw new Error(error.message || "Înregistrare eșuată");
@@ -35,11 +47,10 @@ const RegisterPage = () => {
       // De exemplu: await supabase.from('profiles').insert({ user_id: data.user.id, first_name: firstName, last_name: lastName, company })
 
       // Redirecționăm către pagina de confirmare sau login
-      navigate("/login", {
-        state: {
-          message:
-            "Cont creat cu succes! Verificați email-ul pentru a confirma contul.",
-        },
+      navigate("/login", { 
+        state: { 
+          message: "Cont creat cu succes! Verificați email-ul pentru a confirma contul." 
+        } 
       });
     } catch (err: any) {
       console.error("Eroare la înregistrare:", err);
@@ -49,297 +60,147 @@ const RegisterPage = () => {
     }
   };
 
-  // Stiluri inline pentru a evita probleme cu importul CSS
-  const styles = {
-    container: {
-      minHeight: "100vh",
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center",
-      background: "linear-gradient(135deg, #1e293b, #0f172a)",
-      padding: "1rem",
-    },
-    card: {
-      backgroundColor: "rgba(255, 255, 255, 0.05)",
-      backdropFilter: "blur(10px)",
-      border: "1px solid rgba(255, 255, 255, 0.1)",
-      borderRadius: "1rem",
-      padding: "2rem",
-      width: "100%",
-      maxWidth: "450px",
-      boxShadow: "0 10px 25px rgba(0, 0, 0, 0.2)",
-    },
-    logo: {
-      display: "flex",
-      flexDirection: "column" as const,
-      alignItems: "center",
-      marginBottom: "1.5rem",
-    },
-    logoCircle: {
-      width: "3.5rem",
-      height: "3.5rem",
-      backgroundColor: "#6366f1",
-      borderRadius: "50%",
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center",
-      fontWeight: "bold",
-      fontSize: "1.5rem",
-      color: "white",
-      marginBottom: "0.5rem",
-      boxShadow: "0 0 15px rgba(99, 102, 241, 0.5)",
-    },
-    logoText: {
-      fontSize: "1.5rem",
-      fontWeight: "bold",
-      color: "white",
-      margin: 0,
-    },
-    title: {
-      fontSize: "1.75rem",
-      fontWeight: "bold",
-      color: "white",
-      textAlign: "center" as const,
-      marginBottom: "1rem",
-    },
-    error: {
-      backgroundColor: "rgba(239, 68, 68, 0.15)",
-      border: "1px solid rgba(239, 68, 68, 0.3)",
-      color: "#fca5a5",
-      padding: "0.75rem",
-      borderRadius: "0.5rem",
-      marginBottom: "1rem",
-    },
-    form: {
-      display: "flex",
-      flexDirection: "column" as const,
-      gap: "1.25rem",
-    },
-    formRow: {
-      display: "grid",
-      gridTemplateColumns: "1fr 1fr",
-      gap: "1rem",
-    },
-    formGroup: {
-      display: "flex",
-      flexDirection: "column" as const,
-      gap: "0.5rem",
-    },
-    label: {
-      color: "#e2e8f0",
-      fontSize: "0.875rem",
-      fontWeight: "500",
-    },
-    input: {
-      width: "100%",
-      padding: "0.75rem",
-      backgroundColor: "rgba(255, 255, 255, 0.05)",
-      border: "1px solid rgba(255, 255, 255, 0.1)",
-      borderRadius: "0.5rem",
-      color: "white",
-      fontSize: "0.875rem",
-      outline: "none",
-    },
-    checkboxContainer: {
-      display: "flex",
-      alignItems: "center",
-      gap: "0.75rem",
-      marginTop: "0.5rem",
-    },
-    checkbox: {
-      width: "1.25rem",
-      height: "1.25rem",
-      backgroundColor: agreedToTerms ? "#6366f1" : "rgba(255, 255, 255, 0.05)",
-      border: agreedToTerms
-        ? "1px solid #6366f1"
-        : "1px solid rgba(255, 255, 255, 0.2)",
-      borderRadius: "0.25rem",
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center",
-      cursor: "pointer",
-      flexShrink: 0,
-    },
-    checkboxLabel: {
-      color: "#94a3b8",
-      fontSize: "0.875rem",
-    },
-    button: {
-      backgroundColor: "#6366f1",
-      color: "white",
-      fontWeight: "600",
-      padding: "0.75rem",
-      borderRadius: "0.5rem",
-      border: "none",
-      cursor: "pointer",
-      fontSize: "0.875rem",
-      marginTop: "0.5rem",
-    },
-    buttonDisabled: {
-      opacity: 0.7,
-      cursor: "not-allowed",
-    },
-    footer: {
-      textAlign: "center" as const,
-      marginTop: "1rem",
-      color: "#94a3b8",
-      fontSize: "0.875rem",
-    },
-    link: {
-      color: "#6366f1",
-      textDecoration: "none",
-      fontWeight: "500",
-    },
-  };
-
   return (
-    <div style={styles.container}>
-      <div style={styles.card}>
-        <div style={styles.logo}>
-          <div style={styles.logoCircle}>IM</div>
-          <h1 style={styles.logoText}>InventoryMaster</h1>
-        </div>
-
-        <h2 style={styles.title}>Înregistrare</h2>
-
-        {error && (
-          <div style={styles.error}>
-            <p>{error}</p>
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} style={styles.form}>
-          <div style={styles.formRow}>
-            <div style={styles.formGroup}>
-              <label htmlFor="firstName" style={styles.label}>
-                Prenume
-              </label>
-              <input
-                id="firstName"
-                type="text"
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                placeholder="Prenume"
-                required
-                style={styles.input}
-              />
+    <div className="min-h-screen flex flex-col justify-center items-center px-4 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+      <div className="w-full max-w-md">
+        <Card className="border-slate-700 bg-slate-800/50 backdrop-blur-sm shadow-xl">
+          <CardHeader className="space-y-1 text-center">
+            <div className="flex justify-center mb-2">
+              <div className="h-12 w-12 rounded-full bg-indigo-500 flex items-center justify-center">
+                <span className="text-white font-bold text-xl">IM</span>
+              </div>
             </div>
-
-            <div style={styles.formGroup}>
-              <label htmlFor="lastName" style={styles.label}>
-                Nume
-              </label>
-              <input
-                id="lastName"
-                type="text"
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                placeholder="Nume"
-                required
-                style={styles.input}
-              />
-            </div>
-          </div>
-
-          <div style={styles.formGroup}>
-            <label htmlFor="email" style={styles.label}>
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="nume@exemplu.com"
-              required
-              style={styles.input}
-            />
-          </div>
-
-          <div style={styles.formGroup}>
-            <label htmlFor="company" style={styles.label}>
-              Companie (opțional)
-            </label>
-            <input
-              id="company"
-              type="text"
-              value={company}
-              onChange={(e) => setCompany(e.target.value)}
-              placeholder="Numele companiei"
-              style={styles.input}
-            />
-          </div>
-
-          <div style={styles.formGroup}>
-            <label htmlFor="password" style={styles.label}>
-              Parolă
-            </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              required
-              style={styles.input}
-            />
-          </div>
-
-          <div
-            style={styles.checkboxContainer}
-            onClick={() => setAgreedToTerms(!agreedToTerms)}
-          >
-            <div style={styles.checkbox}>
-              {agreedToTerms && (
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M20 6L9 17L4 12"
-                    stroke="white"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
+            <CardTitle className="text-2xl font-bold text-white">Înregistrare</CardTitle>
+            <CardDescription className="text-slate-400">
+              Creați un cont nou pentru a accesa aplicația
+            </CardDescription>
+          </CardHeader>
+          
+          <CardContent className="space-y-4">
+            {error && (
+              <Alert variant="destructive" className="bg-red-900/50 border-red-800">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription className="text-red-200">{error}</AlertDescription>
+              </Alert>
+            )}
+            
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="firstName" className="text-slate-300">Prenume</Label>
+                  <Input
+                    id="firstName"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    placeholder="Prenume"
+                    required
+                    autoComplete="given-name"
+                    className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-500"
                   />
-                </svg>
-              )}
-            </div>
-            <span style={styles.checkboxLabel}>
-              Sunt de acord cu{" "}
-              <Link to="/terms" style={styles.link}>
-                Termenii și Condițiile
-              </Link>{" "}
-              și{" "}
-              <Link to="/privacy" style={styles.link}>
-                Politica de Confidențialitate
-              </Link>
-            </span>
-          </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="lastName" className="text-slate-300">Nume</Label>
+                  <Input
+                    id="lastName"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    placeholder="Nume"
+                    required
+                    autoComplete="family-name"
+                    className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-500"
+                  />
+                </div>
+              </div>
 
-          <button
-            type="submit"
-            style={{
-              ...styles.button,
-              ...(loading ? styles.buttonDisabled : {}),
-            }}
-            disabled={loading}
-          >
-            {loading ? "Se creează contul..." : "Creează cont"}
-          </button>
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-slate-300">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="nume@exemplu.com"
+                  required
+                  autoComplete="email"
+                  className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-500"
+                />
+              </div>
 
-          <div style={styles.footer}>
-            <p>
+              <div className="space-y-2">
+                <Label htmlFor="company" className="text-slate-300">Companie (opțional)</Label>
+                <Input
+                  id="company"
+                  value={company}
+                  onChange={(e) => setCompany(e.target.value)}
+                  placeholder="Numele companiei"
+                  autoComplete="organization"
+                  className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-500"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-slate-300">Parolă</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                  autoComplete="new-password"
+                  className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-500"
+                />
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="terms" 
+                  checked={agreedToTerms}
+                  onCheckedChange={(checked) => setAgreedToTerms(checked as boolean)}
+                  className="data-[state=checked]:bg-indigo-500 data-[state=checked]:border-indigo-500"
+                />
+                <label
+                  htmlFor="terms"
+                  className="text-sm text-slate-300 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  Sunt de acord cu{" "}
+                  <Link to="/terms" className="text-indigo-400 hover:text-indigo-300">
+                    Termenii și Condițiile
+                  </Link>{" "}
+                  și{" "}
+                  <Link to="/privacy" className="text-indigo-400 hover:text-indigo-300">
+                    Politica de Confidențialitate
+                  </Link>
+                </label>
+              </div>
+              
+              <Button 
+                type="submit" 
+                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white"
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Se creează contul...
+                  </>
+                ) : (
+                  "Creează cont"
+                )}
+              </Button>
+            </form>
+          </CardContent>
+          
+          <CardFooter className="flex justify-center">
+            <p className="text-sm text-slate-400">
               Ai deja un cont?{" "}
-              <Link to="/login" style={styles.link}>
+              <Link to="/login" className="text-indigo-400 hover:text-indigo-300 font-medium">
                 Autentifică-te
               </Link>
             </p>
-          </div>
-        </form>
+          </CardFooter>
+        </Card>
       </div>
     </div>
   );

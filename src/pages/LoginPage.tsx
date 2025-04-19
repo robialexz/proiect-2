@@ -1,13 +1,24 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { authService } from "@/services/auth/auth-service";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Loader2, AlertCircle, CheckCircle } from "lucide-react";
 
+/**
+ * Pagină de autentificare
+ * Permite utilizatorilor să se autentifice în aplicație
+ */
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const { signIn } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -27,7 +38,7 @@ const LoginPage = () => {
     setLoading(true);
 
     try {
-      const { data, error } = await authService.signIn(email, password);
+      const { data, error } = await signIn(email, password);
 
       if (error) {
         throw new Error(error.message || "Autentificare eșuată");
@@ -47,216 +58,97 @@ const LoginPage = () => {
     }
   };
 
-  // Stiluri inline pentru a evita probleme cu importul CSS
-  const styles = {
-    container: {
-      minHeight: "100vh",
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center",
-      background: "linear-gradient(135deg, #1e293b, #0f172a)",
-      padding: "1rem",
-    },
-    card: {
-      backgroundColor: "rgba(255, 255, 255, 0.05)",
-      backdropFilter: "blur(10px)",
-      border: "1px solid rgba(255, 255, 255, 0.1)",
-      borderRadius: "1rem",
-      padding: "2rem",
-      width: "100%",
-      maxWidth: "450px",
-      boxShadow: "0 10px 25px rgba(0, 0, 0, 0.2)",
-    },
-    logo: {
-      display: "flex",
-      flexDirection: "column" as const,
-      alignItems: "center",
-      marginBottom: "1.5rem",
-    },
-    logoCircle: {
-      width: "3.5rem",
-      height: "3.5rem",
-      backgroundColor: "#6366f1",
-      borderRadius: "50%",
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center",
-      fontWeight: "bold",
-      fontSize: "1.5rem",
-      color: "white",
-      marginBottom: "0.5rem",
-      boxShadow: "0 0 15px rgba(99, 102, 241, 0.5)",
-    },
-    logoText: {
-      fontSize: "1.5rem",
-      fontWeight: "bold",
-      color: "white",
-      margin: 0,
-    },
-    title: {
-      fontSize: "1.75rem",
-      fontWeight: "bold",
-      color: "white",
-      textAlign: "center" as const,
-      marginBottom: "1rem",
-    },
-    error: {
-      backgroundColor: "rgba(239, 68, 68, 0.15)",
-      border: "1px solid rgba(239, 68, 68, 0.3)",
-      color: "#fca5a5",
-      padding: "0.75rem",
-      borderRadius: "0.5rem",
-      marginBottom: "1rem",
-    },
-    success: {
-      backgroundColor: "rgba(34, 197, 94, 0.15)",
-      border: "1px solid rgba(34, 197, 94, 0.3)",
-      color: "#86efac",
-      padding: "0.75rem",
-      borderRadius: "0.5rem",
-      marginBottom: "1rem",
-    },
-    form: {
-      display: "flex",
-      flexDirection: "column" as const,
-      gap: "1.25rem",
-    },
-    formGroup: {
-      display: "flex",
-      flexDirection: "column" as const,
-      gap: "0.5rem",
-    },
-    label: {
-      color: "#e2e8f0",
-      fontSize: "0.875rem",
-      fontWeight: "500",
-    },
-    labelWithLink: {
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-    },
-    forgotPassword: {
-      fontSize: "0.875rem",
-      color: "#94a3b8",
-      textDecoration: "none",
-    },
-    input: {
-      width: "100%",
-      padding: "0.75rem",
-      backgroundColor: "rgba(255, 255, 255, 0.05)",
-      border: "1px solid rgba(255, 255, 255, 0.1)",
-      borderRadius: "0.5rem",
-      color: "white",
-      fontSize: "0.875rem",
-      outline: "none",
-    },
-    button: {
-      backgroundColor: "#6366f1",
-      color: "white",
-      fontWeight: "600",
-      padding: "0.75rem",
-      borderRadius: "0.5rem",
-      border: "none",
-      cursor: "pointer",
-      fontSize: "0.875rem",
-      marginTop: "0.5rem",
-    },
-    buttonDisabled: {
-      opacity: 0.7,
-      cursor: "not-allowed",
-    },
-    footer: {
-      textAlign: "center" as const,
-      marginTop: "1rem",
-      color: "#94a3b8",
-      fontSize: "0.875rem",
-    },
-    link: {
-      color: "#6366f1",
-      textDecoration: "none",
-      fontWeight: "500",
-    },
-  };
-
   return (
-    <div style={styles.container}>
-      <div style={styles.card}>
-        <div style={styles.logo}>
-          <div style={styles.logoCircle}>IM</div>
-          <h1 style={styles.logoText}>InventoryMaster</h1>
-        </div>
-
-        <h2 style={styles.title}>Autentificare</h2>
-
-        {error && (
-          <div style={styles.error}>
-            <p>{error}</p>
-          </div>
-        )}
-
-        {success && (
-          <div style={styles.success}>
-            <p>{success}</p>
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} style={styles.form}>
-          <div style={styles.formGroup}>
-            <label htmlFor="email" style={styles.label}>
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="nume@exemplu.com"
-              required
-              style={styles.input}
-            />
-          </div>
-
-          <div style={styles.formGroup}>
-            <div style={styles.labelWithLink}>
-              <label htmlFor="password" style={styles.label}>
-                Parolă
-              </label>
-              <Link to="/forgot-password" style={styles.forgotPassword}>
-                Ai uitat parola?
-              </Link>
+    <div className="min-h-screen flex flex-col justify-center items-center px-4 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+      <div className="w-full max-w-md">
+        <Card className="border-slate-700 bg-slate-800/50 backdrop-blur-sm shadow-xl">
+          <CardHeader className="space-y-1 text-center">
+            <div className="flex justify-center mb-2">
+              <div className="h-12 w-12 rounded-full bg-indigo-500 flex items-center justify-center">
+                <span className="text-white font-bold text-xl">IM</span>
+              </div>
             </div>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              required
-              style={styles.input}
-            />
-          </div>
-
-          <button
-            type="submit"
-            style={{
-              ...styles.button,
-              ...(loading ? styles.buttonDisabled : {}),
-            }}
-            disabled={loading}
-          >
-            {loading ? "Se procesează..." : "Autentificare"}
-          </button>
-
-          <div style={styles.footer}>
-            <p>
+            <CardTitle className="text-2xl font-bold text-white">Autentificare</CardTitle>
+            <CardDescription className="text-slate-400">
+              Introduceți datele pentru a vă autentifica
+            </CardDescription>
+          </CardHeader>
+          
+          <CardContent className="space-y-4">
+            {error && (
+              <Alert variant="destructive" className="bg-red-900/50 border-red-800">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription className="text-red-200">{error}</AlertDescription>
+              </Alert>
+            )}
+            
+            {success && (
+              <Alert className="bg-green-900/50 border-green-800">
+                <CheckCircle className="h-4 w-4 text-green-400" />
+                <AlertDescription className="text-green-200">{success}</AlertDescription>
+              </Alert>
+            )}
+            
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-slate-300">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="nume@exemplu.com"
+                  required
+                  autoComplete="email"
+                  className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-500"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <Label htmlFor="password" className="text-slate-300">Parolă</Label>
+                  <Link to="/forgot-password" className="text-sm text-indigo-400 hover:text-indigo-300">
+                    Ai uitat parola?
+                  </Link>
+                </div>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                  autoComplete="current-password"
+                  className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-500"
+                />
+              </div>
+              
+              <Button 
+                type="submit" 
+                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white"
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Se procesează...
+                  </>
+                ) : (
+                  "Autentificare"
+                )}
+              </Button>
+            </form>
+          </CardContent>
+          
+          <CardFooter className="flex justify-center">
+            <p className="text-sm text-slate-400">
               Nu ai un cont?{" "}
-              <Link to="/register" style={styles.link}>
+              <Link to="/register" className="text-indigo-400 hover:text-indigo-300 font-medium">
                 Înregistrează-te
               </Link>
             </p>
-          </div>
-        </form>
+          </CardFooter>
+        </Card>
       </div>
     </div>
   );
