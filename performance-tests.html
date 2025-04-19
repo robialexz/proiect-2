@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teste de Performanță</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    h1 {
+      color: #333;
+      margin-top: 0;
+    }
+    
+    .test-section {
+      margin-bottom: 20px;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    
+    .test-section h2 {
+      margin-top: 0;
+      color: #444;
+    }
+    
+    .test-button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-right: 10px;
+    }
+    
+    .test-button:hover {
+      background-color: #45a049;
+    }
+    
+    .results {
+      margin-top: 15px;
+      padding: 10px;
+      background-color: #f9f9f9;
+      border-radius: 4px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    
+    .log-entry {
+      margin-bottom: 5px;
+      font-family: monospace;
+      font-size: 12px;
+    }
+    
+    .log-entry.info {
+      color: #333;
+    }
+    
+    .log-entry.warning {
+      color: #ff9800;
+    }
+    
+    .log-entry.error {
+      color: #f44336;
+    }
+    
+    .status {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 3px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+    
+    .status.running {
+      background-color: #2196F3;
+      color: white;
+    }
+    
+    .status.completed {
+      background-color: #4CAF50;
+      color: white;
+    }
+    
+    .status.failed {
+      background-color: #f44336;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Teste de Performanță</h1>
+    
+    <div class="test-section">
+      <h2>Monitorizare Performanță în Timp Real</h2>
+      <button id="start-monitor" class="test-button">Pornește Monitorizarea</button>
+      <button id="stop-monitor" class="test-button" disabled>Oprește Monitorizarea</button>
+      <button id="generate-report" class="test-button" disabled>Generează Raport</button>
+      <span id="monitor-status" class="status">Oprit</span>
+      <div id="monitor-results" class="results"></div>
+    </div>
+    
+    <div class="test-section">
+      <h2>Test de Performanță Generală</h2>
+      <button id="run-performance-test" class="test-button">Rulează Testul</button>
+      <span id="performance-status" class="status">Neexecutat</span>
+      <div id="performance-results" class="results"></div>
+    </div>
+    
+    <div class="test-section">
+      <h2>Test de Navigare</h2>
+      <button id="run-navigation-test" class="test-button">Rulează Testul</button>
+      <span id="navigation-status" class="status">Neexecutat</span>
+      <div id="navigation-results" class="results"></div>
+    </div>
+    
+    <div class="test-section">
+      <h2>Test de Funcționalități</h2>
+      <button id="run-functionality-test" class="test-button">Rulează Testul</button>
+      <span id="functionality-status" class="status">Neexecutat</span>
+      <div id="functionality-results" class="results"></div>
+    </div>
+    
+    <div class="test-section">
+      <h2>Test de Memorie</h2>
+      <button id="run-memory-test" class="test-button">Rulează Testul</button>
+      <span id="memory-status" class="status">Neexecutat</span>
+      <div id="memory-results" class="results"></div>
+    </div>
+    
+    <div class="test-section">
+      <h2>Rulează Toate Testele</h2>
+      <button id="run-all-tests" class="test-button">Rulează Toate Testele</button>
+      <span id="all-tests-status" class="status">Neexecutat</span>
+      <div id="all-tests-results" class="results"></div>
+    </div>
+  </div>
+  
+  <script>
+    // Funcție pentru a adăuga o intrare în log
+    function addLogEntry(containerId, message, type = 'info') {
+      const container = document.getElementById(containerId);
+      const entry = document.createElement('div');
+      entry.className = `log-entry ${type}`;
+      entry.textContent = message;
+      container.appendChild(entry);
+      container.scrollTop = container.scrollHeight;
+    }
+    
+    // Funcție pentru a actualiza statusul unui test
+    function updateStatus(statusId, status, text) {
+      const statusElement = document.getElementById(statusId);
+      statusElement.className = `status ${status}`;
+      statusElement.textContent = text;
+    }
+    
+    // Suprascrie console.log pentru a captura mesajele
+    const originalConsoleLog = console.log;
+    const originalConsoleWarn = console.warn;
+    const originalConsoleError = console.error;
+    
+    // Funcție pentru a redirecționa mesajele de log
+    function redirectLogs(containerId) {
+      console.log = function(message) {
+        originalConsoleLog.apply(console, arguments);
+        addLogEntry(containerId, typeof message === 'object' ? JSON.stringify(message) : message, 'info');
+      };
+      
+      console.warn = function(message) {
+        originalConsoleWarn.apply(console, arguments);
+        addLogEntry(containerId, typeof message === 'object' ? JSON.stringify(message) : message, 'warning');
+      };
+      
+      console.error = function(message) {
+        originalConsoleError.apply(console, arguments);
+        addLogEntry(containerId, typeof message === 'object' ? JSON.stringify(message) : message, 'error');
+      };
+    }
+    
+    // Funcție pentru a restaura console.log original
+    function restoreLogs() {
+      console.log = originalConsoleLog;
+      console.warn = originalConsoleWarn;
+      console.error = originalConsoleError;
+    }
+    
+    // Funcție pentru a încărca un script
+    function loadScript(src) {
+      return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = src;
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+      });
+    }
+    
+    // Configurăm butoanele de test
+    document.getElementById('start-monitor').addEventListener('click', async function() {
+      this.disabled = true;
+      document.getElementById('stop-monitor').disabled = false;
+      document.getElementById('generate-report').disabled = true;
+      updateStatus('monitor-status', 'running', 'Rulează');
+      
+      redirectLogs('monitor-results');
+      
+      try {
+        await loadScript('performance-monitor.js');
+        addLogEntry('monitor-results', 'Monitorizarea a început cu succes.', 'info');
+      } catch (error) {
+        addLogEntry('monitor-results', `Eroare la pornirea monitorizării: ${error}`, 'error');
+        updateStatus('monitor-status', 'failed', 'Eroare');
+        this.disabled = false;
+        document.getElementById('stop-monitor').disabled = true;
+      }
+      
+      restoreLogs();
+    });
+    
+    document.getElementById('stop-monitor').addEventListener('click', function() {
+      this.disabled = true;
+      document.getElementById('start-monitor').disabled = false;
+      document.getElementById('generate-report').disabled = false;
+      updateStatus('monitor-status', 'completed', 'Oprit');
+      
+      redirectLogs('monitor-results');
+      
+      try {
+        if (window.performanceMonitor) {
+          window.performanceMonitor.stop();
+          addLogEntry('monitor-results', 'Monitorizarea a fost oprită cu succes.', 'info');
+        } else {
+          addLogEntry('monitor-results', 'Monitorul de performanță nu a fost găsit.', 'warning');
+        }
+      } catch (error) {
+        addLogEntry('monitor-results', `Eroare la oprirea monitorizării: ${error}`, 'error');
+      }
+      
+      restoreLogs();
+    });
+    
+    document.getElementById('generate-report').addEventListener('click', function() {
+      redirectLogs('monitor-results');
+      
+      try {
+        if (window.performanceMonitor) {
+          const report = window.performanceMonitor.generateReport();
+          addLogEntry('monitor-results', 'Raport generat cu succes.', 'info');
+          addLogEntry('monitor-results', JSON.stringify(report, null, 2), 'info');
+        } else {
+          addLogEntry('monitor-results', 'Monitorul de performanță nu a fost găsit.', 'warning');
+        }
+      } catch (error) {
+        addLogEntry('monitor-results', `Eroare la generarea raportului: ${error}`, 'error');
+      }
+      
+      restoreLogs();
+    });
+    
+    document.getElementById('run-performance-test').addEventListener('click', async function() {
+      this.disabled = true;
+      updateStatus('performance-status', 'running', 'Rulează');
+      
+      redirectLogs('performance-results');
+      
+      try {
+        await loadScript('performance-test.js');
+        updateStatus('performance-status', 'completed', 'Completat');
+      } catch (error) {
+        addLogEntry('performance-results', `Eroare la rularea testului: ${error}`, 'error');
+        updateStatus('performance-status', 'failed', 'Eroare');
+      }
+      
+      restoreLogs();
+      this.disabled = false;
+    });
+    
+    document.getElementById('run-navigation-test').addEventListener('click', async function() {
+      this.disabled = true;
+      updateStatus('navigation-status', 'running', 'Rulează');
+      
+      redirectLogs('navigation-results');
+      
+      try {
+        await loadScript('navigation-test.js');
+        updateStatus('navigation-status', 'completed', 'Completat');
+      } catch (error) {
+        addLogEntry('navigation-results', `Eroare la rularea testului: ${error}`, 'error');
+        updateStatus('navigation-status', 'failed', 'Eroare');
+      }
+      
+      restoreLogs();
+      this.disabled = false;
+    });
+    
+    document.getElementById('run-functionality-test').addEventListener('click', async function() {
+      this.disabled = true;
+      updateStatus('functionality-status', 'running', 'Rulează');
+      
+      redirectLogs('functionality-results');
+      
+      try {
+        await loadScript('functionality-test.js');
+        updateStatus('functionality-status', 'completed', 'Completat');
+      } catch (error) {
+        addLogEntry('functionality-results', `Eroare la rularea testului: ${error}`, 'error');
+        updateStatus('functionality-status', 'failed', 'Eroare');
+      }
+      
+      restoreLogs();
+      this.disabled = false;
+    });
+    
+    document.getElementById('run-memory-test').addEventListener('click', async function() {
+      this.disabled = true;
+      updateStatus('memory-status', 'running', 'Rulează');
+      
+      redirectLogs('memory-results');
+      
+      try {
+        await loadScript('memory-test.js');
+        updateStatus('memory-status', 'completed', 'Completat');
+      } catch (error) {
+        addLogEntry('memory-results', `Eroare la rularea testului: ${error}`, 'error');
+        updateStatus('memory-status', 'failed', 'Eroare');
+      }
+      
+      restoreLogs();
+      this.disabled = false;
+    });
+    
+    document.getElementById('run-all-tests').addEventListener('click', async function() {
+      this.disabled = true;
+      updateStatus('all-tests-status', 'running', 'Rulează');
+      
+      redirectLogs('all-tests-results');
+      
+      try {
+        await loadScript('run-tests.js');
+        updateStatus('all-tests-status', 'completed', 'Completat');
+      } catch (error) {
+        addLogEntry('all-tests-results', `Eroare la rularea testelor: ${error}`, 'error');
+        updateStatus('all-tests-status', 'failed', 'Eroare');
+      }
+      
+      restoreLogs();
+      this.disabled = false;
+    });
+  </script>
+</body>
+</html>
