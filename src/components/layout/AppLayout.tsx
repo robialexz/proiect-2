@@ -9,7 +9,7 @@ import { useMemoizedCallback } from "@/lib/performance";
 import ConnectionStatus from "@/components/ui/connection-status";
 import { routePreloader } from "@/lib/route-preloader";
 import { OfflineIndicator } from "@/components/ui/offline-indicator";
-import { measurePerformance } from "@/lib/performance-optimizer";
+import { measurePageLoad } from "@/lib/performance-optimizer";
 import WelcomeOverlay from "@/components/welcome/WelcomeOverlay";
 
 // Importăm hook-uri personalizate
@@ -45,9 +45,7 @@ const AppLayout: React.FC = () => {
   // Optimizare: Preîncărcăm rutele adiacente pentru o navigație mai rapidă
   useEffect(() => {
     // Măsurăm performanța încărcării paginii
-    const endMeasurement = measurePerformance(
-      `Page load complete: ${location.pathname}`
-    );
+    const endMeasurement = measurePageLoad(location.pathname);
 
     // Preîncărcăm rutele adiacente pentru a îmbunătăți performanța
     routePreloader.preloadAdjacentRoutes(location.pathname);
