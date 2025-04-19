@@ -32,6 +32,8 @@ const AuthPage = () => {
   const [resendError, setResendError] = useState<string | null>(null);
   const [resendSuccess, setResendSuccess] = useState<string | null>(null);
   const [showResendForm, setShowResendForm] = useState(false);
+  const [showResendOption, setShowResendOption] = useState(false);
+  const [registrationTime, setRegistrationTime] = useState<number | null>(null);
 
   // Stare pentru a determina dacă afișăm formularul de login sau register
   const [isLogin, setIsLogin] = useState(location.pathname === "/login");
@@ -192,13 +194,32 @@ const AuthPage = () => {
             (error.message.toLowerCase().includes("user already registered") ||
               error.message.toLowerCase().includes("există deja un cont")))
         ) {
-          throw new Error(
-            "Există deja un cont cu această adresă de email. Vă rugăm să vă autentificați sau să folosiți opțiunea 'Am uitat parola'."
+          // Setez email-ul pentru retrimitere/recuperare
+          setResendEmail(registerEmail);
+
+          // Afișăm un mesaj de eroare cu opțiuni
+          setRegisterError(
+            "Există deja un cont cu această adresă de email. Puteți să vă autentificați sau să folosiți opțiunile de mai jos."
           );
+
+          // Afișăm opțiunile pentru utilizatorul existent
+          setShowResendOption(true);
+
+          // Nu aruncăm eroare pentru a permite utilizatorului să vadă opțiunile
+          return;
         } else {
           throw new Error(error.message || "Înregistrare eșuată");
         }
       }
+
+      // Setăm timpul de înregistrare pentru a afișa butonul de retrimitere după 1 minut
+      setRegistrationTime(Date.now());
+      setResendEmail(registerEmail); // Pre-completăm email-ul pentru retrimitere
+
+      // Setăm un timer pentru a afișa opțiunea de retrimitere după 1 minut
+      setTimeout(() => {
+        setShowResendOption(true);
+      }, 60000); // 1 minut = 60000 ms
 
       // Verificăm dacă avem date și dacă email-ul a fost trimis
       if (data && data.user) {
@@ -209,57 +230,36 @@ const AuthPage = () => {
             "Cont creat cu succes! Email-ul dvs. este deja confirmat.";
           setRegisterSuccess(successMessage);
 
-          // Redirecționăm către login
+          // Redirecționăm către login după un timp mai lung
           setTimeout(() => {
             setIsLogin(true);
             navigate("/login", {
               replace: true,
               state: { message: successMessage },
             });
-          }, 2000);
+          }, 120000); // 2 minute pentru a da timp utilizatorului să vadă opțiunea de retrimitere
         } else if (data.user.confirmation_sent_at) {
           // Email-ul de confirmare a fost trimis
           const successMessage =
-            "Cont creat cu succes! Vă rugăm să verificați email-ul pentru a confirma contul. Verificați și folderul de spam dacă nu găsiți email-ul.";
+            "Cont creat cu succes! Vă rugăm să verificați email-ul pentru a confirma contul. Verificați și folderul de spam dacă nu găsiți email-ul. După 1 minut veți putea retrimite email-ul de confirmare dacă nu l-ați primit.";
           setRegisterSuccess(successMessage);
 
-          // Redirecționăm către login
-          setTimeout(() => {
-            setIsLogin(true);
-            navigate("/login", {
-              replace: true,
-              state: { message: successMessage },
-            });
-          }, 3000);
+          // Nu mai redirecționăm automat către login pentru a permite utilizatorului să folosească opțiunea de retrimitere
         } else {
           // Email-ul de confirmare nu a fost trimis (posibilă problemă de configurare)
           const successMessage =
-            "Cont creat cu succes! Însă nu am putut trimite email-ul de confirmare. Vă rugăm să contactați administratorul.";
+            "Cont creat cu succes! Însă nu am putut trimite email-ul de confirmare. După 1 minut veți putea încerca să retrimiteți email-ul de confirmare.";
           setRegisterSuccess(successMessage);
 
-          // Redirecționăm către login
-          setTimeout(() => {
-            setIsLogin(true);
-            navigate("/login", {
-              replace: true,
-              state: { message: successMessage },
-            });
-          }, 3000);
+          // Nu mai redirecționăm automat către login pentru a permite utilizatorului să folosească opțiunea de retrimitere
         }
       } else {
         // Nu avem date despre utilizator, dar nu avem nici eroare (situație ciudată)
         const successMessage =
-          "Cont creat cu succes! Verificați email-ul pentru a confirma contul.";
+          "Cont creat cu succes! Verificați email-ul pentru a confirma contul. După 1 minut veți putea retrimite email-ul de confirmare dacă nu l-ați primit.";
         setRegisterSuccess(successMessage);
 
-        // Redirecționăm către login
-        setTimeout(() => {
-          setIsLogin(true);
-          navigate("/login", {
-            replace: true,
-            state: { message: successMessage },
-          });
-        }, 2000);
+        // Nu mai redirecționăm automat către login pentru a permite utilizatorului să folosească opțiunea de retrimitere
       }
     } catch (err: any) {
       // Doar în dezvoltare, nu în producție
@@ -399,106 +399,6 @@ const AuthPage = () => {
                         )}
                       </Button>
                     </form>
-
-                    {/* Secțiune pentru retrimiterea email-ului de confirmare */}
-                    <div className="mt-4">
-                      <Separator className="my-4" />
-
-                      {!showResendForm ? (
-                        <div className="text-center">
-                          <p className="text-sm text-slate-400 mb-2">
-                            Nu ați primit email-ul de confirmare?
-                          </p>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={toggleResendForm}
-                            className="text-indigo-400 border-indigo-800 hover:bg-indigo-900/50"
-                          >
-                            <Mail className="mr-2 h-4 w-4" />
-                            Retrimite email de confirmare
-                          </Button>
-                        </div>
-                      ) : (
-                        <div className="space-y-4">
-                          <h3 className="text-sm font-medium text-slate-300 text-center">
-                            Retrimite email-ul de confirmare
-                          </h3>
-
-                          {resendError && (
-                            <Alert
-                              variant="destructive"
-                              className="bg-red-900/50 border-red-800"
-                            >
-                              <AlertCircle className="h-4 w-4" />
-                              <AlertDescription className="text-red-200">
-                                {resendError}
-                              </AlertDescription>
-                            </Alert>
-                          )}
-
-                          {resendSuccess && (
-                            <Alert className="bg-green-900/50 border-green-800">
-                              <CheckCircle className="h-4 w-4 text-green-400" />
-                              <AlertDescription className="text-green-200">
-                                {resendSuccess}
-                              </AlertDescription>
-                            </Alert>
-                          )}
-
-                          <form
-                            onSubmit={handleResendConfirmation}
-                            className="space-y-4"
-                          >
-                            <div className="space-y-2">
-                              <Label
-                                htmlFor="resendEmail"
-                                className="text-slate-300"
-                              >
-                                Email
-                              </Label>
-                              <Input
-                                id="resendEmail"
-                                type="email"
-                                value={resendEmail}
-                                onChange={(e) => setResendEmail(e.target.value)}
-                                placeholder="nume@exemplu.com"
-                                required
-                                className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-500"
-                              />
-                            </div>
-
-                            <div className="flex space-x-2">
-                              <Button
-                                type="submit"
-                                className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white"
-                                disabled={resendLoading}
-                                size="sm"
-                              >
-                                {resendLoading ? (
-                                  <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    Se trimite...
-                                  </>
-                                ) : (
-                                  "Trimite"
-                                )}
-                              </Button>
-
-                              <Button
-                                type="button"
-                                variant="outline"
-                                className="border-slate-600 text-slate-300 hover:bg-slate-700"
-                                onClick={toggleResendForm}
-                                size="sm"
-                              >
-                                Anulare
-                              </Button>
-                            </div>
-                          </form>
-                        </div>
-                      )}
-                    </div>
                   </>
                 )}
 
@@ -661,6 +561,149 @@ const AuthPage = () => {
                           "Creează cont"
                         )}
                       </Button>
+
+                      {/* Secțiune pentru retrimiterea email-ului de confirmare - apare după 1 minut sau în caz de email existent */}
+                      {showResendOption &&
+                        (registerSuccess || registerError) && (
+                          <div className="mt-6">
+                            <Separator className="my-4" />
+
+                            {!showResendForm ? (
+                              <div className="text-center">
+                                <p className="text-sm text-slate-400 mb-2">
+                                  {registerError
+                                    ? "Alegeți una din opțiunile de mai jos pentru a continua:"
+                                    : "Nu ați primit email-ul de confirmare? Puteți retrimite acum."}
+                                </p>
+
+                                <div className="flex flex-col space-y-2">
+                                  {registerError && (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => {
+                                        setIsLogin(true);
+                                        navigate("/login");
+                                      }}
+                                      className="text-indigo-400 border-indigo-800 hover:bg-indigo-900/50"
+                                    >
+                                      Autentificare cu contul existent
+                                    </Button>
+                                  )}
+
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={toggleResendForm}
+                                    className="text-indigo-400 border-indigo-800 hover:bg-indigo-900/50"
+                                  >
+                                    <Mail className="mr-2 h-4 w-4" />
+                                    {registerError
+                                      ? "Recuperare parolă"
+                                      : "Retrimite email de confirmare"}
+                                  </Button>
+
+                                  {registerError && (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => {
+                                        setRegisterEmail("");
+                                        setRegisterError(null);
+                                        setShowResendOption(false);
+                                      }}
+                                      className="text-slate-400 border-slate-600 hover:bg-slate-700/50 mt-2"
+                                    >
+                                      Folosiți altă adresă de email
+                                    </Button>
+                                  )}
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="space-y-4">
+                                <h3 className="text-sm font-medium text-slate-300 text-center">
+                                  {registerError
+                                    ? "Recuperare parolă"
+                                    : "Retrimite email-ul de confirmare"}
+                                </h3>
+
+                                {resendError && (
+                                  <Alert
+                                    variant="destructive"
+                                    className="bg-red-900/50 border-red-800"
+                                  >
+                                    <AlertCircle className="h-4 w-4" />
+                                    <AlertDescription className="text-red-200">
+                                      {resendError}
+                                    </AlertDescription>
+                                  </Alert>
+                                )}
+
+                                {resendSuccess && (
+                                  <Alert className="bg-green-900/50 border-green-800">
+                                    <CheckCircle className="h-4 w-4 text-green-400" />
+                                    <AlertDescription className="text-green-200">
+                                      {resendSuccess}
+                                    </AlertDescription>
+                                  </Alert>
+                                )}
+
+                                <form
+                                  onSubmit={handleResendConfirmation}
+                                  className="space-y-4"
+                                >
+                                  <div className="space-y-2">
+                                    <Label
+                                      htmlFor="resendEmail"
+                                      className="text-slate-300"
+                                    >
+                                      Email
+                                    </Label>
+                                    <Input
+                                      id="resendEmail"
+                                      type="email"
+                                      value={resendEmail}
+                                      onChange={(e) =>
+                                        setResendEmail(e.target.value)
+                                      }
+                                      placeholder="nume@exemplu.com"
+                                      required
+                                      className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-500"
+                                    />
+                                  </div>
+
+                                  <div className="flex space-x-2">
+                                    <Button
+                                      type="submit"
+                                      className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white"
+                                      disabled={resendLoading}
+                                      size="sm"
+                                    >
+                                      {resendLoading ? (
+                                        <>
+                                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                          Se trimite...
+                                        </>
+                                      ) : (
+                                        "Trimite"
+                                      )}
+                                    </Button>
+
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      className="border-slate-600 text-slate-300 hover:bg-slate-700"
+                                      onClick={toggleResendForm}
+                                      size="sm"
+                                    >
+                                      Anulare
+                                    </Button>
+                                  </div>
+                                </form>
+                              </div>
+                            )}
+                          </div>
+                        )}
                     </form>
                   </>
                 )}
