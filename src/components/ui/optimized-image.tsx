@@ -1,9 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "./skeleton";
 import {
   optimizeImage,
   generateBlurPlaceholder,
+  preloadImage,
+  isImageCached,
 } from "@/lib/image-optimization";
+import { measurePerformance } from "@/lib/performance-optimizer";
 
 /**
  * Props pentru componenta OptimizedImage
@@ -54,6 +58,26 @@ export function OptimizedImage({
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [placeholderSrc, setPlaceholderSrc] = useState<string | null>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  // Verificăm dacă imaginea este deja în cache
+  useEffect(() => {
+    if (src) {
+      // Verificăm cache-ul pentru a evita flicker-ul
+      isImageCached(optimizedSrc).then((cached) => {
+        if (cached) {
+          // Dacă imaginea este în cache, o marcăm ca încărcată imediat
+          setIsLoaded(true);
+          setIsLoading(false);
+        }
+      });
+
+      // Preîncărcăm imaginea pentru pagini frecvent accesate
+      if (priority) {
+        preloadImage(optimizedSrc);
+      }
+    }
+  }, [src, optimizedSrc, priority]);
 
   // Optimizăm imaginea
   const optimizedSrc = src
@@ -89,15 +113,49 @@ export function OptimizedImage({
 
   // Gestionăm încărcarea imaginii
   const handleLoad = () => {
-    setIsLoaded(true);
-    setIsLoading(false);
+    // Măsurăm performanța încărcării imaginii
+    measurePerformance(`image-load-${src.substring(0, 20)}`, () => {
+      setIsLoaded(true);
+      setIsLoading(false);
+    });
   };
 
   // Gestionăm erorile de încărcare
   const handleError = () => {
+    console.warn(`Failed to load image: ${src}`);
     setHasError(true);
     setIsLoading(false);
   };
+
+  // Folosim Intersection Observer pentru lazy loading avansat
+  useEffect(() => {
+    if (!imgRef.current || loading === "eager" || priority) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const img = entry.target as HTMLImageElement;
+            // Preîncărcăm imaginea când este aproape de viewport
+            if (img.dataset.src) {
+              img.src = img.dataset.src;
+              img.removeAttribute("data-src");
+            }
+            observer.unobserve(img);
+          }
+        });
+      },
+      { rootMargin: "200px 0px" } // Preîncărcăm imaginile când sunt la 200px de viewport
+    );
+
+    observer.observe(imgRef.current);
+
+    return () => {
+      if (imgRef.current) {
+        observer.unobserve(imgRef.current);
+      }
+    };
+  }, [loading, priority, finalSrc]);
 
   return (
     <div
@@ -122,7 +180,9 @@ export function OptimizedImage({
       {/* Imaginea optimizată */}
       {finalSrc ? (
         <img
-          src={finalSrc}
+          ref={imgRef}
+          src={priority || loading === "eager" ? finalSrc : undefined}
+          data-src={!priority && loading !== "eager" ? finalSrc : undefined}
           alt={alt}
           width={width}
           height={height}
@@ -134,6 +194,8 @@ export function OptimizedImage({
           onLoad={handleLoad}
           onError={handleError}
           loading={priority ? "eager" : loading}
+          decoding={priority ? "sync" : "async"} // Optimizăm decodarea imaginii
+          fetchPriority={priority ? "high" : "auto"} // Optimizăm prioritatea de încărcare
           {...props}
         />
       ) : (
