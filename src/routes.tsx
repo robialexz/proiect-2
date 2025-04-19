@@ -24,6 +24,14 @@ const ForgotPasswordPage = lazyPage(
   }
 );
 
+const AuthCallbackPage = lazyPage(() => import("./pages/AuthCallbackPage"), {
+  preload: true,
+});
+
+const ResetPasswordPage = lazyPage(() => import("./pages/ResetPasswordPage"), {
+  preload: true,
+});
+
 // Lazy load pages with custom loading states
 const OverviewPage = lazyPage(() => import("./pages/OverviewPage"), {
   preload: true,
@@ -117,6 +125,8 @@ export function AppRoutes() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/auth/callback" element={<AuthCallbackPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
 
       <Route path="/notifications-demo" element={<NotificationsDemo />} />
 
