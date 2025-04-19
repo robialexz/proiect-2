@@ -164,7 +164,7 @@ export const authService = {
   ): Promise<SupabaseResponse<{ session: any; user: any }>> {
     try {
       // Construim URL-ul de redirecționare pentru verificarea email-ului
-      const redirectUrl = `${window.location.origin}/auth/callback`;
+      const redirectUrl = `${window.location.origin}/auth/callback?type=signup`;
       console.log(
         "URL de redirecționare pentru verificare email:",
         redirectUrl
@@ -175,8 +175,21 @@ export const authService = {
         password,
         options: {
           emailRedirectTo: redirectUrl,
+          data: {
+            // Putem adăuga date suplimentare despre utilizator aici
+            signup_timestamp: new Date().toISOString(),
+          },
         },
       });
+
+      // Verificăm dacă utilizatorul a fost creat cu succes
+      if (data?.user) {
+        console.log("Utilizator creat cu ID:", data.user.id);
+        console.log(
+          "Confirmare email necesară:",
+          data.user.email_confirmed_at ? "Nu" : "Da"
+        );
+      }
 
       return handleResponse(data, error as unknown as PostgrestError);
     } catch (error) {
@@ -285,7 +298,7 @@ export const authService = {
   async resetPassword(email: string): Promise<SupabaseResponse<null>> {
     try {
       // Construim URL-ul de redirecționare pentru resetarea parolei
-      const redirectUrl = `${window.location.origin}/auth/callback`;
+      const redirectUrl = `${window.location.origin}/auth/callback?type=recovery`;
       console.log("URL de redirecționare pentru resetare parolă:", redirectUrl);
 
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
