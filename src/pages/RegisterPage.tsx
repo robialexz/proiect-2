@@ -55,7 +55,18 @@ const RegisterPage = () => {
 
       if (error) {
         console.error("Eroare returnată de signUp:", error);
-        throw new Error(error.message || "Înregistrare eșuată");
+
+        // Verificăm dacă este o eroare de utilizator existent
+        if (
+          error.message &&
+          error.message.toLowerCase().includes("user already registered")
+        ) {
+          throw new Error(
+            "Există deja un cont cu această adresă de email. Vă rugăm să vă autentificați sau să folosiți opțiunea 'Am uitat parola'."
+          );
+        } else {
+          throw new Error(error.message || "Înregistrare eșuată");
+        }
       }
 
       console.log("Răspuns înregistrare:", data);

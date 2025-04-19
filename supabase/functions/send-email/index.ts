@@ -1,6 +1,13 @@
 // Supabase Edge Function pentru trimiterea emailurilor
 // Pentru a implementa această funcție, trebuie să o deployați în proiectul Supabase
 
+// NOTĂ: Acest fișier va afișa erori TypeScript în mediul de dezvoltare local
+// deoarece folosește module Deno care nu sunt disponibile în Node.js.
+// Aceste erori sunt normale și nu vor afecta funcționalitatea când funcția
+// va fi implementată în Supabase Edge Functions.
+
+// @ts-nocheck - Dezactivăm complet verificările TypeScript pentru acest fișier
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { SmtpClient } from "https://deno.land/x/smtp@v0.7.0/mod.ts";
 
@@ -65,7 +72,7 @@ serve(async (req) => {
         headers: { "Content-Type": "application/json" },
       }
     );
-  } catch (error) {
+  } catch (error: any) {
     // Gestionăm erorile
     console.error("Error sending email:", error);
     return new Response(
