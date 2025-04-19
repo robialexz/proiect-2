@@ -27,6 +27,7 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
+  Bug,
   ChevronDown,
   BookOpen,
   LogOut,
