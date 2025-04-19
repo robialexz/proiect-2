@@ -1,11 +1,21 @@
 import { createClient } from "@supabase/supabase-js";
 import { type Database } from "@/types/supabase";
 
+// Afișăm valorile pentru debugging
+console.log("VITE_SUPABASE_URL:", import.meta.env.VITE_SUPABASE_URL);
+console.log(
+  "VITE_SUPABASE_ANON_KEY:",
+  import.meta.env.VITE_SUPABASE_ANON_KEY ? "Există" : "Lipsește"
+);
+
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
   console.error("Missing Supabase environment variables");
+  console.error(
+    "Verificați fișierul .env și asigurați-vă că conține valorile corecte"
+  );
 }
 
 /**
@@ -31,27 +41,29 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
             // Verificăm dacă sesiunea este validă
             const parsedData = JSON.parse(data);
             const expiresAt = parsedData.expiresAt;
-            
+
             // Dacă sesiunea a expirat, returnăm null
             if (expiresAt && expiresAt < Date.now()) {
               console.log("Session expired, returning null");
               return null;
             }
-            
+
             return data;
           } catch (e) {
             console.error("Error parsing session data:", e);
             return data; // Returnăm datele brute în caz de eroare
           }
         }
-        
+
         // Verificăm dacă există un backup al sesiunii
-        const backupSession = window.sessionStorage.getItem("temp_session_backup");
+        const backupSession = window.sessionStorage.getItem(
+          "temp_session_backup"
+        );
         if (backupSession) {
           console.log("Valid session found in storage");
           return backupSession;
         }
-        
+
         return null;
       },
       setItem: (key, value) => {
@@ -69,13 +81,15 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
         // Verificăm dacă este o deconectare intenționată sau o ștergere automată
         const isIntentionalSignOut =
           window.sessionStorage.getItem("intentional_signout") === "true";
-        
+
         // Contorul de încercări de restaurare a sesiunii
-        const currentAttempts = parseInt(window.sessionStorage.getItem("session_restore_attempts") || "0");
-        
+        const currentAttempts = parseInt(
+          window.sessionStorage.getItem("session_restore_attempts") || "0"
+        );
+
         // Dacă am depășit numărul maxim de încercări, nu mai încercăm să restaurăm sesiunea
         const maxAttempts = 2; // Limităm la 2 încercări pentru a evita bucle infinite
-        
+
         // Salvăm o copie a sesiunii înainte de a o șterge pentru a o putea restaura în caz de deconectare automată
         if (!isIntentionalSignOut && currentAttempts < maxAttempts) {
           try {
@@ -86,9 +100,12 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
               // Salvăm temporar sesiunea pentru a o putea restaura în caz de deconectare automată
               window.sessionStorage.setItem("temp_session_backup", sessionData);
               console.log("Session backup created before automatic removal");
-              
+
               // Incrementăm contorul de încercări
-              window.sessionStorage.setItem("session_restore_attempts", (currentAttempts + 1).toString());
+              window.sessionStorage.setItem(
+                "session_restore_attempts",
+                (currentAttempts + 1).toString()
+              );
             }
           } catch (e) {
             console.error("Error creating session backup:", e);
@@ -113,9 +130,12 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
           window.sessionStorage.removeItem("session_restore_attempts");
         } else if (currentAttempts < maxAttempts) {
           console.log(
-            "Automatic session removal detected, attempt " + (currentAttempts + 1) + " of " + maxAttempts
+            "Automatic session removal detected, attempt " +
+              (currentAttempts + 1) +
+              " of " +
+              maxAttempts
           );
-          
+
           // Emitem un eveniment pentru a notifica alte componente despre deconectarea automată
           // pentru a putea încerca să restaureze sesiunea
           setTimeout(() => {
@@ -136,17 +156,22 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
             }
           }, 100);
         } else {
-          console.log("Maximum session restore attempts reached, redirecting to login");
+          console.log(
+            "Maximum session restore attempts reached, redirecting to login"
+          );
           // Resetăm contorul de încercări
           window.sessionStorage.removeItem("session_restore_attempts");
-          
+
           // Notificăm utilizatorul că sesiunea a expirat și trebuie să se autentifice din nou
           window.dispatchEvent(
             new CustomEvent("session-expired", {
-              detail: { message: "Sesiunea a expirat. Vă rugăm să vă autentificați din nou." },
+              detail: {
+                message:
+                  "Sesiunea a expirat. Vă rugăm să vă autentificați din nou.",
+              },
             })
           );
-          
+
           // Redirecționăm către pagina de login după o scurtă întârziere
           setTimeout(() => {
             window.location.href = "/login";

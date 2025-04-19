@@ -123,9 +123,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     displayName?: string
   ): Promise<AuthResponse> => {
     try {
+      console.log(
+        "AuthContext: Începe procesul de înregistrare pentru email:",
+        email
+      );
+
       const response = await authService.signUp(email, password);
+
+      console.log("AuthContext: Răspuns de la authService.signUp:", response);
+
+      // Dacă înregistrarea a reușit și avem un utilizator, actualizăm starea
+      if (response.status === "success" && response.data?.user) {
+        console.log(
+          "AuthContext: Utilizator creat cu succes, actualizăm starea"
+        );
+
+        // Dacă avem o sesiune, o setăm
+        if (response.data.session) {
+          setSession(response.data.session);
+          setUser(response.data.user);
+
+          // Actualizăm profilul utilizatorului
+          if (response.data.user.email) {
+            setUserProfile({
+              displayName:
+                displayName || response.data.user.email.split("@")[0],
+              email: response.data.user.email,
+            });
+          }
+        }
+      }
+
       return response;
     } catch (error: any) {
+      console.error("AuthContext: Eroare la înregistrare:", error);
       return {
         data: null,
         error: error,

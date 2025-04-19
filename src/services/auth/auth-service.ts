@@ -163,6 +163,9 @@ export const authService = {
     password: string
   ): Promise<SupabaseResponse<{ session: any; user: any }>> {
     try {
+      console.log("Începe procesul de înregistrare pentru email:", email);
+      console.log("URL Supabase folosit:", import.meta.env.VITE_SUPABASE_URL);
+
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -171,8 +174,30 @@ export const authService = {
         },
       });
 
+      if (error) {
+        console.error("Eroare la înregistrare:", error);
+        return {
+          data: null,
+          error: formatError(error),
+          status: "error",
+        };
+      }
+
+      console.log("Răspuns înregistrare:", data);
+
+      // Verificăm dacă utilizatorul a fost creat cu succes
+      if (data?.user) {
+        console.log("Utilizator creat cu ID:", data.user.id);
+        console.log(
+          "Email confirmat:",
+          data.user.email_confirmed_at ? "Da" : "Nu"
+        );
+        console.log("Sesiune creată:", data.session ? "Da" : "Nu");
+      }
+
       return handleResponse(data, error as unknown as PostgrestError);
     } catch (error) {
+      console.error("Excepție la înregistrare:", error);
       return {
         data: null,
         error: formatError(error),

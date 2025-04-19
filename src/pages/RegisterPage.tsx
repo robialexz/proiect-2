@@ -5,7 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2, AlertCircle } from "lucide-react";
 
@@ -37,23 +44,57 @@ const RegisterPage = () => {
     setLoading(true);
 
     try {
-      const { error } = await signUp(email, password);
+      console.log("Trimit cerere de înregistrare pentru:", {
+        email,
+        firstName,
+        lastName,
+        company,
+      });
+
+      const { data, error } = await signUp(email, password);
 
       if (error) {
+        console.error("Eroare returnată de signUp:", error);
         throw new Error(error.message || "Înregistrare eșuată");
       }
 
-      // În aplicația reală, aici am salva datele profilului utilizatorului în baza de date
-      // De exemplu: await supabase.from('profiles').insert({ user_id: data.user.id, first_name: firstName, last_name: lastName, company })
+      console.log("Răspuns înregistrare:", data);
 
-      // Redirecționăm către pagina de confirmare sau login
-      navigate("/login", { 
-        state: { 
-          message: "Cont creat cu succes! Verificați email-ul pentru a confirma contul." 
-        } 
-      });
+      // Verificăm dacă utilizatorul a fost creat cu succes
+      if (data?.user) {
+        console.log("Utilizator creat cu ID:", data.user.id);
+        console.log(
+          "Email confirmat:",
+          data.user.email_confirmed_at ? "Da" : "Nu"
+        );
+
+        // În aplicația reală, aici am salva datele profilului utilizatorului în baza de date
+        // De exemplu: await supabase.from('profiles').insert({ user_id: data.user.id, first_name: firstName, last_name: lastName, company })
+
+        // Verificăm dacă emailul trebuie confirmat
+        if (!data.user.email_confirmed_at) {
+          // Redirecționăm către pagina de confirmare sau login
+          navigate("/login", {
+            state: {
+              message:
+                "Cont creat cu succes! Verificați email-ul pentru a confirma contul.",
+            },
+          });
+        } else {
+          // Dacă emailul este deja confirmat, redirecționăm direct către dashboard
+          navigate("/dashboard");
+        }
+      } else {
+        // Dacă nu avem date despre utilizator, afișăm un mesaj generic
+        navigate("/login", {
+          state: {
+            message:
+              "Cont creat cu succes! Verificați email-ul pentru a confirma contul.",
+          },
+        });
+      }
     } catch (err: any) {
-      console.error("Eroare la înregistrare:", err);
+      console.error("Excepție la înregistrare:", err);
       setError(err.message || "A apărut o eroare la crearea contului");
     } finally {
       setLoading(false);
@@ -70,24 +111,33 @@ const RegisterPage = () => {
                 <span className="text-white font-bold text-xl">IM</span>
               </div>
             </div>
-            <CardTitle className="text-2xl font-bold text-white">Înregistrare</CardTitle>
+            <CardTitle className="text-2xl font-bold text-white">
+              Înregistrare
+            </CardTitle>
             <CardDescription className="text-slate-400">
               Creați un cont nou pentru a accesa aplicația
             </CardDescription>
           </CardHeader>
-          
+
           <CardContent className="space-y-4">
             {error && (
-              <Alert variant="destructive" className="bg-red-900/50 border-red-800">
+              <Alert
+                variant="destructive"
+                className="bg-red-900/50 border-red-800"
+              >
                 <AlertCircle className="h-4 w-4" />
-                <AlertDescription className="text-red-200">{error}</AlertDescription>
+                <AlertDescription className="text-red-200">
+                  {error}
+                </AlertDescription>
               </Alert>
             )}
-            
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="firstName" className="text-slate-300">Prenume</Label>
+                  <Label htmlFor="firstName" className="text-slate-300">
+                    Prenume
+                  </Label>
                   <Input
                     id="firstName"
                     value={firstName}
@@ -98,9 +148,11 @@ const RegisterPage = () => {
                     className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-500"
                   />
                 </div>
-                
+
                 <div className="space-y-2">
-                  <Label htmlFor="lastName" className="text-slate-300">Nume</Label>
+                  <Label htmlFor="lastName" className="text-slate-300">
+                    Nume
+                  </Label>
                   <Input
                     id="lastName"
                     value={lastName}
@@ -114,7 +166,9 @@ const RegisterPage = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-slate-300">Email</Label>
+                <Label htmlFor="email" className="text-slate-300">
+                  Email
+                </Label>
                 <Input
                   id="email"
                   type="email"
@@ -128,7 +182,9 @@ const RegisterPage = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="company" className="text-slate-300">Companie (opțional)</Label>
+                <Label htmlFor="company" className="text-slate-300">
+                  Companie (opțional)
+                </Label>
                 <Input
                   id="company"
                   value={company}
@@ -140,7 +196,9 @@ const RegisterPage = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-slate-300">Parolă</Label>
+                <Label htmlFor="password" className="text-slate-300">
+                  Parolă
+                </Label>
                 <Input
                   id="password"
                   type="password"
@@ -154,10 +212,12 @@ const RegisterPage = () => {
               </div>
 
               <div className="flex items-center space-x-2">
-                <Checkbox 
-                  id="terms" 
+                <Checkbox
+                  id="terms"
                   checked={agreedToTerms}
-                  onCheckedChange={(checked) => setAgreedToTerms(checked as boolean)}
+                  onCheckedChange={(checked) =>
+                    setAgreedToTerms(checked as boolean)
+                  }
                   className="data-[state=checked]:bg-indigo-500 data-[state=checked]:border-indigo-500"
                 />
                 <label
@@ -165,18 +225,24 @@ const RegisterPage = () => {
                   className="text-sm text-slate-300 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                 >
                   Sunt de acord cu{" "}
-                  <Link to="/terms" className="text-indigo-400 hover:text-indigo-300">
+                  <Link
+                    to="/terms"
+                    className="text-indigo-400 hover:text-indigo-300"
+                  >
                     Termenii și Condițiile
                   </Link>{" "}
                   și{" "}
-                  <Link to="/privacy" className="text-indigo-400 hover:text-indigo-300">
+                  <Link
+                    to="/privacy"
+                    className="text-indigo-400 hover:text-indigo-300"
+                  >
                     Politica de Confidențialitate
                   </Link>
                 </label>
               </div>
-              
-              <Button 
-                type="submit" 
+
+              <Button
+                type="submit"
                 className="w-full bg-indigo-600 hover:bg-indigo-500 text-white"
                 disabled={loading}
               >
@@ -191,11 +257,14 @@ const RegisterPage = () => {
               </Button>
             </form>
           </CardContent>
-          
+
           <CardFooter className="flex justify-center">
             <p className="text-sm text-slate-400">
               Ai deja un cont?{" "}
-              <Link to="/login" className="text-indigo-400 hover:text-indigo-300 font-medium">
+              <Link
+                to="/login"
+                className="text-indigo-400 hover:text-indigo-300 font-medium"
+              >
                 Autentifică-te
               </Link>
             </p>
