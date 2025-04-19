@@ -4,6 +4,7 @@ import {
   SupabaseResponse,
   SupabaseErrorResponse,
 } from "../api/supabase-service";
+import { emailService } from "../email/email-service";
 
 /**
  * Formatează erorile pentru a fi mai ușor de înțeles
@@ -160,9 +161,12 @@ export const authService = {
    */
   async signUp(
     email: string,
-    password: string
+    password: string,
+    displayName?: string
   ): Promise<SupabaseResponse<{ session: any; user: any }>> {
     try {
+      console.log("Începe procesul de înregistrare pentru email:", email);
+
       // Construim URL-ul de redirecționare pentru verificarea email-ului
       const redirectUrl = `${window.location.origin}/auth/callback?type=signup`;
       console.log(
@@ -177,6 +181,7 @@ export const authService = {
           emailRedirectTo: redirectUrl,
           data: {
             // Putem adăuga date suplimentare despre utilizator aici
+            display_name: displayName || email.split("@")[0],
             signup_timestamp: new Date().toISOString(),
           },
         },
@@ -189,10 +194,26 @@ export const authService = {
           "Confirmare email necesară:",
           data.user.email_confirmed_at ? "Nu" : "Da"
         );
+
+        // Trimitem email-ul de bun venit
+        try {
+          await emailService.sendWelcomeEmail(
+            email,
+            displayName || email.split("@")[0]
+          );
+          console.log("Email de bun venit trimis cu succes");
+        } catch (emailError) {
+          console.error(
+            "Eroare la trimiterea email-ului de bun venit:",
+            emailError
+          );
+          // Nu întrerupem fluxul dacă trimiterea email-ului eșuează
+        }
       }
 
       return handleResponse(data, error as unknown as PostgrestError);
     } catch (error) {
+      console.error("Eroare la înregistrare:", error);
       return {
         data: null,
         error: formatError(error),
@@ -297,12 +318,8 @@ export const authService = {
    */
   async resetPassword(email: string): Promise<SupabaseResponse<null>> {
     try {
-      // Construim URL-ul de redirecționare pentru resetarea parolei
-      const redirectUrl = `${window.location.origin}/auth/callback?type=recovery`;
-      console.log("URL de redirecționare pentru resetare parolă:", redirectUrl);
-
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: redirectUrl,
+        redirectTo: `${window.location.origin}/reset-password`,
       });
 
       if (error) {

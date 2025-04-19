@@ -128,7 +128,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email
       );
 
-      const response = await authService.signUp(email, password);
+      const response = await authService.signUp(email, password, displayName);
 
       console.log("AuthContext: Răspuns de la authService.signUp:", response);
 
