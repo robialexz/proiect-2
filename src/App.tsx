@@ -10,6 +10,7 @@ import { useIsMobile } from "./hooks";
 import AppRoutes from "./routes";
 
 import ChatBotWidget from "./components/ai/ChatBotWidget";
+import TestRunner from "./components/TestRunner";
 
 function App() {
   const location = useLocation();
@@ -86,6 +87,9 @@ function App() {
           "/forgot-password",
           "/reset-password",
         ].includes(location.pathname) && <ChatBotWidget />}
+
+      {/* Adăugăm TestRunner pentru a putea rula testele direct din aplicație */}
+      {process.env.NODE_ENV !== "production" && <TestRunner />}
     </>
   );
 }
