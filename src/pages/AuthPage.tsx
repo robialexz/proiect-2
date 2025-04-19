@@ -14,8 +14,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Loader2, AlertCircle, CheckCircle } from "lucide-react";
+import { Loader2, AlertCircle, CheckCircle, Mail } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Separator } from "@/components/ui/separator";
 
 /**
  * Pagină combinată pentru autentificare și înregistrare
@@ -23,7 +24,14 @@ import { motion, AnimatePresence } from "framer-motion";
 const AuthPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, authService } = useAuth();
+
+  // State pentru retrimiterea email-ului de confirmare
+  const [resendEmail, setResendEmail] = useState("");
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendError, setResendError] = useState<string | null>(null);
+  const [resendSuccess, setResendSuccess] = useState<string | null>(null);
+  const [showResendForm, setShowResendForm] = useState(false);
 
   // Stare pentru a determina dacă afișăm formularul de login sau register
   const [isLogin, setIsLogin] = useState(location.pathname === "/login");
@@ -56,12 +64,65 @@ const AuthPage = () => {
     setLoginSuccess(null);
     setRegisterError(null);
     setRegisterSuccess(null);
+    setResendError(null);
+    setResendSuccess(null);
+    setShowResendForm(false);
 
     // Schimbăm modul
     setIsLogin(!isLogin);
 
     // Actualizăm URL-ul fără a reîncărca pagina
     navigate(isLogin ? "/register" : "/login", { replace: true });
+  };
+
+  // Gestionăm retrimiterea email-ului de confirmare
+  const handleResendConfirmation = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setResendError(null);
+    setResendSuccess(null);
+    setResendLoading(true);
+
+    try {
+      // Doar în dezvoltare, nu în producție
+      if (process.env.NODE_ENV !== "production") {
+        console.log("Trimit cerere de retrimitere email pentru:", resendEmail);
+      }
+
+      const { error } = await authService.resendConfirmationEmail(resendEmail);
+
+      if (error) {
+        throw new Error(
+          error.message || "Nu am putut retrimite email-ul de confirmare"
+        );
+      }
+
+      setResendSuccess(
+        "Email-ul de confirmare a fost retrimis. Vă rugăm să verificați căsuța de email, inclusiv folderul de spam."
+      );
+
+      // Resetăm formularul după 5 secunde
+      setTimeout(() => {
+        setShowResendForm(false);
+        setResendEmail("");
+      }, 5000);
+    } catch (err: any) {
+      // Doar în dezvoltare, nu în producție
+      if (process.env.NODE_ENV !== "production") {
+        console.error("Eroare la retrimiterea email-ului:", err);
+      }
+      setResendError(
+        err.message || "A apărut o eroare la retrimiterea email-ului"
+      );
+    } finally {
+      setResendLoading(false);
+    }
+  };
+
+  // Funcție pentru a afișa/ascunde formularul de retrimitere email
+  const toggleResendForm = () => {
+    setShowResendForm(!showResendForm);
+    setResendError(null);
+    setResendSuccess(null);
   };
 
   // Gestionăm autentificarea
@@ -139,19 +200,67 @@ const AuthPage = () => {
         }
       }
 
-      // Afișăm mesajul de succes și redirecționăm către login
-      const successMessage =
-        "Cont creat cu succes! Verificați email-ul pentru a confirma contul.";
-      setRegisterSuccess(successMessage);
+      // Verificăm dacă avem date și dacă email-ul a fost trimis
+      if (data && data.user) {
+        // Verificăm dacă email-ul de confirmare a fost trimis
+        if (data.user.email_confirmed_at) {
+          // Email-ul este deja confirmat (rar, dar posibil)
+          const successMessage =
+            "Cont creat cu succes! Email-ul dvs. este deja confirmat.";
+          setRegisterSuccess(successMessage);
 
-      // Folosim un singur setTimeout pentru a reduce consumul de resurse
-      setTimeout(() => {
-        setIsLogin(true);
-        navigate("/login", {
-          replace: true,
-          state: { message: successMessage },
-        });
-      }, 2000);
+          // Redirecționăm către login
+          setTimeout(() => {
+            setIsLogin(true);
+            navigate("/login", {
+              replace: true,
+              state: { message: successMessage },
+            });
+          }, 2000);
+        } else if (data.user.confirmation_sent_at) {
+          // Email-ul de confirmare a fost trimis
+          const successMessage =
+            "Cont creat cu succes! Vă rugăm să verificați email-ul pentru a confirma contul. Verificați și folderul de spam dacă nu găsiți email-ul.";
+          setRegisterSuccess(successMessage);
+
+          // Redirecționăm către login
+          setTimeout(() => {
+            setIsLogin(true);
+            navigate("/login", {
+              replace: true,
+              state: { message: successMessage },
+            });
+          }, 3000);
+        } else {
+          // Email-ul de confirmare nu a fost trimis (posibilă problemă de configurare)
+          const successMessage =
+            "Cont creat cu succes! Însă nu am putut trimite email-ul de confirmare. Vă rugăm să contactați administratorul.";
+          setRegisterSuccess(successMessage);
+
+          // Redirecționăm către login
+          setTimeout(() => {
+            setIsLogin(true);
+            navigate("/login", {
+              replace: true,
+              state: { message: successMessage },
+            });
+          }, 3000);
+        }
+      } else {
+        // Nu avem date despre utilizator, dar nu avem nici eroare (situație ciudată)
+        const successMessage =
+          "Cont creat cu succes! Verificați email-ul pentru a confirma contul.";
+        setRegisterSuccess(successMessage);
+
+        // Redirecționăm către login
+        setTimeout(() => {
+          setIsLogin(true);
+          navigate("/login", {
+            replace: true,
+            state: { message: successMessage },
+          });
+        }, 2000);
+      }
     } catch (err: any) {
       // Doar în dezvoltare, nu în producție
       if (process.env.NODE_ENV !== "production") {
@@ -290,6 +399,106 @@ const AuthPage = () => {
                         )}
                       </Button>
                     </form>
+
+                    {/* Secțiune pentru retrimiterea email-ului de confirmare */}
+                    <div className="mt-4">
+                      <Separator className="my-4" />
+
+                      {!showResendForm ? (
+                        <div className="text-center">
+                          <p className="text-sm text-slate-400 mb-2">
+                            Nu ați primit email-ul de confirmare?
+                          </p>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={toggleResendForm}
+                            className="text-indigo-400 border-indigo-800 hover:bg-indigo-900/50"
+                          >
+                            <Mail className="mr-2 h-4 w-4" />
+                            Retrimite email de confirmare
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          <h3 className="text-sm font-medium text-slate-300 text-center">
+                            Retrimite email-ul de confirmare
+                          </h3>
+
+                          {resendError && (
+                            <Alert
+                              variant="destructive"
+                              className="bg-red-900/50 border-red-800"
+                            >
+                              <AlertCircle className="h-4 w-4" />
+                              <AlertDescription className="text-red-200">
+                                {resendError}
+                              </AlertDescription>
+                            </Alert>
+                          )}
+
+                          {resendSuccess && (
+                            <Alert className="bg-green-900/50 border-green-800">
+                              <CheckCircle className="h-4 w-4 text-green-400" />
+                              <AlertDescription className="text-green-200">
+                                {resendSuccess}
+                              </AlertDescription>
+                            </Alert>
+                          )}
+
+                          <form
+                            onSubmit={handleResendConfirmation}
+                            className="space-y-4"
+                          >
+                            <div className="space-y-2">
+                              <Label
+                                htmlFor="resendEmail"
+                                className="text-slate-300"
+                              >
+                                Email
+                              </Label>
+                              <Input
+                                id="resendEmail"
+                                type="email"
+                                value={resendEmail}
+                                onChange={(e) => setResendEmail(e.target.value)}
+                                placeholder="nume@exemplu.com"
+                                required
+                                className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-500"
+                              />
+                            </div>
+
+                            <div className="flex space-x-2">
+                              <Button
+                                type="submit"
+                                className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white"
+                                disabled={resendLoading}
+                                size="sm"
+                              >
+                                {resendLoading ? (
+                                  <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Se trimite...
+                                  </>
+                                ) : (
+                                  "Trimite"
+                                )}
+                              </Button>
+
+                              <Button
+                                type="button"
+                                variant="outline"
+                                className="border-slate-600 text-slate-300 hover:bg-slate-700"
+                                onClick={toggleResendForm}
+                                size="sm"
+                              >
+                                Anulare
+                              </Button>
+                            </div>
+                          </form>
+                        </div>
+                      )}
+                    </div>
                   </>
                 )}
 

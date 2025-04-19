@@ -164,15 +164,15 @@ export const authService = {
     displayName?: string
   ): Promise<SupabaseResponse<{ session: any; user: any }>> {
     try {
-      console.log("Începe procesul de înregistrare pentru email:", email);
+      // Doar în dezvoltare, nu în producție
+      if (process.env.NODE_ENV !== "production") {
+        console.log("Începe procesul de înregistrare pentru email:", email);
+      }
 
       // Construim URL-ul de redirecționare pentru verificarea email-ului
       const redirectUrl = `${window.location.origin}/auth/callback?type=signup`;
-      console.log(
-        "URL de redirecționare pentru verificare email:",
-        redirectUrl
-      );
 
+      // Configurăm opțiunile pentru înregistrare
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -187,6 +187,41 @@ export const authService = {
       });
 
       return handleResponse(data, error as unknown as PostgrestError);
+    } catch (error) {
+      return {
+        data: null,
+        error: formatError(error),
+        status: "error",
+      };
+    }
+  },
+
+  /**
+   * Retrimite email-ul de confirmare pentru un utilizator
+   * @param email Email-ul utilizatorului
+   * @returns Succes sau eroare
+   */
+  async resendConfirmationEmail(
+    email: string
+  ): Promise<SupabaseResponse<null>> {
+    try {
+      // Doar în dezvoltare, nu în producție
+      if (process.env.NODE_ENV !== "production") {
+        console.log("Retrimite email de confirmare pentru:", email);
+      }
+
+      // Construim URL-ul de redirecționare pentru verificarea email-ului
+      const redirectUrl = `${window.location.origin}/auth/callback?type=recovery`;
+
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email,
+        options: {
+          emailRedirectTo: redirectUrl,
+        },
+      });
+
+      return handleResponse(null, error as unknown as PostgrestError);
     } catch (error) {
       return {
         data: null,
