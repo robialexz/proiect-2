@@ -56,14 +56,17 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
           <RoleProvider>
             <AdvancedRoleProvider>
               <OfflineProvider>
-                <EnhancedThemeProvider>
-                  <EnhancedNotificationProvider>
-                    <NotificationProvider>
-                      <App />
-                      <Toaster />
-                    </NotificationProvider>
-                  </EnhancedNotificationProvider>
-                </EnhancedThemeProvider>
+                {/* Adăugăm ThemeProvider înainte de EnhancedThemeProvider pentru a rezolva eroarea */}
+                <ThemeProvider>
+                  <EnhancedThemeProvider>
+                    <EnhancedNotificationProvider>
+                      <NotificationProvider>
+                        <App />
+                        <Toaster />
+                      </NotificationProvider>
+                    </EnhancedNotificationProvider>
+                  </EnhancedThemeProvider>
+                </ThemeProvider>
               </OfflineProvider>
             </AdvancedRoleProvider>
           </RoleProvider>
