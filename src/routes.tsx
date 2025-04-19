@@ -59,6 +59,14 @@ const DashboardPage = lazyPage(() => import("./pages/DashboardPage"), {
   preload: true,
 });
 
+// Noile pagini adăugate
+const AnalyticsPage = lazyPage(() => import("./pages/AnalyticsPage"), {
+  preload: true,
+});
+const CalendarPage = lazyPage(() => import("./pages/CalendarPage"), {
+  preload: true,
+});
+
 const NotificationsDemo = lazyPage(() => import("./pages/NotificationsDemo"));
 const TestDashboardPage = lazyPage(() => import("./pages/TestDashboardPage"));
 
@@ -166,6 +174,8 @@ export function AppRoutes() {
         <Route path="scan" element={<ScanPage />} />
         <Route path="test-dashboard" element={<TestDashboardPage />} />
         <Route path="debug" element={<DebugPage />} />
+        <Route path="analytics" element={<AnalyticsPage />} />
+        <Route path="calendar" element={<CalendarPage />} />
       </Route>
       {/* Add tempobook route to prevent catchall from capturing it */}
       {import.meta.env.VITE_TEMPO === "true" && <Route path="/tempobook/*" />}

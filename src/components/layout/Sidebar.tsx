@@ -158,9 +158,14 @@ const Sidebar = () => {
             href: "/reports",
           },
           {
-            title: t("sidebar.schedule"),
+            title: t("sidebar.analytics", "Analytics"),
+            icon: <BarChart size={20} />,
+            href: "/analytics",
+          },
+          {
+            title: t("sidebar.calendar", "Calendar"),
             icon: <Calendar size={20} />,
-            href: "/schedule",
+            href: "/calendar",
           },
           {
             title: t("sidebar.documents"),
