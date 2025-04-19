@@ -63,9 +63,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Verificăm sesiunea la încărcarea componentei
   useEffect(() => {
+    // Variabilă pentru a ține evidența dacă componenta este montată
+    let isMounted = true;
+
     const checkSession = async () => {
       try {
         const { data } = await authService.getSession();
+
+        // Verificăm dacă componenta este încă montată
+        if (!isMounted) return;
+
         setSession(data.session);
         setUser(data.session?.user || null);
 
@@ -73,30 +80,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           await fetchUserProfile(data.session.user.id);
         }
       } catch (error) {
-        console.error("Eroare la verificarea sesiunii:", error);
+        // Limităm logging-ul pentru a îmbunătăți performanța
+        if (process.env.NODE_ENV !== "production") {
+          console.error("Eroare la verificarea sesiunii:", error);
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     checkSession();
 
     // Ascultăm pentru schimbări de autentificare
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      setSession(session);
-      setUser(session?.user || null);
+    // Folosim o variabilă pentru a stoca subscripția
+    let authSubscription: { unsubscribe: () => void } | null = null;
 
-      if (session?.user) {
-        await fetchUserProfile(session.user.id);
-      } else {
-        setUserProfile(null);
-      }
-    });
+    const setupAuthListener = () => {
+      const {
+        data: { subscription },
+      } = supabase.auth.onAuthStateChange(async (_event, session) => {
+        // Verificăm dacă componenta este încă montată
+        if (!isMounted) return;
 
+        setSession(session);
+        setUser(session?.user || null);
+
+        if (session?.user) {
+          await fetchUserProfile(session.user.id);
+        } else {
+          setUserProfile(null);
+        }
+      });
+
+      authSubscription = subscription;
+    };
+
+    setupAuthListener();
+
+    // Curățăm listener-ul la demontare
     return () => {
-      subscription.unsubscribe();
+      isMounted = false;
+      if (authSubscription) {
+        authSubscription.unsubscribe();
+      }
     };
   }, []);
 
@@ -123,40 +151,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     displayName?: string
   ): Promise<AuthResponse> => {
     try {
-      console.log(
-        "AuthContext: Începe procesul de înregistrare pentru email:",
-        email
-      );
-
+      // Folosim displayName dacă este furnizat
       const response = await authService.signUp(email, password, displayName);
-
-      console.log("AuthContext: Răspuns de la authService.signUp:", response);
-
-      // Dacă înregistrarea a reușit și avem un utilizator, actualizăm starea
-      if (response.status === "success" && response.data?.user) {
-        console.log(
-          "AuthContext: Utilizator creat cu succes, actualizăm starea"
-        );
-
-        // Dacă avem o sesiune, o setăm
-        if (response.data.session) {
-          setSession(response.data.session);
-          setUser(response.data.user);
-
-          // Actualizăm profilul utilizatorului
-          if (response.data.user.email) {
-            setUserProfile({
-              displayName:
-                displayName || response.data.user.email.split("@")[0],
-              email: response.data.user.email,
-            });
-          }
-        }
-      }
-
       return response;
     } catch (error: any) {
-      console.error("AuthContext: Eroare la înregistrare:", error);
       return {
         data: null,
         error: error,
