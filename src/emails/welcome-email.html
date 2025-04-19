@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bun venit la InventoryMaster</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            background-color: #f9fafb;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        .header {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .logo {
+            width: 80px;
+            height: 80px;
+            background-color: #6366f1;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto 15px;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .welcome-title {
+            color: #1f2937;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .welcome-subtitle {
+            color: #6b7280;
+            font-size: 16px;
+            margin-top: 0;
+        }
+        .content {
+            padding: 20px 0;
+        }
+        .section {
+            margin-bottom: 25px;
+        }
+        .section-title {
+            color: #4f46e5;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        .feature-list {
+            padding-left: 20px;
+        }
+        .feature-item {
+            margin-bottom: 8px;
+        }
+        .highlight {
+            background-color: #f3f4f6;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #6366f1;
+            margin: 20px 0;
+        }
+        .button {
+            display: inline-block;
+            background-color: #6366f1;
+            color: white;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-weight: 600;
+            margin: 15px 0;
+            text-align: center;
+        }
+        .button:hover {
+            background-color: #4f46e5;
+        }
+        .footer {
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+            color: #6b7280;
+            font-size: 14px;
+        }
+        .social-links {
+            margin: 15px 0;
+        }
+        .social-link {
+            display: inline-block;
+            margin: 0 10px;
+            color: #6366f1;
+            text-decoration: none;
+        }
+        .quote {
+            font-style: italic;
+            color: #6b7280;
+            text-align: center;
+            margin: 20px 0;
+            padding: 0 20px;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 25px 0;
+            text-align: center;
+        }
+        .stat {
+            flex: 1;
+        }
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4f46e5;
+            margin-bottom: 5px;
+        }
+        .stat-label {
+            font-size: 14px;
+            color: #6b7280;
+        }
+        @media (max-width: 600px) {
+            .container {
+                width: 100%;
+                border-radius: 0;
+            }
+            .stats {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">IM</div>
+            <h1 class="welcome-title">Bun venit la InventoryMaster!</h1>
+            <p class="welcome-subtitle">Platforma completă pentru gestionarea proiectelor și inventarului</p>
+        </div>
+
+        <div class="content">
+            <p>Dragă utilizator,</p>
+            
+            <p>Suntem încântați să te avem alături de noi în comunitatea InventoryMaster! Ai făcut o alegere excelentă pentru gestionarea eficientă a proiectelor și inventarului tău.</p>
+
+            <div class="section">
+                <h2 class="section-title">Despre InventoryMaster</h2>
+                <p>InventoryMaster este o aplicație dezvoltată cu pasiune de o echipă de ingineri și experți în management de proiecte, cu scopul de a simplifica și eficientiza procesele de lucru în companiile de construcții și nu numai.</p>
+                
+                <div class="highlight">
+                    <p>Aplicația noastră a fost concepută pornind de la nevoile reale ale managerilor de proiecte și a evoluat continuu prin feedback-ul valoros al utilizatorilor noștri.</p>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">Funcționalități principale</h2>
+                <ul class="feature-list">
+                    <li class="feature-item"><strong>Gestionare completă a proiectelor</strong> - Creează, monitorizează și finalizează proiecte cu ușurință</li>
+                    <li class="feature-item"><strong>Management de inventar</strong> - Urmărește materialele și resursele pentru fiecare proiect</li>
+                    <li class="feature-item"><strong>Rapoarte detaliate</strong> - Generează automat rapoarte despre starea proiectelor și inventarului</li>
+                    <li class="feature-item"><strong>Colaborare în echipă</strong> - Lucrează eficient cu toți membrii echipei tale</li>
+                    <li class="feature-item"><strong>Interfață intuitivă</strong> - Design modern și animat pentru o experiență plăcută</li>
+                    <li class="feature-item"><strong>Securitate avansată</strong> - Datele tale sunt protejate prin cele mai bune practici de securitate</li>
+                </ul>
+            </div>
+
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-number">98%</div>
+                    <div class="stat-label">Satisfacție clienți</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">30%</div>
+                    <div class="stat-label">Economie de timp</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">500+</div>
+                    <div class="stat-label">Proiecte gestionate</div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">Povestea noastră</h2>
+                <p>InventoryMaster a început ca un proiect ambițios în 2023, când am observat că multe companii se confruntă cu provocări în gestionarea eficientă a proiectelor și inventarului. Am dezvoltat aplicația folosind tehnologii moderne precum React, Tailwind CSS și Supabase, pentru a oferi o experiență de utilizare fluidă și performantă.</p>
+                
+                <p>În ultimele luni, am implementat numeroase îmbunătățiri bazate pe feedback-ul utilizatorilor, inclusiv:</p>
+                <ul class="feature-list">
+                    <li class="feature-item">Sistem de roluri personalizat pentru diferite tipuri de utilizatori</li>
+                    <li class="feature-item">Interfață adaptabilă pentru dispozitive mobile</li>
+                    <li class="feature-item">Generare automată de rapoarte comprehensive</li>
+                    <li class="feature-item">Integrare cu servicii de stocare în cloud pentru documentele proiectelor</li>
+                </ul>
+            </div>
+
+            <div class="quote">
+                "InventoryMaster a transformat complet modul în care gestionăm proiectele și inventarul. Este incredibil cât de mult timp economisim acum!" - Director de Proiecte
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">Primii pași</h2>
+                <p>Pentru a începe să folosești InventoryMaster la potențialul său maxim, îți recomandăm să:</p>
+                <ol class="feature-list">
+                    <li class="feature-item">Completezi profilul tău cu informații relevante</li>
+                    <li class="feature-item">Creezi primul tău proiect în secțiunea Proiecte</li>
+                    <li class="feature-item">Adaugi materialele necesare în inventarul proiectului</li>
+                    <li class="feature-item">Explorezi tutorialele noastre pentru a descoperi toate funcționalitățile</li>
+                </ol>
+            </div>
+
+            <a href="https://inventorymaster.app/dashboard" class="button">Accesează contul tău</a>
+
+            <div class="section">
+                <h2 class="section-title">Asistență și suport</h2>
+                <p>Suntem aici pentru tine! Dacă ai întrebări sau ai nevoie de asistență, nu ezita să ne contactezi la <a href="mailto:support@inventorymaster.app">support@inventorymaster.app</a>.</p>
+                <p>De asemenea, verifică secțiunea de Ajutor din aplicație pentru tutoriale detaliate și răspunsuri la întrebările frecvente.</p>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Cu stimă,<br>Echipa InventoryMaster</p>
+            
+            <div class="social-links">
+                <a href="#" class="social-link">Facebook</a>
+                <a href="#" class="social-link">LinkedIn</a>
+                <a href="#" class="social-link">Twitter</a>
+            </div>
+            
+            <p>© 2024 InventoryMaster. Toate drepturile rezervate.</p>
+            <p>
+                <small>Acest email a fost trimis către {{email}} deoarece te-ai înregistrat pe platforma InventoryMaster.<br>
+                Pentru a te dezabona de la comunicările noastre, <a href="#">click aici</a>.</small>
+            </p>
+        </div>
+    </div>
+</body>
+</html>
