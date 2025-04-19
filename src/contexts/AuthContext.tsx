@@ -44,10 +44,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   // Funcție pentru a obține profilul utilizatorului
-  const fetchUserProfile = async (userId: string) => {
+  const fetchUserProfile = async (user: User) => {
     try {
       // În aplicația reală, aici am obține profilul utilizatorului din baza de date
-      // De exemplu: const { data } = await supabase.from('profiles').select('*').eq('user_id', userId).single();
+      // De exemplu: const { data } = await supabase.from('profiles').select('*').eq('user_id', user.id).single();
 
       // Pentru moment, creăm un profil simplu bazat pe email
       if (user?.email) {
@@ -66,6 +66,49 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Variabilă pentru a ține evidența dacă componenta este montată
     let isMounted = true;
 
+    // Verificăm mai întâi dacă avem o sesiune în localStorage pentru a evita întârzierea
+    const checkLocalSession = () => {
+      try {
+        const storedSession = localStorage.getItem("supabase.auth.token");
+        if (storedSession) {
+          try {
+            const parsedSession = JSON.parse(storedSession);
+            if (
+              parsedSession.currentSession &&
+              parsedSession.expiresAt > Date.now()
+            ) {
+              // Avem o sesiune validă în localStorage, o folosim temporar
+              setSession(parsedSession.currentSession);
+              setUser(parsedSession.currentSession.user || null);
+
+              if (parsedSession.currentSession.user) {
+                // Setăm un profil temporar bazat pe email
+                if (parsedSession.currentSession.user.email) {
+                  setUserProfile({
+                    displayName:
+                      parsedSession.currentSession.user.email.split("@")[0],
+                    email: parsedSession.currentSession.user.email,
+                  });
+                }
+              }
+
+              // Setăm loading la false pentru a permite afișarea dashboard-ului
+              setLoading(false);
+
+              // Vom verifica totuși sesiunea cu serverul în background
+              return true;
+            }
+          } catch (e) {
+            console.error("Eroare la parsarea sesiunii din localStorage:", e);
+          }
+        }
+        return false;
+      } catch (e) {
+        console.error("Eroare la accesarea localStorage:", e);
+        return false;
+      }
+    };
+
     const checkSession = async () => {
       try {
         const { data } = await authService.getSession();
@@ -77,7 +120,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(data.session?.user || null);
 
         if (data.session?.user) {
-          await fetchUserProfile(data.session.user.id);
+          await fetchUserProfile(data.session.user);
         }
       } catch (error) {
         // Limităm logging-ul pentru a îmbunătăți performanța
@@ -91,6 +134,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
+    // Încercam mai întâi să folosim sesiunea din localStorage
+    checkLocalSession();
+
+    // Verificăm oricum sesiunea cu serverul, dar nu mai blocăm UI-ul dacă avem deja o sesiune locală
     checkSession();
 
     // Ascultăm pentru schimbări de autentificare
@@ -108,7 +155,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(session?.user || null);
 
         if (session?.user) {
-          await fetchUserProfile(session.user.id);
+          await fetchUserProfile(session.user);
         } else {
           setUserProfile(null);
         }
