@@ -1,16 +1,37 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/components/ui/use-toast';
-import { Mic, MicOff, Send, Bot, User, Loader2, Volume2, VolumeX, Sparkles, Info, HelpCircle, Clipboard, CheckCircle2 } from 'lucide-react';
-import { inventoryService } from '@/lib/inventory-service';
-import { inventoryAssistantService } from '@/lib/inventory-assistant-service';
-import { Material } from '@/types';
+import React, { useState, useRef, useEffect } from "react";
+import { motion } from "framer-motion";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/components/ui/use-toast";
+import {
+  Mic,
+  MicOff,
+  Send,
+  Bot,
+  User,
+  Loader2,
+  Volume2,
+  VolumeX,
+  Sparkles,
+  Info,
+  HelpCircle,
+  Clipboard,
+  CheckCircle2,
+} from "lucide-react";
+import { inventoryService } from "@/lib/inventory-service";
+// Importăm serviciul mock în loc de cel real pentru a asigura funcționalitatea
+import { mockInventoryAssistantService as inventoryAssistantService } from "@/lib/mock-inventory-assistant-service";
+import { Material } from "@/types";
 
 /**
  * Pagina pentru AI Inventory Assistant
@@ -18,28 +39,32 @@ import { Material } from '@/types';
  */
 const InventoryAssistantPage: React.FC = () => {
   // State pentru mesaje
-  const [messages, setMessages] = useState<Array<{
-    id: string;
-    role: 'user' | 'assistant';
-    content: string;
-    timestamp: Date;
-    isProcessing?: boolean;
-    isError?: boolean;
-  }>>([
+  const [messages, setMessages] = useState<
+    Array<{
+      id: string;
+      role: "user" | "assistant";
+      content: string;
+      timestamp: Date;
+      isProcessing?: boolean;
+      isError?: boolean;
+    }>
+  >([
     {
-      id: '1',
-      role: 'assistant',
-      content: 'Bună ziua! Sunt asistentul tău pentru inventar. Cum te pot ajuta astăzi? Poți să mă întrebi despre stocuri, să setezi niveluri minime, să generezi liste de reaprovizionare și multe altele.',
+      id: "1",
+      role: "assistant",
+      content:
+        "Bună ziua! Sunt asistentul tău pentru inventar. Cum te pot ajuta astăzi? Poți să mă întrebi despre stocuri, să setezi niveluri minime, să generezi liste de reaprovizionare și multe altele.",
       timestamp: new Date(),
-    }
+    },
   ]);
 
   // State pentru input
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
-  const [isSpeechRecognitionActive, setIsSpeechRecognitionActive] = useState(false);
+  const [isSpeechRecognitionActive, setIsSpeechRecognitionActive] =
+    useState(false);
   const [isSpeechSynthesisActive, setIsSpeechSynthesisActive] = useState(false);
-  const [activeTab, setActiveTab] = useState('chat');
+  const [activeTab, setActiveTab] = useState("chat");
   const [copiedToClipboard, setCopiedToClipboard] = useState(false);
 
   // Referințe
@@ -50,35 +75,37 @@ const InventoryAssistantPage: React.FC = () => {
 
   // Efect pentru scroll la ultimul mesaj
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   // Efect pentru inițializarea recunoașterii vocale
   useEffect(() => {
     // Verificăm dacă browserul suportă Speech Recognition
-    if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
-      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if ("SpeechRecognition" in window || "webkitSpeechRecognition" in window) {
+      const SpeechRecognition =
+        (window as any).SpeechRecognition ||
+        (window as any).webkitSpeechRecognition;
       speechRecognition.current = new SpeechRecognition();
       speechRecognition.current.continuous = true;
       speechRecognition.current.interimResults = true;
-      speechRecognition.current.lang = 'ro-RO';
+      speechRecognition.current.lang = "ro-RO";
 
       speechRecognition.current.onresult = (event: any) => {
         const transcript = Array.from(event.results)
           .map((result: any) => result[0])
           .map((result: any) => result.transcript)
-          .join('');
-        
+          .join("");
+
         setInput(transcript);
       };
 
       speechRecognition.current.onerror = (event: any) => {
-        console.error('Speech recognition error', event.error);
+        console.error("Speech recognition error", event.error);
         setIsSpeechRecognitionActive(false);
         toast({
-          title: 'Eroare recunoaștere vocală',
+          title: "Eroare recunoaștere vocală",
           description: `A apărut o eroare: ${event.error}`,
-          variant: 'destructive',
+          variant: "destructive",
         });
       };
 
@@ -105,31 +132,31 @@ const InventoryAssistantPage: React.FC = () => {
 
     // Adăugăm mesajul utilizatorului
     const userMessageId = generateId();
-    setMessages(prev => [
+    setMessages((prev) => [
       ...prev,
       {
         id: userMessageId,
-        role: 'user',
+        role: "user",
         content: message,
         timestamp: new Date(),
-      }
+      },
     ]);
 
     // Adăugăm un mesaj temporar pentru asistent (în procesare)
     const assistantMessageId = generateId();
-    setMessages(prev => [
+    setMessages((prev) => [
       ...prev,
       {
         id: assistantMessageId,
-        role: 'assistant',
-        content: '',
+        role: "assistant",
+        content: "",
         timestamp: new Date(),
         isProcessing: true,
-      }
+      },
     ]);
 
     setIsProcessing(true);
-    setInput('');
+    setInput("");
 
     try {
       // Procesăm mesajul cu serviciul de asistent
@@ -140,41 +167,53 @@ const InventoryAssistantPage: React.FC = () => {
       }
 
       // Actualizăm mesajul asistentului cu răspunsul
-      setMessages(prev => prev.map(msg => 
-        msg.id === assistantMessageId
-          ? {
-              ...msg,
-              content: response.data?.response || 'Nu am putut procesa cererea. Te rog să încerci din nou.',
-              isProcessing: false,
-            }
-          : msg
-      ));
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === assistantMessageId
+            ? {
+                ...msg,
+                content:
+                  response.data?.response ||
+                  "Nu am putut procesa cererea. Te rog să încerci din nou.",
+                isProcessing: false,
+              }
+            : msg
+        )
+      );
 
       // Citim răspunsul dacă sinteza vocală este activă
-      if (isSpeechSynthesisActive && 'speechSynthesis' in window) {
-        const utterance = new SpeechSynthesisUtterance(response.data?.response || '');
-        utterance.lang = 'ro-RO';
+      if (isSpeechSynthesisActive && "speechSynthesis" in window) {
+        const utterance = new SpeechSynthesisUtterance(
+          response.data?.response || ""
+        );
+        utterance.lang = "ro-RO";
         window.speechSynthesis.speak(utterance);
       }
     } catch (error) {
-      console.error('Error processing message:', error);
-      
+      console.error("Error processing message:", error);
+
       // Actualizăm mesajul asistentului cu eroarea
-      setMessages(prev => prev.map(msg => 
-        msg.id === assistantMessageId
-          ? {
-              ...msg,
-              content: 'A apărut o eroare în procesarea cererii tale. Te rog să încerci din nou.',
-              isProcessing: false,
-              isError: true,
-            }
-          : msg
-      ));
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === assistantMessageId
+            ? {
+                ...msg,
+                content:
+                  "A apărut o eroare în procesarea cererii tale. Te rog să încerci din nou.",
+                isProcessing: false,
+                isError: true,
+              }
+            : msg
+        )
+      );
 
       toast({
-        title: 'Eroare',
-        description: error instanceof Error ? error.message : 'A apărut o eroare în procesarea cererii tale.',
-        variant: 'destructive',
+        title: "Eroare",
+        description:
+          error instanceof Error
+            ? error.message
+            : "A apărut o eroare în procesarea cererii tale.",
+        variant: "destructive",
       });
     } finally {
       setIsProcessing(false);
@@ -188,7 +227,7 @@ const InventoryAssistantPage: React.FC = () => {
 
   // Funcție pentru a gestiona apăsarea tastei Enter
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
     }
@@ -198,9 +237,9 @@ const InventoryAssistantPage: React.FC = () => {
   const toggleSpeechRecognition = () => {
     if (!speechRecognition.current) {
       toast({
-        title: 'Recunoaștere vocală indisponibilă',
-        description: 'Browserul tău nu suportă recunoașterea vocală.',
-        variant: 'destructive',
+        title: "Recunoaștere vocală indisponibilă",
+        description: "Browserul tău nu suportă recunoașterea vocală.",
+        variant: "destructive",
       });
       return;
     }
@@ -212,57 +251,62 @@ const InventoryAssistantPage: React.FC = () => {
       speechRecognition.current.start();
       setIsSpeechRecognitionActive(true);
       toast({
-        title: 'Recunoaștere vocală activată',
-        description: 'Poți vorbi acum. Voi transcrie ce spui.',
-        variant: 'default',
+        title: "Recunoaștere vocală activată",
+        description: "Poți vorbi acum. Voi transcrie ce spui.",
+        variant: "default",
       });
     }
   };
 
   // Funcție pentru a gestiona sinteza vocală
   const toggleSpeechSynthesis = () => {
-    if (!('speechSynthesis' in window)) {
+    if (!("speechSynthesis" in window)) {
       toast({
-        title: 'Sinteză vocală indisponibilă',
-        description: 'Browserul tău nu suportă sinteza vocală.',
-        variant: 'destructive',
+        title: "Sinteză vocală indisponibilă",
+        description: "Browserul tău nu suportă sinteza vocală.",
+        variant: "destructive",
       });
       return;
     }
 
     setIsSpeechSynthesisActive(!isSpeechSynthesisActive);
     toast({
-      title: isSpeechSynthesisActive ? 'Sinteză vocală dezactivată' : 'Sinteză vocală activată',
-      description: isSpeechSynthesisActive 
-        ? 'Nu voi mai citi răspunsurile cu voce tare.' 
-        : 'Voi citi răspunsurile cu voce tare.',
-      variant: 'default',
+      title: isSpeechSynthesisActive
+        ? "Sinteză vocală dezactivată"
+        : "Sinteză vocală activată",
+      description: isSpeechSynthesisActive
+        ? "Nu voi mai citi răspunsurile cu voce tare."
+        : "Voi citi răspunsurile cu voce tare.",
+      variant: "default",
     });
   };
 
   // Funcție pentru a copia conversația în clipboard
   const copyConversationToClipboard = () => {
     const conversationText = messages
-      .map(msg => `${msg.role === 'user' ? 'Tu' : 'Asistent'}: ${msg.content}`)
-      .join('\n\n');
-    
-    navigator.clipboard.writeText(conversationText)
+      .map(
+        (msg) => `${msg.role === "user" ? "Tu" : "Asistent"}: ${msg.content}`
+      )
+      .join("\n\n");
+
+    navigator.clipboard
+      .writeText(conversationText)
       .then(() => {
         setCopiedToClipboard(true);
         setTimeout(() => setCopiedToClipboard(false), 2000);
-        
+
         toast({
-          title: 'Conversație copiată',
-          description: 'Conversația a fost copiată în clipboard.',
-          variant: 'default',
+          title: "Conversație copiată",
+          description: "Conversația a fost copiată în clipboard.",
+          variant: "default",
         });
       })
-      .catch(err => {
-        console.error('Failed to copy conversation:', err);
+      .catch((err) => {
+        console.error("Failed to copy conversation:", err);
         toast({
-          title: 'Eroare',
-          description: 'Nu am putut copia conversația în clipboard.',
-          variant: 'destructive',
+          title: "Eroare",
+          description: "Nu am putut copia conversația în clipboard.",
+          variant: "destructive",
         });
       });
   };
@@ -272,10 +316,10 @@ const InventoryAssistantPage: React.FC = () => {
     setMessages([
       {
         id: generateId(),
-        role: 'assistant',
-        content: 'Conversația a fost ștearsă. Cu ce te pot ajuta?',
+        role: "assistant",
+        content: "Conversația a fost ștearsă. Cu ce te pot ajuta?",
         timestamp: new Date(),
-      }
+      },
     ]);
   };
 
@@ -300,9 +344,17 @@ const InventoryAssistantPage: React.FC = () => {
                     variant="outline"
                     size="icon"
                     onClick={toggleSpeechSynthesis}
-                    title={isSpeechSynthesisActive ? "Dezactivează sinteza vocală" : "Activează sinteza vocală"}
+                    title={
+                      isSpeechSynthesisActive
+                        ? "Dezactivează sinteza vocală"
+                        : "Activează sinteza vocală"
+                    }
                   >
-                    {isSpeechSynthesisActive ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+                    {isSpeechSynthesisActive ? (
+                      <Volume2 className="h-4 w-4" />
+                    ) : (
+                      <VolumeX className="h-4 w-4" />
+                    )}
                   </Button>
                   <Button
                     variant="outline"
@@ -310,7 +362,11 @@ const InventoryAssistantPage: React.FC = () => {
                     onClick={copyConversationToClipboard}
                     title="Copiază conversația"
                   >
-                    {copiedToClipboard ? <CheckCircle2 className="h-4 w-4 text-green-500" /> : <Clipboard className="h-4 w-4" />}
+                    {copiedToClipboard ? (
+                      <CheckCircle2 className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <Clipboard className="h-4 w-4" />
+                    )}
                   </Button>
                   <Button
                     variant="outline"
@@ -318,12 +374,30 @@ const InventoryAssistantPage: React.FC = () => {
                     onClick={clearConversation}
                     title="Șterge conversația"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-trash-2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="lucide lucide-trash-2"
+                    >
+                      <path d="M3 6h18" />
+                      <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                      <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                      <line x1="10" x2="10" y1="11" y2="17" />
+                      <line x1="14" x2="14" y1="11" y2="17" />
+                    </svg>
                   </Button>
                 </div>
               </div>
               <CardDescription>
-                Asistentul tău personal pentru gestionarea inventarului. Întreabă-mă orice despre stocuri, materiale sau comenzi.
+                Asistentul tău personal pentru gestionarea inventarului.
+                Întreabă-mă orice despre stocuri, materiale sau comenzi.
               </CardDescription>
             </CardHeader>
             <CardContent className="flex-grow flex flex-col">
@@ -334,17 +408,19 @@ const InventoryAssistantPage: React.FC = () => {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3 }}
-                    className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                    className={`flex ${
+                      message.role === "user" ? "justify-end" : "justify-start"
+                    }`}
                   >
                     <div
                       className={`flex max-w-[80%] ${
-                        message.role === 'user'
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-muted'
+                        message.role === "user"
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted"
                       } rounded-lg p-3`}
                     >
                       <div className="mr-2 mt-0.5">
-                        {message.role === 'user' ? (
+                        {message.role === "user" ? (
                           <User className="h-5 w-5" />
                         ) : (
                           <Bot className="h-5 w-5" />
@@ -357,7 +433,9 @@ const InventoryAssistantPage: React.FC = () => {
                             <span>Se procesează...</span>
                           </div>
                         ) : (
-                          <div className="whitespace-pre-wrap">{message.content}</div>
+                          <div className="whitespace-pre-wrap">
+                            {message.content}
+                          </div>
                         )}
                         <div className="text-xs opacity-70 mt-1">
                           {message.timestamp.toLocaleTimeString()}
@@ -374,9 +452,17 @@ const InventoryAssistantPage: React.FC = () => {
                   size="icon"
                   onClick={toggleSpeechRecognition}
                   disabled={isProcessing}
-                  className={isSpeechRecognitionActive ? 'bg-red-100 text-red-600 border-red-300 hover:bg-red-200 hover:text-red-700' : ''}
+                  className={
+                    isSpeechRecognitionActive
+                      ? "bg-red-100 text-red-600 border-red-300 hover:bg-red-200 hover:text-red-700"
+                      : ""
+                  }
                 >
-                  {isSpeechRecognitionActive ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+                  {isSpeechRecognitionActive ? (
+                    <MicOff className="h-5 w-5" />
+                  ) : (
+                    <Mic className="h-5 w-5" />
+                  )}
                 </Button>
                 <Input
                   ref={inputRef}
@@ -391,7 +477,11 @@ const InventoryAssistantPage: React.FC = () => {
                   onClick={handleSendMessage}
                   disabled={isProcessing || !input.trim()}
                 >
-                  {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                  {isProcessing ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Send className="h-4 w-4" />
+                  )}
                 </Button>
               </div>
             </CardContent>
@@ -418,35 +508,55 @@ const InventoryAssistantPage: React.FC = () => {
                   <Button
                     variant="outline"
                     className="w-full justify-start text-left h-auto py-2"
-                    onClick={() => sendPredefinedQuestion("Câte bucăți de ciment mai avem în stoc?")}
+                    onClick={() =>
+                      sendPredefinedQuestion(
+                        "Câte bucăți de ciment mai avem în stoc?"
+                      )
+                    }
                   >
                     Câte bucăți de ciment mai avem în stoc?
                   </Button>
                   <Button
                     variant="outline"
                     className="w-full justify-start text-left h-auto py-2"
-                    onClick={() => sendPredefinedQuestion("Setează nivelul minim de stoc la 50 pentru cărămizi")}
+                    onClick={() =>
+                      sendPredefinedQuestion(
+                        "Setează nivelul minim de stoc la 50 pentru cărămizi"
+                      )
+                    }
                   >
                     Setează nivelul minim de stoc la 50 pentru cărămizi
                   </Button>
                   <Button
                     variant="outline"
                     className="w-full justify-start text-left h-auto py-2"
-                    onClick={() => sendPredefinedQuestion("Generează o listă de reaprovizionare pentru materialele cu stoc scăzut")}
+                    onClick={() =>
+                      sendPredefinedQuestion(
+                        "Generează o listă de reaprovizionare pentru materialele cu stoc scăzut"
+                      )
+                    }
                   >
                     Generează o listă de reaprovizionare
                   </Button>
                   <Button
                     variant="outline"
                     className="w-full justify-start text-left h-auto py-2"
-                    onClick={() => sendPredefinedQuestion("Care sunt materialele din categoria 'Electrice' cu stoc sub 10 bucăți?")}
+                    onClick={() =>
+                      sendPredefinedQuestion(
+                        "Care sunt materialele din categoria 'Electrice' cu stoc sub 10 bucăți?"
+                      )
+                    }
                   >
                     Materiale electrice cu stoc sub 10 bucăți
                   </Button>
                   <Button
                     variant="outline"
                     className="w-full justify-start text-left h-auto py-2"
-                    onClick={() => sendPredefinedQuestion("Adaugă 20 de bucăți de parchet laminat în stoc")}
+                    onClick={() =>
+                      sendPredefinedQuestion(
+                        "Adaugă 20 de bucăți de parchet laminat în stoc"
+                      )
+                    }
                   >
                     Adaugă 20 de bucăți de parchet laminat în stoc
                   </Button>
@@ -471,7 +581,8 @@ const InventoryAssistantPage: React.FC = () => {
                       Întrebări despre stoc
                     </h3>
                     <p className="text-sm text-muted-foreground">
-                      Poți întreba despre cantitățile disponibile, locații, prețuri și detalii despre materiale.
+                      Poți întreba despre cantitățile disponibile, locații,
+                      prețuri și detalii despre materiale.
                     </p>
                   </div>
                   <div>
@@ -480,7 +591,9 @@ const InventoryAssistantPage: React.FC = () => {
                       Actualizări de stoc
                     </h3>
                     <p className="text-sm text-muted-foreground">
-                      Poți cere asistentului să actualizeze cantități, să seteze niveluri minime/maxime sau să marcheze materiale pentru comandă.
+                      Poți cere asistentului să actualizeze cantități, să seteze
+                      niveluri minime/maxime sau să marcheze materiale pentru
+                      comandă.
                     </p>
                   </div>
                   <div>
@@ -489,7 +602,8 @@ const InventoryAssistantPage: React.FC = () => {
                       Generare de rapoarte
                     </h3>
                     <p className="text-sm text-muted-foreground">
-                      Cere asistentului să genereze liste de reaprovizionare, rapoarte de stoc sau analize de utilizare.
+                      Cere asistentului să genereze liste de reaprovizionare,
+                      rapoarte de stoc sau analize de utilizare.
                     </p>
                   </div>
                   <div>
@@ -498,15 +612,26 @@ const InventoryAssistantPage: React.FC = () => {
                       Comenzi vocale
                     </h3>
                     <p className="text-sm text-muted-foreground">
-                      Apasă pe butonul de microfon pentru a activa recunoașterea vocală și vorbește natural.
+                      Apasă pe butonul de microfon pentru a activa recunoașterea
+                      vocală și vorbește natural.
                     </p>
                   </div>
                   <div className="pt-2">
-                    <Badge variant="outline" className="mr-1">Stoc</Badge>
-                    <Badge variant="outline" className="mr-1">Cantitate</Badge>
-                    <Badge variant="outline" className="mr-1">Materiale</Badge>
-                    <Badge variant="outline" className="mr-1">Reaprovizionare</Badge>
-                    <Badge variant="outline" className="mr-1">Raport</Badge>
+                    <Badge variant="outline" className="mr-1">
+                      Stoc
+                    </Badge>
+                    <Badge variant="outline" className="mr-1">
+                      Cantitate
+                    </Badge>
+                    <Badge variant="outline" className="mr-1">
+                      Materiale
+                    </Badge>
+                    <Badge variant="outline" className="mr-1">
+                      Reaprovizionare
+                    </Badge>
+                    <Badge variant="outline" className="mr-1">
+                      Raport
+                    </Badge>
                   </div>
                 </CardContent>
               </Card>
