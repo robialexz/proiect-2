@@ -9,11 +9,7 @@ import AppLayout from "./components/layout/AppLayout";
 import HomePage from "./pages/HomePage";
 
 // Import pagini de autentificare
-const LoginPage = lazyPage(() => import("./pages/LoginPage"), {
-  preload: true,
-});
-
-const RegisterPage = lazyPage(() => import("./pages/RegisterPage"), {
+const AuthPage = lazyPage(() => import("./pages/AuthPage"), {
   preload: true,
 });
 
@@ -122,8 +118,8 @@ export function AppRoutes() {
       <Route path="/contact" element={<ContactPage />} />
 
       {/* Rute pentru autentificare */}
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
+      <Route path="/login" element={<AuthPage />} />
+      <Route path="/register" element={<AuthPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/auth/callback" element={<AuthCallbackPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
