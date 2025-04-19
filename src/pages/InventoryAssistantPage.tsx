@@ -29,8 +29,8 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { inventoryService } from "@/lib/inventory-service";
-// Importăm serviciul mock în loc de cel real pentru a asigura funcționalitatea
-import { mockInventoryAssistantService as inventoryAssistantService } from "@/lib/mock-inventory-assistant-service";
+// Importăm serviciul real pentru asistentul de inventar
+import { inventoryAssistantService } from "@/lib/inventory-assistant-service";
 import { Material } from "@/types";
 
 /**
