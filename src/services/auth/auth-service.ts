@@ -4,7 +4,6 @@ import {
   SupabaseResponse,
   SupabaseErrorResponse,
 } from "../api/supabase-service";
-import { emailService } from "../email/email-service";
 
 /**
  * Formatează erorile pentru a fi mai ușor de înțeles
@@ -187,33 +186,8 @@ export const authService = {
         },
       });
 
-      // Verificăm dacă utilizatorul a fost creat cu succes
-      if (data?.user) {
-        console.log("Utilizator creat cu ID:", data.user.id);
-        console.log(
-          "Confirmare email necesară:",
-          data.user.email_confirmed_at ? "Nu" : "Da"
-        );
-
-        // Trimitem email-ul de bun venit
-        try {
-          await emailService.sendWelcomeEmail(
-            email,
-            displayName || email.split("@")[0]
-          );
-          console.log("Email de bun venit trimis cu succes");
-        } catch (emailError) {
-          console.error(
-            "Eroare la trimiterea email-ului de bun venit:",
-            emailError
-          );
-          // Nu întrerupem fluxul dacă trimiterea email-ului eșuează
-        }
-      }
-
       return handleResponse(data, error as unknown as PostgrestError);
     } catch (error) {
-      console.error("Eroare la înregistrare:", error);
       return {
         data: null,
         error: formatError(error),
