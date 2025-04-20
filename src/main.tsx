@@ -5,6 +5,8 @@ import "./index.css";
 import { BrowserRouter } from "react-router-dom";
 // Importăm utilitar pentru gestionarea cache-ului
 import "./utils/cache-buster";
+// Importăm fix-ul pentru React
+import "./utils/react-fix";
 
 // Înregistrăm service worker-ul pentru a gestiona cache-ul doar în producție
 if ("serviceWorker" in navigator && import.meta.env.PROD) {
