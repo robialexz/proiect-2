@@ -51,42 +51,25 @@ const ProjectsPage: React.FC = () => {
     setFetchError(null);
 
     try {
-      // Folosim date de test pentru a evita eroarea
-      const mockProjects = [
-        {
-          id: "1",
-          name: "Proiect rezidențial - Nord",
-          description: "Construcție complex rezidențial cu 50 de apartamente",
-          status: "active",
-          created_at: new Date().toISOString(),
-          progress: 35,
-          priority: "high",
-        },
-        {
-          id: "2",
-          name: "Renovare clădire de birouri - Centru",
-          description: "Renovare completă a unei clădiri de birouri cu 5 etaje",
-          status: "planning",
-          created_at: new Date().toISOString(),
-          progress: 10,
-          priority: "medium",
-        }
-      ];
+      // Obținem proiectele utilizatorului din Supabase
+      const { data, error } = await supabase
+        .from("projects")
+        .select("*")
+        .eq("manager_id", user.id)
+        .order("created_at", { ascending: false });
 
-      setProjects(mockProjects as Project[]);
-      setIsLoading(false);
+      if (error) throw error;
+
+      setProjects(data as Project[]);
     } catch (error: any) {
       console.error("Error fetching projects:", error);
       setFetchError(error.message);
-      toast({
-        variant: "destructive",
-        title: t("projects.errors.fetchFailed", "Error fetching projects"),
-        description: error.message,
-      });
+      // Eliminăm notificarea toast pentru a evita duplicarea
+      // Eroarea va fi afișată în interfață prin componenta de eroare
     } finally {
       setIsLoading(false);
     }
-  }, [user, t, toast]);
+  }, [user]);
 
   // Load projects on component mount
   useEffect(() => {
@@ -96,11 +79,15 @@ const ProjectsPage: React.FC = () => {
   }, [user, fetchProjects]);
 
   // Filter projects based on search term
-  const filteredProjects = projects.filter((project) =>
-    project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (project.description && project.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (project.client_name && project.client_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (project.location && project.location.toLowerCase().includes(searchTerm.toLowerCase()))
+  const filteredProjects = projects.filter(
+    (project) =>
+      project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (project.description &&
+        project.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (project.client_name &&
+        project.client_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (project.location &&
+        project.location.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   // Handle project actions
@@ -117,7 +104,14 @@ const ProjectsPage: React.FC = () => {
   const handleDeleteProject = async (projectId: string) => {
     if (!user) return;
 
-    if (window.confirm(t("projects.confirmDelete", "Are you sure you want to delete this project? This action cannot be undone."))) {
+    if (
+      window.confirm(
+        t(
+          "projects.confirmDelete",
+          "Are you sure you want to delete this project? This action cannot be undone."
+        )
+      )
+    ) {
       try {
         const { error } = await supabase
           .from("projects")
@@ -126,19 +120,20 @@ const ProjectsPage: React.FC = () => {
 
         if (error) throw error;
 
-        setProjects(projects.filter(p => p.id !== projectId));
+        setProjects(projects.filter((p) => p.id !== projectId));
 
+        // Afișăm o singură notificare de succes
         toast({
           title: t("projects.toasts.deleted", "Project Deleted"),
-          description: t("projects.toasts.deletedDesc", "The project has been deleted successfully"),
+          description: t(
+            "projects.toasts.deletedDesc",
+            "The project has been deleted successfully"
+          ),
         });
       } catch (error: any) {
         console.error("Error deleting project:", error);
-        toast({
-          variant: "destructive",
-          title: t("projects.errors.deleteFailed", "Error deleting project"),
-          description: error.message,
-        });
+        // Setăm eroarea pentru a fi afișată în interfață
+        setFetchError(error.message);
       }
     }
   };
@@ -150,7 +145,6 @@ const ProjectsPage: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-slate-900 text-white">
-      
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
         <header className="bg-slate-800 border-b border-slate-700 p-4">
@@ -164,16 +158,21 @@ const ProjectsPage: React.FC = () => {
                   <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-500" />
                   <Input
                     type="search"
-                    placeholder={t("projects.searchPlaceholder", "Search projects...")}
+                    placeholder={t(
+                      "projects.searchPlaceholder",
+                      "Search projects..."
+                    )}
                     className="pl-8 bg-slate-900 border-slate-700"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
                 </div>
-                <Button onClick={() => {
-                  setSelectedProject(null);
-                  setIsCreateDialogOpen(true);
-                }}>
+                <Button
+                  onClick={() => {
+                    setSelectedProject(null);
+                    setIsCreateDialogOpen(true);
+                  }}
+                >
                   <PlusCircle className="h-4 w-4 mr-2" />
                   {t("projects.createButton", "Create Project")}
                 </Button>
@@ -190,7 +189,9 @@ const ProjectsPage: React.FC = () => {
                 animate={{ opacity: 1, y: 0 }}
                 className="bg-red-500/20 border border-red-500/50 text-red-200 px-4 py-3 rounded-md mb-6"
               >
-                <p className="font-medium">{t("common.error", "Error")}: {fetchError}</p>
+                <p className="font-medium">
+                  {t("common.error", "Error")}: {fetchError}
+                </p>
               </motion.div>
             )}
             <ProjectsList
@@ -233,5 +234,3 @@ const ProjectsPage: React.FC = () => {
 };
 
 export default ProjectsPage;
-
-

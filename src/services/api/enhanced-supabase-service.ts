@@ -1,21 +1,27 @@
-import { supabase } from './supabase-client';
-import { PostgrestError } from '@supabase/supabase-js';
-import { supabaseService, SupabaseResponse, SupabaseErrorResponse } from './supabase-service';
-import { SupabaseTables, SupabaseRpcFunctions } from '@/types/supabase-tables';
+import { supabase } from "./supabase-client";
+import { PostgrestError } from "@supabase/supabase-js";
+import {
+  supabaseService,
+  SupabaseResponse,
+  SupabaseErrorResponse,
+} from "./supabase-service";
+import { SupabaseTables, SupabaseRpcFunctions } from "@/types/supabase-tables";
 
 /**
  * Formatează erorile pentru a fi mai ușor de înțeles
  * @param error Eroarea de formatat
  * @returns Eroarea formatată
  */
-const formatError = (error: PostgrestError | Error | unknown): SupabaseErrorResponse => {
+const formatError = (
+  error: PostgrestError | Error | unknown
+): SupabaseErrorResponse => {
   if (error instanceof Error) {
     return {
       message: error.message,
-      code: 'client_error'
+      code: "client_error",
     };
   }
-  
+
   // Verificăm dacă este o eroare PostgrestError
   const pgError = error as PostgrestError;
   if (pgError && pgError.code) {
@@ -23,14 +29,14 @@ const formatError = (error: PostgrestError | Error | unknown): SupabaseErrorResp
       message: pgError.message,
       details: pgError.details,
       hint: pgError.hint,
-      code: pgError.code
+      code: pgError.code,
     };
   }
-  
+
   // Eroare generică
   return {
-    message: 'An unknown error occurred',
-    code: 'unknown_error'
+    message: "An unknown error occurred",
+    code: "unknown_error",
   };
 };
 
@@ -40,7 +46,7 @@ const formatError = (error: PostgrestError | Error | unknown): SupabaseErrorResp
  */
 export const enhancedSupabaseService = {
   ...supabaseService,
-  
+
   /**
    * Obține date cu caching și invalidare automată
    * @param table Numele tabelului
@@ -50,7 +56,7 @@ export const enhancedSupabaseService = {
    */
   async getWithCache<T>(
     table: SupabaseTables | string,
-    columns: string = '*',
+    columns: string = "*",
     options?: {
       filters?: Record<string, any>;
       order?: { column: string; ascending?: boolean };
@@ -60,23 +66,25 @@ export const enhancedSupabaseService = {
   ): Promise<SupabaseResponse<T>> {
     try {
       // Generăm o cheie de cache unică bazată pe parametri
-      const cacheKey = `${table}_${columns}_${JSON.stringify(options?.filters || {})}_${JSON.stringify(options?.order || {})}`;
-      
+      const cacheKey = `${table}_${columns}_${JSON.stringify(
+        options?.filters || {}
+      )}_${JSON.stringify(options?.order || {})}`;
+
       // Implementarea caching-ului va fi adăugată ulterior
       // Deocamdată, delegăm către metoda standard
       return supabaseService.select<T>(table, columns, {
         filters: options?.filters,
-        order: options?.order
+        order: options?.order,
       });
     } catch (error) {
       return {
         data: null,
         error: formatError(error),
-        status: 'error'
+        status: "error",
       };
     }
   },
-  
+
   /**
    * Paginează date cu caching
    * @param table Numele tabelului
@@ -88,7 +96,7 @@ export const enhancedSupabaseService = {
    */
   async paginateWithCache<T>(
     table: SupabaseTables | string,
-    columns: string = '*',
+    columns: string = "*",
     page: number = 1,
     pageSize: number = 10,
     options?: {
@@ -103,18 +111,20 @@ export const enhancedSupabaseService = {
     page: number;
     pageSize: number;
     error: SupabaseErrorResponse | null;
-    status: 'success' | 'error';
+    status: "success" | "error";
     fromCache?: boolean;
   }> {
     try {
       // Generăm o cheie de cache unică bazată pe parametri
-      const cacheKey = `paginate_${table}_${columns}_${page}_${pageSize}_${JSON.stringify(options?.filters || {})}_${JSON.stringify(options?.order || {})}`;
-      
+      const cacheKey = `paginate_${table}_${columns}_${page}_${pageSize}_${JSON.stringify(
+        options?.filters || {}
+      )}_${JSON.stringify(options?.order || {})}`;
+
       // Implementarea caching-ului va fi adăugată ulterior
       // Deocamdată, delegăm către metoda standard
       return supabaseService.paginate<T>(table, columns, page, pageSize, {
         filters: options?.filters,
-        order: options?.order
+        order: options?.order,
       });
     } catch (error) {
       return {
@@ -123,11 +133,11 @@ export const enhancedSupabaseService = {
         page,
         pageSize,
         error: formatError(error),
-        status: 'error'
+        status: "error",
       };
     }
   },
-  
+
   /**
    * Abonează la schimbări în timp real pentru un tabel cu gestionare avansată a evenimentelor
    * @param table Numele tabelului
@@ -138,40 +148,42 @@ export const enhancedSupabaseService = {
    */
   subscribe<T>(
     table: SupabaseTables | string,
-    event: 'INSERT' | 'UPDATE' | 'DELETE' | '*',
+    event: "INSERT" | "UPDATE" | "DELETE" | "*",
     callback: (payload: {
       new: T | null;
       old: T | null;
-      eventType: 'INSERT' | 'UPDATE' | 'DELETE';
+      eventType: "INSERT" | "UPDATE" | "DELETE";
     }) => void,
     filters?: Record<string, any>
   ) {
     try {
       let realtime: any = supabase.from(table as any);
-      
+
       // Aplicăm filtrele dacă există
       if (filters) {
         Object.entries(filters).forEach(([column, value]) => {
           if (value !== undefined && value !== null) {
-            realtime = realtime.filter(column, 'eq', value);
+            realtime = realtime.filter(column, "eq", value);
           }
         });
       }
-      
-      return realtime.on(event, (payload: any) => {
-        // Transformăm payload-ul pentru a fi mai ușor de utilizat
-        callback({
-          new: payload.new || null,
-          old: payload.old || null,
-          eventType: payload.eventType
-        });
-      }).subscribe();
+
+      return realtime
+        .on(event, (payload: any) => {
+          // Transformăm payload-ul pentru a fi mai ușor de utilizat
+          callback({
+            new: payload.new || null,
+            old: payload.old || null,
+            eventType: payload.eventType,
+          });
+        })
+        .subscribe();
     } catch (error) {
       console.error(`Error subscribing to ${table}:`, error);
       throw error;
     }
   },
-  
+
   /**
    * Execută o tranzacție (mai multe operațiuni într-o singură tranzacție)
    * @param operations Funcția care definește operațiunile din tranzacție
@@ -184,21 +196,21 @@ export const enhancedSupabaseService = {
       // Notă: Supabase nu suportă tranzacții native în JavaScript SDK
       // Această metodă este un wrapper pentru a simula tranzacțiile
       const result = await operations();
-      
+
       return {
         data: result,
         error: null,
-        status: 'success'
+        status: "success",
       };
     } catch (error) {
       return {
         data: null,
         error: formatError(error),
-        status: 'error'
+        status: "error",
       };
     }
   },
-  
+
   /**
    * Execută o interogare complexă cu join-uri
    * @param mainTable Tabelul principal
@@ -213,40 +225,52 @@ export const enhancedSupabaseService = {
       table: SupabaseTables | string;
       on: { mainTableColumn: string; joinTableColumn: string };
       columns: string[];
-      type?: 'inner' | 'left' | 'right';
+      type?: "inner" | "left" | "right";
     }>,
-    columns: string[] = ['*'],
+    columns: string[] = ["*"],
     filters?: Record<string, any>
   ): Promise<SupabaseResponse<T>> {
     try {
       // Construim query-ul cu join-uri
-      const mainColumns = columns.map(col => `${mainTable}.${col}`).join(', ');
-      
+      const mainColumns = columns
+        .map((col) => `${mainTable}.${col}`)
+        .join(", ");
+
       // Construim coloanele pentru join-uri
-      const joinColumns = joins.map(join => {
-        return join.columns.map(col => `${join.table}.${col}`).join(', ');
-      }).join(', ');
-      
+      const joinColumns = joins
+        .map((join) => {
+          return join.columns.map((col) => `${join.table}.${col}`).join(", ");
+        })
+        .join(", ");
+
       // Construim clauza de select
-      const selectClause = `${mainColumns}${joinColumns ? ', ' + joinColumns : ''}`;
-      
+      const selectClause = `${mainColumns}${
+        joinColumns ? ", " + joinColumns : ""
+      }`;
+
       // Construim query-ul
       let query: any = supabase.from(mainTable as any).select(selectClause);
-      
+
       // Adăugăm join-urile
-      joins.forEach(join => {
-        const joinType = join.type || 'inner';
+      joins.forEach((join) => {
+        const joinType = join.type || "inner";
         const joinClause = `${join.table}!${join.on.mainTableColumn}=${join.on.joinTableColumn}`;
-        
-        if (joinType === 'inner') {
+
+        if (joinType === "inner") {
           query = query.join(joinClause);
-        } else if (joinType === 'left') {
-          query = query.join(joinClause, { foreignTable: join.table, type: 'left' });
-        } else if (joinType === 'right') {
-          query = query.join(joinClause, { foreignTable: join.table, type: 'right' });
+        } else if (joinType === "left") {
+          query = query.join(joinClause, {
+            foreignTable: join.table,
+            type: "left",
+          });
+        } else if (joinType === "right") {
+          query = query.join(joinClause, {
+            foreignTable: join.table,
+            type: "right",
+          });
         }
       });
-      
+
       // Aplicăm filtrele dacă există
       if (filters) {
         Object.entries(filters).forEach(([column, value]) => {
@@ -255,27 +279,27 @@ export const enhancedSupabaseService = {
           }
         });
       }
-      
+
       const { data, error } = await query;
-      
+
       if (error) {
         throw error;
       }
-      
+
       return {
         data: data as T,
         error: null,
-        status: 'success'
+        status: "success",
       };
     } catch (error) {
       return {
         data: null,
         error: formatError(error),
-        status: 'error'
+        status: "error",
       };
     }
   },
-  
+
   /**
    * Execută o interogare full-text search
    * @param table Numele tabelului
@@ -296,44 +320,75 @@ export const enhancedSupabaseService = {
   ): Promise<SupabaseResponse<T>> {
     try {
       // Construim coloanele de selectat
-      const selectColumns = options?.columns ? options.columns.join(', ') : '*';
-      
+      const selectColumns = options?.columns ? options.columns.join(", ") : "*";
+
       // Construim query-ul
-      let dbQuery: any = supabase.from(table as any)
+      let dbQuery: any = supabase
+        .from(table as any)
         .select(selectColumns)
         .textSearch(column, query);
-      
+
       // Aplicăm limita dacă există
       if (options?.limit) {
         dbQuery = dbQuery.limit(options.limit);
       }
-      
+
       // Aplicăm ordinea dacă există
       if (options?.order) {
         dbQuery = dbQuery.order(options.order.column, {
-          ascending: options.order.ascending !== false
+          ascending: options.order.ascending !== false,
         });
       }
-      
+
       const { data, error } = await dbQuery;
-      
+
       if (error) {
         throw error;
       }
-      
+
       return {
         data: data as T,
         error: null,
-        status: 'success'
+        status: "success",
       };
     } catch (error) {
       return {
         data: null,
         error: formatError(error),
-        status: 'error'
+        status: "error",
       };
     }
-  }
+  },
+
+  /**
+   * Execută o interogare personalizată folosind un callback
+   * @param queryBuilder Funcția care construiește interogarea
+   * @returns Datele sau eroarea
+   */
+  async custom<T>(
+    queryBuilder: (supabase: any) => any
+  ): Promise<SupabaseResponse<T>> {
+    try {
+      const query = queryBuilder(supabase);
+      const { data, error } = await query;
+
+      if (error) {
+        throw error;
+      }
+
+      return {
+        data: data as T,
+        error: null,
+        status: "success",
+      };
+    } catch (error) {
+      return {
+        data: null,
+        error: formatError(error),
+        status: "error",
+      };
+    }
+  },
 };
 
 export default enhancedSupabaseService;

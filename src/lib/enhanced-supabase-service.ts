@@ -1,10 +1,10 @@
 import { supabase } from "./supabase";
 import { PostgrestError } from "@supabase/supabase-js";
-import {
-  supabaseService,
+import { supabaseService } from "../services";
+import type {
   SupabaseResponse,
   SupabaseErrorResponse,
-} from "../services";
+} from "../services/api/supabase-service";
 import { errorHandler } from "./error-handler";
 import { inputValidation } from "./input-validation";
 import { dataLoader } from "./data-loader";

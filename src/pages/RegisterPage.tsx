@@ -58,8 +58,10 @@ const RegisterPage = () => {
 
         // Verificăm dacă este o eroare de utilizator existent
         if (
-          error.message &&
-          error.message.toLowerCase().includes("user already registered")
+          (error as any).code === "user_already_registered" ||
+          (error.message &&
+            (error.message.toLowerCase().includes("user already registered") ||
+              error.message.toLowerCase().includes("există deja un cont")))
         ) {
           throw new Error(
             "Există deja un cont cu această adresă de email. Vă rugăm să vă autentificați sau să folosiți opțiunea 'Am uitat parola'."

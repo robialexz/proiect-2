@@ -8,13 +8,12 @@ import { useNotification } from "@/components/ui/notification";
 import { useMemoizedCallback } from "@/lib/performance";
 import ConnectionStatus from "@/components/ui/connection-status";
 import { routePreloader } from "@/lib/route-preloader";
-import { OfflineIndicator } from "@/components/ui/offline-indicator";
-import { measurePageLoad } from "@/lib/performance-optimizer";
 import WelcomeOverlay from "@/components/welcome/WelcomeOverlay";
+import { measurePageLoad } from "@/lib/performance-optimizer";
 
 // Importăm hook-uri personalizate
-import { useAuth } from "@/contexts/AuthContext"; // Corrected import path
-import { useUI } from "@/store"; // Assuming useUI is still correct
+import { useAuth } from "@/contexts/AuthContext";
+import { useUI } from "@/store";
 import { useMediaQuery, useDebounce } from "@/hooks";
 
 const AppLayout: React.FC = () => {
@@ -103,7 +102,20 @@ const AppLayout: React.FC = () => {
   // Auth Guard Logic:
   // Use the 'loading' state from the new AuthContext which indicates
   // if the initial session check is complete.
-  if (loading) {
+  // Limităm timpul de încărcare la 2 secunde pentru a evita blocarea la "Se încarcă sesiunea..."
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
+
+  useEffect(() => {
+    if (loading) {
+      const timer = setTimeout(() => {
+        setLoadingTimeout(true);
+      }, 2000); // 2 secunde
+
+      return () => clearTimeout(timer);
+    }
+  }, [loading]);
+
+  if (loading && !loadingTimeout) {
     // Show loading indicator while the initial session is being checked
     return (
       <div className="flex items-center justify-center h-screen bg-slate-900 text-white">
@@ -118,9 +130,14 @@ const AppLayout: React.FC = () => {
   // REMOVED: Complex session restoration logic useEffects.
   // AuthContext now handles session state via onAuthStateChange.
 
-  // If loading is finished and there's still no user, redirect to login.
-  if (!user) {
-    console.log("AppLayout: No authenticated user, redirecting to login.");
+  // If loading is finished or timeout has occurred and there's still no user, redirect to login.
+  if (!user || loadingTimeout) {
+    console.log(
+      "AppLayout: No authenticated user or loading timeout, redirecting to login."
+    );
+
+    // Nu mai ștergem datele de autentificare pentru a păstra sesiunea la refresh
+
     return <Navigate to="/login" replace />;
   }
 
@@ -179,9 +196,6 @@ const AppLayout: React.FC = () => {
             </motion.div>
           </AnimatePresence>
         </main>
-
-        {/* Indicator de stare offline */}
-        <OfflineIndicator />
       </div>
     </div>
   );

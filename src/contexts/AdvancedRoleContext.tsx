@@ -5,6 +5,8 @@ import { cacheService } from "@/lib/cache-service";
 
 // Definim tipurile de roluri disponibile în aplicație
 export type UserRole =
+  // Rol de administrator
+  | "ADMIN"
   // Roluri de management
   | "director_general"
   | "director_executiv"
@@ -101,6 +103,7 @@ const AdvancedRoleContext = createContext<AdvancedRoleContextType | undefined>(
 
 // Mapăm rolurile la categorii
 const roleToCategoryMap: Record<UserRole, RoleCategory> = {
+  ADMIN: "management",
   director_general: "management",
   director_executiv: "management",
   manager_departament: "management",
@@ -122,6 +125,41 @@ const roleToCategoryMap: Record<UserRole, RoleCategory> = {
 
 // Definim permisiunile pentru fiecare rol
 const rolePermissionsMap: Record<UserRole, Permission[]> = {
+  ADMIN: [
+    "view_dashboard",
+    "edit_profile",
+    "view_projects",
+    "create_project",
+    "edit_project",
+    "delete_project",
+    "assign_project",
+    "view_inventory",
+    "add_material",
+    "edit_material",
+    "delete_material",
+    "adjust_stock",
+    "request_material",
+    "approve_request",
+    "view_reports",
+    "create_report",
+    "export_report",
+    "view_users",
+    "create_user",
+    "edit_user",
+    "delete_user",
+    "assign_role",
+    "view_settings",
+    "edit_settings",
+    "view_finances",
+    "create_invoice",
+    "approve_payment",
+    "view_budget",
+    "edit_budget",
+    "view_hr",
+    "manage_attendance",
+    "manage_payroll",
+    "manage_benefits",
+  ],
   director_general: [
     "view_dashboard",
     "edit_profile",
@@ -381,6 +419,7 @@ const uiPreferencesMap: Record<RoleCategory, Record<string, any>> = {
 
 // Culorile asociate fiecărui rol
 const roleColorsMap: Record<UserRole, string> = {
+  ADMIN: "text-red-600",
   director_general: "text-purple-600",
   director_executiv: "text-purple-500",
   manager_departament: "text-blue-500",

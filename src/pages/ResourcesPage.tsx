@@ -1,14 +1,20 @@
 import React, { useState, useEffect, useMemo, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
-import { Navigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useTranslation } from "react-i18next";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/lib/supabase";
 import { Database } from "@/types/supabase";
-import { PlusCircle, Search, BookOpen, RefreshCw } from "lucide-react";
+import {
+  PlusCircle,
+  Search,
+  BookOpen,
+  RefreshCw,
+  FolderPlus,
+} from "lucide-react";
 import ResourcesList from "@/components/resources/ResourcesList";
 import ResourceForm from "@/components/resources/ResourceForm";
 import ResourceAllocations from "@/components/resources/ResourceAllocations";
@@ -22,20 +28,56 @@ const ResourcesPage: React.FC = () => {
   const { t } = useTranslation();
   const { toast } = useToast();
   const { user, loading } = useAuth();
+  const navigate = useNavigate();
+
+  // State pentru proiecte
+  const [projects, setProjects] = useState<any[]>([]);
+  const [loadingProjects, setLoadingProjects] = useState(false);
   const [resources, setResources] = useState<Resource[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isAllocationsDialogOpen, setIsAllocationsDialogOpen] = useState(false);
   const [isMaintenanceDialogOpen, setIsMaintenanceDialogOpen] = useState(false);
-  const [selectedResource, setSelectedResource] = useState<Resource | null>(null);
+  const [selectedResource, setSelectedResource] = useState<Resource | null>(
+    null
+  );
+
+  // Încărcăm proiectele utilizatorului
+  useEffect(() => {
+    const loadProjects = async () => {
+      if (!user) return;
+
+      setLoadingProjects(true);
+      try {
+        const { data, error } = await supabase
+          .from("projects")
+          .select("id, name")
+          .eq("manager_id", user.id);
+
+        if (error) throw error;
+        setProjects(data || []);
+      } catch (error) {
+        console.error("Error loading projects:", error);
+      } finally {
+        setLoadingProjects(false);
+      }
+    };
+
+    loadProjects();
+  }, [user]);
+
+  // Navigare către pagina de proiecte pentru a crea un proiect nou
+  const handleCreateProject = () => {
+    navigate("/projects");
+  };
 
   // Folosim hook-ul useDataLoader pentru încărcarea optimizată a resurselor
   const {
     data: resourcesData,
     isLoading: resourcesLoading,
     error: resourcesError,
-    refetch: refetchResources
+    refetch: refetchResources,
   } = useDataLoader<Resource>(
     "resources",
     "*",
@@ -150,10 +192,13 @@ const ResourcesPage: React.FC = () => {
   const filteredResources = resources.filter(
     (resource) =>
       resource.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (resource.description || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (resource.description || "")
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
       resource.type.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Verificare dacă se încarcă datele de autentificare
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen bg-slate-900">
@@ -162,20 +207,48 @@ const ResourcesPage: React.FC = () => {
     );
   }
 
+  // Verificare dacă utilizatorul este autentificat
   if (!user) {
     return <Navigate to="/login" />;
   }
 
+  // Verificare dacă există proiecte
+  const hasProjects = projects.length > 0;
+
+  // Render pentru starea fără proiecte
+  if (!loadingProjects && !hasProjects) {
+    return (
+      <div className="flex h-screen bg-slate-900 text-white">
+        <div className="flex-1 flex flex-col items-center justify-center p-6">
+          <FolderPlus className="h-16 w-16 text-slate-400 mb-4" />
+          <h1 className="text-2xl font-bold mb-2">
+            {t("resources.noProjects.title", "Nu există proiecte")}
+          </h1>
+          <p className="text-slate-400 mb-6 text-center max-w-md">
+            {t(
+              "resources.noProjects.description",
+              "Pentru a gestiona resursele, trebuie să creați mai întâi un proiect."
+            )}
+          </p>
+          <Button
+            onClick={handleCreateProject}
+            className="flex items-center gap-2"
+          >
+            <FolderPlus className="h-4 w-4" />
+            {t("resources.noProjects.createButton", "Creați primul proiect")}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-screen bg-slate-900 text-white">
-
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
         <header className="sticky top-0 z-10 bg-slate-900 border-b border-slate-800 px-6 py-4 shrink-0">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold">
-              Resource Management
-            </h1>
+            <h1 className="text-2xl font-bold">Resource Management</h1>
             <div className="flex items-center gap-4">
               <div className="relative w-64">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
@@ -187,10 +260,12 @@ const ResourcesPage: React.FC = () => {
                   className="pl-9 w-full bg-slate-800 border-slate-700 focus:ring-primary"
                 />
               </div>
-              <Button onClick={() => {
-                setSelectedResource(null);
-                setIsCreateDialogOpen(true);
-              }}>
+              <Button
+                onClick={() => {
+                  setSelectedResource(null);
+                  setIsCreateDialogOpen(true);
+                }}
+              >
                 <PlusCircle className="h-4 w-4 mr-2" />
                 Add Resource
               </Button>
@@ -211,7 +286,8 @@ const ResourcesPage: React.FC = () => {
             >
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold">
-                  {filteredResources.length} {filteredResources.length === 1 ? 'Resource' : 'Resources'}
+                  {filteredResources.length}{" "}
+                  {filteredResources.length === 1 ? "Resource" : "Resources"}
                 </h2>
                 <Button
                   variant="outline"
@@ -224,11 +300,13 @@ const ResourcesPage: React.FC = () => {
                 </Button>
               </div>
 
-              <Suspense fallback={
-                <div className="flex items-center justify-center py-10">
-                  <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-                </div>
-              }>
+              <Suspense
+                fallback={
+                  <div className="flex items-center justify-center py-10">
+                    <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                }
+              >
                 <ResourcesList
                   resources={filteredResources}
                   isLoading={isLoading}
@@ -264,5 +342,3 @@ const ResourcesPage: React.FC = () => {
 };
 
 export default ResourcesPage;
-
-

@@ -42,6 +42,14 @@ const InventoryManagementPage = lazyPage(
   }
 );
 
+const InventoryOverviewPage = lazyPage(
+  () => import("./pages/InventoryOverviewPage"),
+  {
+    preload: true,
+    minDisplayTime: 300,
+  }
+);
+
 const CompanyInventoryPage = lazyPage(
   () => import("./pages/CompanyInventoryPage"),
   {
@@ -67,9 +75,6 @@ const CalendarPage = lazyPage(() => import("./pages/CalendarPage"), {
   preload: true,
 });
 
-const NotificationsDemo = lazyPage(() => import("./pages/NotificationsDemo"));
-const TestDashboardPage = lazyPage(() => import("./pages/TestDashboardPage"));
-
 // Lazy load additional project management pages
 const ProjectsPage = lazyPage(() => import("./pages/ProjectsPage"), {
   preload: true,
@@ -90,7 +95,6 @@ const TutorialPage = lazyPage(() => import("./pages/TutorialPage"));
 const TasksPage = lazyPage(() => import("./pages/TasksPage"));
 const EditProfilePage = lazyPage(() => import("./pages/EditProfilePage"));
 // Pagină de debug pentru dezvoltatori
-const DebugPage = lazyPage(() => import("./pages/DebugPage"));
 // Paginile de autentificare au fost eliminate pentru noua implementare
 const PreferencesPage = lazyPage(() => import("./pages/PreferencesPage"));
 const InventoryListPage = lazyPage(() => import("./pages/InventoryListPage"));
@@ -110,6 +114,16 @@ const AIInventoryAssistantPage = lazyPage(
 );
 const ForecastPage = lazyPage(() => import("./pages/ForecastPage"));
 const ScanPage = lazyPage(() => import("./pages/ScanPage"));
+// New dedicated tester page for running application tests
+const TesterPage = lazyPage(() => import("./pages/TesterPage"));
+
+// Error monitoring page
+const ErrorMonitoringPage = lazyPage(
+  () => import("./pages/ErrorMonitoringPage")
+);
+
+// OS Report page
+const OSReportPage = lazyPage(() => import("./pages/OSReportPage"));
 
 /**
  * Componenta pentru rutele aplicației
@@ -132,8 +146,6 @@ export function AppRoutes() {
       <Route path="/auth/callback" element={<AuthCallbackPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
 
-      <Route path="/notifications-demo" element={<NotificationsDemo />} />
-
       {/* Protected routes inside AppLayout */}
       <Route path="/" element={<AppLayout />}>
         <Route path="dashboard" element={<DashboardPage />} />
@@ -142,6 +154,7 @@ export function AppRoutes() {
           path="inventory-management"
           element={<InventoryManagementPage />}
         />
+        <Route path="inventory-overview" element={<InventoryOverviewPage />} />
         <Route path="company-inventory" element={<CompanyInventoryPage />} />
         <Route path="projects" element={<ProjectsPage />} />
         <Route path="suppliers" element={<SuppliersPage />} />
@@ -172,10 +185,9 @@ export function AppRoutes() {
         <Route path="ai-assistant" element={<AIInventoryAssistantPage />} />
         <Route path="forecast" element={<ForecastPage />} />
         <Route path="scan" element={<ScanPage />} />
-        <Route path="test-dashboard" element={<TestDashboardPage />} />
-        <Route path="debug" element={<DebugPage />} />
-        <Route path="analytics" element={<AnalyticsPage />} />
-        <Route path="calendar" element={<CalendarPage />} />
+        <Route path="tester" element={<TesterPage />} />
+        <Route path="error-monitoring" element={<ErrorMonitoringPage />} />
+        <Route path="os-report" element={<OSReportPage />} />
       </Route>
       {/* Add tempobook route to prevent catchall from capturing it */}
       {import.meta.env.VITE_TEMPO === "true" && <Route path="/tempobook/*" />}

@@ -1,9 +1,9 @@
-import { enhancedSupabaseService } from './enhanced-supabase-service';
-import { SupabaseResponse } from './supabase-service';
-import { errorHandler } from './error-handler';
-import { dataLoader } from './data-loader';
-import { Material, LowStockItem } from '../types';
-import { supabase } from './supabase';
+import { enhancedSupabaseService } from "./enhanced-supabase-service";
+import type { SupabaseResponse } from "../services/api/supabase-service";
+import { errorHandler } from "./error-handler";
+import { dataLoader } from "./data-loader";
+import { Material, LowStockItem } from "../types";
+import { supabase } from "./supabase";
 
 /**
  * Serviciu specializat pentru gestionarea inventarului
@@ -37,25 +37,29 @@ export const inventoryService = {
 
       // Dacă avem termen de căutare, folosim custom query
       if (options?.searchTerm) {
-        return enhancedSupabaseService.custom<Material[]>(supabase =>
+        return enhancedSupabaseService.custom<Material[]>((supabase) =>
           supabase
-            .from('materials')
-            .select('*')
-            .or(`name.ilike.%${options.searchTerm}%,category.ilike.%${options.searchTerm}%,notes.ilike.%${options.searchTerm}%`)
-            .order(options?.orderBy?.column || 'name', { ascending: options?.orderBy?.ascending ?? true })
+            .from("materials")
+            .select("*")
+            .or(
+              `name.ilike.%${options.searchTerm}%,category.ilike.%${options.searchTerm}%,notes.ilike.%${options.searchTerm}%`
+            )
+            .order(options?.orderBy?.column || "name", {
+              ascending: options?.orderBy?.ascending ?? true,
+            })
         );
       }
 
       // Dacă avem paginare, folosim paginate
       if (options?.page !== undefined && options?.pageSize !== undefined) {
         const result = await enhancedSupabaseService.paginate<Material>(
-          'materials',
-          '*',
+          "materials",
+          "*",
           options.page,
           options.pageSize,
           {
             filters,
-            order: options?.orderBy
+            order: options?.orderBy,
           }
         );
 
@@ -63,29 +67,25 @@ export const inventoryService = {
         return {
           data: result.data,
           error: result.error,
-          status: result.status
+          status: result.status,
         };
       }
 
       // Altfel, folosim select normal
-      return enhancedSupabaseService.select<Material[]>(
-        'materials',
-        '*',
-        {
-          filters,
-          order: options?.orderBy
-        }
-      );
+      return enhancedSupabaseService.select<Material[]>("materials", "*", {
+        filters,
+        order: options?.orderBy,
+      });
     } catch (error) {
       errorHandler.handleError(error, false);
       return {
         data: null,
         error: {
-          message: error instanceof Error ? error.message : 'Unknown error',
-          details: error instanceof Error ? error.stack || '' : '',
-          code: 'client_error'
+          message: error instanceof Error ? error.message : "Unknown error",
+          details: error instanceof Error ? error.stack || "" : "",
+          code: "client_error",
         },
-        status: 'error'
+        status: "error",
       };
     }
   },
@@ -97,24 +97,20 @@ export const inventoryService = {
    */
   async getItemById(id: string): Promise<SupabaseResponse<Material>> {
     try {
-      return enhancedSupabaseService.select<Material>(
-        'materials',
-        '*',
-        {
-          filters: { id },
-          single: true
-        }
-      );
+      return enhancedSupabaseService.select<Material>("materials", "*", {
+        filters: { id },
+        single: true,
+      });
     } catch (error) {
       errorHandler.handleError(error, false);
       return {
         data: null,
         error: {
-          message: error instanceof Error ? error.message : 'Unknown error',
-          details: error instanceof Error ? error.stack || '' : '',
-          code: 'client_error'
+          message: error instanceof Error ? error.message : "Unknown error",
+          details: error instanceof Error ? error.stack || "" : "",
+          code: "client_error",
         },
-        status: 'error'
+        status: "error",
       };
     }
   },
@@ -124,19 +120,21 @@ export const inventoryService = {
    * @param material - Datele materialului
    * @returns Materialul creat sau eroare
    */
-  async createItem(material: Partial<Material>): Promise<SupabaseResponse<Material>> {
+  async createItem(
+    material: Partial<Material>
+  ): Promise<SupabaseResponse<Material>> {
     try {
-      return enhancedSupabaseService.insert<Material>('materials', material);
+      return enhancedSupabaseService.insert<Material>("materials", material);
     } catch (error) {
       errorHandler.handleError(error, false);
       return {
         data: null,
         error: {
-          message: error instanceof Error ? error.message : 'Unknown error',
-          details: error instanceof Error ? error.stack || '' : '',
-          code: 'client_error'
+          message: error instanceof Error ? error.message : "Unknown error",
+          details: error instanceof Error ? error.stack || "" : "",
+          code: "client_error",
         },
-        status: 'error'
+        status: "error",
       };
     }
   },
@@ -147,19 +145,24 @@ export const inventoryService = {
    * @param material - Datele actualizate
    * @returns Materialul actualizat sau eroare
    */
-  async updateItem(id: string, material: Partial<Material>): Promise<SupabaseResponse<Material>> {
+  async updateItem(
+    id: string,
+    material: Partial<Material>
+  ): Promise<SupabaseResponse<Material>> {
     try {
-      return enhancedSupabaseService.update<Material>('materials', material, { id });
+      return enhancedSupabaseService.update<Material>("materials", material, {
+        id,
+      });
     } catch (error) {
       errorHandler.handleError(error, false);
       return {
         data: null,
         error: {
-          message: error instanceof Error ? error.message : 'Unknown error',
-          details: error instanceof Error ? error.stack || '' : '',
-          code: 'client_error'
+          message: error instanceof Error ? error.message : "Unknown error",
+          details: error instanceof Error ? error.stack || "" : "",
+          code: "client_error",
         },
-        status: 'error'
+        status: "error",
       };
     }
   },
@@ -171,17 +174,17 @@ export const inventoryService = {
    */
   async deleteItem(id: string): Promise<SupabaseResponse<Material>> {
     try {
-      return enhancedSupabaseService.delete<Material>('materials', { id });
+      return enhancedSupabaseService.delete<Material>("materials", { id });
     } catch (error) {
       errorHandler.handleError(error, false);
       return {
         data: null,
         error: {
-          message: error instanceof Error ? error.message : 'Unknown error',
-          details: error instanceof Error ? error.stack || '' : '',
-          code: 'client_error'
+          message: error instanceof Error ? error.message : "Unknown error",
+          details: error instanceof Error ? error.stack || "" : "",
+          code: "client_error",
         },
-        status: 'error'
+        status: "error",
       };
     }
   },
@@ -191,26 +194,28 @@ export const inventoryService = {
    * @param threshold - Pragul pentru stoc scăzut (opțional, implicit folosește min_stock_level)
    * @returns Lista de materiale cu stoc scăzut sau eroare
    */
-  async getLowStockItems(threshold?: number): Promise<SupabaseResponse<LowStockItem[]>> {
+  async getLowStockItems(
+    threshold?: number
+  ): Promise<SupabaseResponse<LowStockItem[]>> {
     try {
       if (threshold !== undefined) {
         // Folosim un prag specific
-        return enhancedSupabaseService.custom<LowStockItem[]>(supabase =>
+        return enhancedSupabaseService.custom<LowStockItem[]>((supabase) =>
           supabase
-            .from('materials')
-            .select('*')
-            .lt('quantity', threshold)
-            .order('quantity')
+            .from("materials")
+            .select("*")
+            .lt("quantity", threshold)
+            .order("quantity")
         );
       } else {
         // Folosim min_stock_level din fiecare material
-        return enhancedSupabaseService.custom<LowStockItem[]>(supabase =>
+        return enhancedSupabaseService.custom<LowStockItem[]>((supabase) =>
           supabase
-            .from('materials')
-            .select('*')
-            .not('min_stock_level', 'is', null)
-            .lt('quantity', supabase.raw('min_stock_level'))
-            .order('quantity')
+            .from("materials")
+            .select("*")
+            .not("min_stock_level", "is", null)
+            .lt("quantity", supabase.raw("min_stock_level"))
+            .order("quantity")
         );
       }
     } catch (error) {
@@ -218,11 +223,11 @@ export const inventoryService = {
       return {
         data: null,
         error: {
-          message: error instanceof Error ? error.message : 'Unknown error',
-          details: error instanceof Error ? error.stack || '' : '',
-          code: 'client_error'
+          message: error instanceof Error ? error.message : "Unknown error",
+          details: error instanceof Error ? error.stack || "" : "",
+          code: "client_error",
         },
-        status: 'error'
+        status: "error",
       };
     }
   },
@@ -233,10 +238,13 @@ export const inventoryService = {
    * @param quantity - Noua cantitate suplimentară
    * @returns Materialul actualizat sau eroare
    */
-  async updateSuplimentar(id: string, quantity: number): Promise<SupabaseResponse<Material>> {
+  async updateSuplimentar(
+    id: string,
+    quantity: number
+  ): Promise<SupabaseResponse<Material>> {
     try {
       return enhancedSupabaseService.update<Material>(
-        'materials',
+        "materials",
         { suplimentar: quantity },
         { id }
       );
@@ -245,11 +253,11 @@ export const inventoryService = {
       return {
         data: null,
         error: {
-          message: error instanceof Error ? error.message : 'Unknown error',
-          details: error instanceof Error ? error.stack || '' : '',
-          code: 'client_error'
+          message: error instanceof Error ? error.message : "Unknown error",
+          details: error instanceof Error ? error.stack || "" : "",
+          code: "client_error",
         },
-        status: 'error'
+        status: "error",
       };
     }
   },
@@ -265,18 +273,19 @@ export const inventoryService = {
       const { data: material, error } = await this.getItemById(id);
 
       if (error || !material) {
-        throw new Error(error?.message || 'Material not found');
+        throw new Error(error?.message || "Material not found");
       }
 
       // Calculăm noua cantitate
-      const newQuantity = (material.quantity || 0) + (material.suplimentar || 0);
+      const newQuantity =
+        (material.quantity || 0) + (material.suplimentar || 0);
 
       // Actualizăm materialul
       return enhancedSupabaseService.update<Material>(
-        'materials',
+        "materials",
         {
           quantity: newQuantity,
-          suplimentar: 0
+          suplimentar: 0,
         },
         { id }
       );
@@ -285,11 +294,11 @@ export const inventoryService = {
       return {
         data: null,
         error: {
-          message: error instanceof Error ? error.message : 'Unknown error',
-          details: error instanceof Error ? error.stack || '' : '',
-          code: 'client_error'
+          message: error instanceof Error ? error.message : "Unknown error",
+          details: error instanceof Error ? error.stack || "" : "",
+          code: "client_error",
         },
-        status: 'error'
+        status: "error",
       };
     }
   },
@@ -308,23 +317,26 @@ export const inventoryService = {
       }
 
       // Filtrăm materialele care au deja cantitate suplimentară
-      const reorderItems = lowStockItems?.filter(item => !item.suplimentar || item.suplimentar === 0) || [];
+      const reorderItems =
+        lowStockItems?.filter(
+          (item) => !item.suplimentar || item.suplimentar === 0
+        ) || [];
 
       return {
         data: reorderItems,
         error: null,
-        status: 'success'
+        status: "success",
       };
     } catch (error) {
       errorHandler.handleError(error, false);
       return {
         data: null,
         error: {
-          message: error instanceof Error ? error.message : 'Unknown error',
-          details: error instanceof Error ? error.stack || '' : '',
-          code: 'client_error'
+          message: error instanceof Error ? error.message : "Unknown error",
+          details: error instanceof Error ? error.stack || "" : "",
+          code: "client_error",
         },
-        status: 'error'
+        status: "error",
       };
     }
   },
@@ -336,7 +348,7 @@ export const inventoryService = {
    * @returns Blob cu datele exportate sau eroare
    */
   async exportInventory(
-    format: 'csv' | 'json' = 'csv',
+    format: "csv" | "json" = "csv",
     options?: {
       projectId?: string;
       category?: string;
@@ -355,39 +367,35 @@ export const inventoryService = {
       }
 
       // Exportăm datele
-      return enhancedSupabaseService.export<Material>(
-        'materials',
-        format,
-        {
-          filters,
-          columns: [
-            'id',
-            'name',
-            'dimension',
-            'unit',
-            'quantity',
-            'manufacturer',
-            'category',
-            'cost_per_unit',
-            'supplier_id',
-            'location',
-            'min_stock_level',
-            'max_stock_level',
-            'notes'
-          ],
-          fileName: `inventory-export-${new Date().toISOString().split('T')[0]}`
-        }
-      );
+      return enhancedSupabaseService.export<Material>("materials", format, {
+        filters,
+        columns: [
+          "id",
+          "name",
+          "dimension",
+          "unit",
+          "quantity",
+          "manufacturer",
+          "category",
+          "cost_per_unit",
+          "supplier_id",
+          "location",
+          "min_stock_level",
+          "max_stock_level",
+          "notes",
+        ],
+        fileName: `inventory-export-${new Date().toISOString().split("T")[0]}`,
+      });
     } catch (error) {
       errorHandler.handleError(error, false);
       return {
         data: null,
         error: {
-          message: error instanceof Error ? error.message : 'Unknown error',
-          details: error instanceof Error ? error.stack || '' : '',
-          code: 'client_error'
+          message: error instanceof Error ? error.message : "Unknown error",
+          details: error instanceof Error ? error.stack || "" : "",
+          code: "client_error",
         },
-        status: 'error'
+        status: "error",
       };
     }
   },
@@ -402,11 +410,11 @@ export const inventoryService = {
     callback: (payload: {
       new: Material | null;
       old: Material | null;
-      eventType: 'INSERT' | 'UPDATE' | 'DELETE'
+      eventType: "INSERT" | "UPDATE" | "DELETE";
     }) => void,
     options?: {
       projectId?: string;
-      event?: 'INSERT' | 'UPDATE' | 'DELETE' | '*';
+      event?: "INSERT" | "UPDATE" | "DELETE" | "*";
     }
   ) {
     try {
@@ -419,18 +427,18 @@ export const inventoryService = {
 
       // Creăm abonamentul
       return enhancedSupabaseService.subscribe<Material>(
-        'materials',
-        options?.event || '*',
+        "materials",
+        options?.event || "*",
         callback,
         filters
       );
     } catch (error) {
       errorHandler.handleError(error, false);
-      console.error('Error creating subscription:', error);
+      console.error("Error creating subscription:", error);
 
       // Returnăm un obiect de abonament fals pentru a evita erorile
       return {
-        unsubscribe: () => {}
+        unsubscribe: () => {},
       };
     }
   },
@@ -448,30 +456,35 @@ export const inventoryService = {
    * @param formData - FormData cu fișierul de import
    * @returns Rezultatul importului
    */
-  async importInventory(formData: FormData): Promise<SupabaseResponse<{ imported: number; errors: any[] }>> {
+  async importInventory(
+    formData: FormData
+  ): Promise<SupabaseResponse<{ imported: number; errors: any[] }>> {
     try {
       // Trimitem fișierul către edge function
-      const { data, error } = await supabase.functions.invoke('import-inventory', {
-        body: formData
-      });
+      const { data, error } = await supabase.functions.invoke(
+        "import-inventory",
+        {
+          body: formData,
+        }
+      );
 
       if (error) throw error;
 
       return {
         data,
         error: null,
-        status: 'success'
+        status: "success",
       };
     } catch (error) {
       errorHandler.handleError(error, false);
       return {
         data: null,
         error: {
-          message: error instanceof Error ? error.message : 'Unknown error',
-          details: error instanceof Error ? error.stack || '' : '',
-          code: 'client_error'
+          message: error instanceof Error ? error.message : "Unknown error",
+          details: error instanceof Error ? error.stack || "" : "",
+          code: "client_error",
         },
-        status: 'error'
+        status: "error",
       };
     }
   },
@@ -484,27 +497,30 @@ export const inventoryService = {
   async previewImport(formData: FormData): Promise<SupabaseResponse<any[]>> {
     try {
       // Trimitem fișierul către edge function
-      const { data, error } = await supabase.functions.invoke('preview-import', {
-        body: formData
-      });
+      const { data, error } = await supabase.functions.invoke(
+        "preview-import",
+        {
+          body: formData,
+        }
+      );
 
       if (error) throw error;
 
       return {
         data,
         error: null,
-        status: 'success'
+        status: "success",
       };
     } catch (error) {
       errorHandler.handleError(error, false);
       return {
         data: null,
         error: {
-          message: error instanceof Error ? error.message : 'Unknown error',
-          details: error instanceof Error ? error.stack || '' : '',
-          code: 'client_error'
+          message: error instanceof Error ? error.message : "Unknown error",
+          details: error instanceof Error ? error.stack || "" : "",
+          code: "client_error",
         },
-        status: 'error'
+        status: "error",
       };
     }
   },
@@ -513,18 +529,18 @@ export const inventoryService = {
    * Descarcă șablonul pentru import
    * @param format - Formatul șablonului (xlsx sau csv)
    */
-  downloadTemplate(format: 'xlsx' | 'csv' = 'xlsx') {
+  downloadTemplate(format: "xlsx" | "csv" = "xlsx") {
     // URL-ul către șablonul static
     const templateUrl = `/templates/inventory-template.${format}`;
 
     // Creăm un link și simulăm click pentru descărcare
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = templateUrl;
     a.download = `inventory-template.${format}`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-  }
+  },
 };
 
 export default inventoryService;

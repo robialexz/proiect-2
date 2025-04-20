@@ -2,7 +2,13 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { Session, User } from "@supabase/supabase-js";
 import { authService } from "@/services/auth/auth-service";
+import { roleService } from "@/services/auth/role-service";
 import { SupabaseErrorResponse } from "@/services/api/supabase-service";
+import {
+  UserRoles,
+  ROLE_PERMISSIONS,
+  RolePermissions,
+} from "@/types/supabase-tables";
 
 // Definim tipul pentru răspunsul de autentificare
 type AuthResponse = {
@@ -10,10 +16,19 @@ type AuthResponse = {
   error: Error | SupabaseErrorResponse | null;
 };
 
+type UserProfile = {
+  displayName: string;
+  email: string;
+  role: UserRoles;
+  permissions: RolePermissions;
+};
+
 type AuthContextType = {
   session: Session | null;
   user: User | null;
-  userProfile: { displayName: string; email: string } | null;
+  userProfile: UserProfile | null;
+  userRole: UserRoles | null;
+  permissions: RolePermissions | null;
   signIn: (email: string, password: string) => Promise<AuthResponse>;
   signUp: (
     email: string,
@@ -22,6 +37,7 @@ type AuthContextType = {
   ) => Promise<AuthResponse>;
   signOut: () => Promise<void>;
   loading: boolean;
+  hasPermission: (permission: keyof RolePermissions) => boolean;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -37,143 +53,186 @@ export function useAuth() {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
-  const [userProfile, setUserProfile] = useState<{
-    displayName: string;
-    email: string;
-  } | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [userRole, setUserRole] = useState<UserRoles | null>(null);
+  const [permissions, setPermissions] = useState<RolePermissions | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Funcție pentru a verifica dacă utilizatorul are o anumită permisiune
+  const hasPermission = (permission: keyof RolePermissions): boolean => {
+    if (!permissions) return false;
+    return permissions[permission] === true;
+  };
 
   // Funcție pentru a obține profilul utilizatorului
   const fetchUserProfile = async (user: User) => {
     try {
-      // În aplicația reală, aici am obține profilul utilizatorului din baza de date
-      // De exemplu: const { data } = await supabase.from('profiles').select('*').eq('user_id', user.id).single();
+      // Obținem profilul utilizatorului, inclusiv rolul și permisiunile
+      const userProfileData = await roleService.getUserProfile(user);
 
-      // Pentru moment, creăm un profil simplu bazat pe email
+      // Setăm datele în state
+      setUserProfile(userProfileData);
+      setUserRole(userProfileData.role);
+      setPermissions(userProfileData.permissions);
+
+      // Generăm un mesaj de bun venit personalizat în funcție de rol
+      const welcomeMessage = getWelcomeMessage(userProfileData.role);
+      console.log(welcomeMessage);
+    } catch (error) {
+      console.error("Eroare la obținerea profilului:", error);
+      // Setăm rolul și permisiunile implicite în caz de eroare
+      const defaultRole = UserRoles.VIEWER;
+      setUserRole(defaultRole);
+      setPermissions(ROLE_PERMISSIONS[defaultRole]);
+
+      // Creăm un profil simplu bazat pe email în caz de eroare
       if (user?.email) {
         setUserProfile({
           displayName: user.email.split("@")[0],
           email: user.email,
+          role: defaultRole,
+          permissions: ROLE_PERMISSIONS[defaultRole],
         });
       }
-    } catch (error) {
-      console.error("Eroare la obținerea profilului:", error);
     }
   };
 
-  // Verificăm sesiunea la încărcarea componentei
+  // Funcție pentru a genera un mesaj de bun venit personalizat în funcție de rol
+  const getWelcomeMessage = (role: UserRoles): string => {
+    const hour = new Date().getHours();
+    let timeOfDay = "";
+
+    if (hour >= 5 && hour < 12) {
+      timeOfDay = "dimineața";
+    } else if (hour >= 12 && hour < 18) {
+      timeOfDay = "ziua";
+    } else {
+      timeOfDay = "seara";
+    }
+
+    switch (role) {
+      case UserRoles.ADMIN:
+        return `Bună ${timeOfDay}, șefule! Ai acces complet la sistem.`;
+      case UserRoles.MANAGER:
+        return `Bună ${timeOfDay}, manager! Ai acces la majoritatea funcționalităților.`;
+      case UserRoles.TEAM_LEAD:
+        return `Bună ${timeOfDay}, team lead! Poți gestiona echipa și proiectele tale.`;
+      case UserRoles.INVENTORY_MANAGER:
+        return `Bună ${timeOfDay}! Ai acces la gestionarea inventarului.`;
+      case UserRoles.WORKER:
+        return `Bună ${timeOfDay}! Ai acces la proiectele tale.`;
+      default:
+        return `Bună ${timeOfDay}! Bine ai venit în aplicație.`;
+    }
+  };
+
+  // Verificăm sesiunea la încărcarea componentei și ascultăm schimbările
   useEffect(() => {
+    console.log("AuthContext: Verificare sesiune inițială");
     // Variabilă pentru a ține evidența dacă componenta este montată
     let isMounted = true;
 
-    // Verificăm mai întâi dacă avem o sesiune în localStorage pentru a evita întârzierea
-    const checkLocalSession = () => {
+    // Funcție pentru a obține sesiunea curentă de la Supabase
+    const getInitialSession = async () => {
       try {
-        const storedSession = localStorage.getItem("supabase.auth.token");
-        if (storedSession) {
-          try {
-            const parsedSession = JSON.parse(storedSession);
-            if (
-              parsedSession.currentSession &&
-              parsedSession.expiresAt > Date.now()
-            ) {
-              // Avem o sesiune validă în localStorage, o folosim temporar
-              setSession(parsedSession.currentSession);
-              setUser(parsedSession.currentSession.user || null);
+        console.log("AuthContext: Începe obținerea sesiunii inițiale");
 
-              if (parsedSession.currentSession.user) {
-                // Setăm un profil temporar bazat pe email
-                if (parsedSession.currentSession.user.email) {
-                  setUserProfile({
-                    displayName:
-                      parsedSession.currentSession.user.email.split("@")[0],
-                    email: parsedSession.currentSession.user.email,
-                  });
-                }
-              }
+        // Nu mai ștergem datele de autentificare pentru a păstra sesiunea la refresh
 
-              // Setăm loading la false pentru a permite afișarea dashboard-ului
-              setLoading(false);
-
-              // Vom verifica totuși sesiunea cu serverul în background
-              return true;
-            }
-          } catch (e) {
-            console.error("Eroare la parsarea sesiunii din localStorage:", e);
-          }
-        }
-        return false;
-      } catch (e) {
-        console.error("Eroare la accesarea localStorage:", e);
-        return false;
-      }
-    };
-
-    const checkSession = async () => {
-      try {
-        const { data } = await authService.getSession();
+        // Obținem sesiunea de la Supabase
+        const {
+          data: { session },
+          error,
+        } = await supabase.auth.getSession();
 
         // Verificăm dacă componenta este încă montată
         if (!isMounted) return;
 
-        setSession(data.session);
-        setUser(data.session?.user || null);
+        if (error) {
+          console.error("Error getting initial session:", error);
+          setSession(null);
+          setUser(null);
+          setUserProfile(null);
+        } else {
+          setSession(session);
+          setUser(session?.user || null);
+          if (session?.user) {
+            await fetchUserProfile(session.user);
+          } else {
+            setUserProfile(null);
+          }
+        }
 
-        if (data.session?.user) {
-          await fetchUserProfile(data.session.user);
-        }
-      } catch (error) {
-        // Limităm logging-ul pentru a îmbunătăți performanța
-        if (process.env.NODE_ENV !== "production") {
-          console.error("Eroare la verificarea sesiunii:", error);
-        }
-      } finally {
+        // Setăm loading la false după ce am obținut sesiunea
         if (isMounted) {
+          setLoading(false);
+        }
+
+        // Codul de mai jos este dezactivat pentru a evita problemele cu sesiunea persistentă
+        /*
+        const {
+          data: { session },
+          error,
+        } = await supabase.auth.getSession();
+
+        // Verificăm dacă componenta este încă montată
+        if (!isMounted) return;
+
+        if (error) {
+          console.error("Error getting initial session:", error);
+          setSession(null);
+          setUser(null);
+          setUserProfile(null);
+        } else {
+          setSession(session);
+          setUser(session?.user || null);
+          if (session?.user) {
+            await fetchUserProfile(session.user);
+          } else {
+            setUserProfile(null);
+          }
+        }
+        */
+      } catch (error) {
+        console.error("Unexpected error getting initial session:", error);
+        if (isMounted) {
+          setSession(null);
+          setUser(null);
+          setUserProfile(null);
           setLoading(false);
         }
       }
     };
 
-    // Încercam mai întâi să folosim sesiunea din localStorage
-    checkLocalSession();
+    // Obținem sesiunea inițială
+    getInitialSession();
 
-    // Verificăm oricum sesiunea cu serverul, dar nu mai blocăm UI-ul dacă avem deja o sesiune locală
-    checkSession();
+    // Ascultăm pentru schimbări de autentificare în timp real
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      console.log("AuthContext: Schimbare de stare de autentificare", _event);
+      // Verificăm dacă componenta este încă montată
+      if (!isMounted) return;
 
-    // Ascultăm pentru schimbări de autentificare
-    // Folosim o variabilă pentru a stoca subscripția
-    let authSubscription: { unsubscribe: () => void } | null = null;
+      setSession(session);
+      setUser(session?.user || null);
 
-    const setupAuthListener = () => {
-      const {
-        data: { subscription },
-      } = supabase.auth.onAuthStateChange(async (_event, session) => {
-        // Verificăm dacă componenta este încă montată
-        if (!isMounted) return;
+      if (session?.user) {
+        await fetchUserProfile(session.user);
+      } else {
+        setUserProfile(null);
+      }
+      // Ensure loading is false after auth state change
+      setLoading(false);
+    });
 
-        setSession(session);
-        setUser(session?.user || null);
-
-        if (session?.user) {
-          await fetchUserProfile(session.user);
-        } else {
-          setUserProfile(null);
-        }
-      });
-
-      authSubscription = subscription;
-    };
-
-    setupAuthListener();
-
-    // Curățăm listener-ul la demontare
+    // Curățăm subscripția la demontare
     return () => {
       isMounted = false;
-      if (authSubscription) {
-        authSubscription.unsubscribe();
-      }
+      subscription.unsubscribe();
     };
-  }, []);
+  }, []); // Empty dependency array means this effect runs once on mount and cleans up on unmount
 
   // Funcție pentru autentificare
   const signIn = async (
@@ -212,6 +271,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Funcție pentru deconectare
   const signOut = async () => {
     await authService.signOut();
+
+    // Ștergem manual sesiunea din localStorage și sessionStorage
+    localStorage.removeItem("supabase.auth.token");
+    sessionStorage.removeItem("supabase.auth.token");
+    localStorage.removeItem("sb-btvpnzsmrfrlwczanbcg-auth-token");
+    sessionStorage.removeItem("sb-btvpnzsmrfrlwczanbcg-auth-token");
+
+    // Resetăm starea
     setSession(null);
     setUser(null);
     setUserProfile(null);
@@ -221,10 +288,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     session,
     user,
     userProfile,
+    userRole,
+    permissions,
     signIn,
     signUp,
     signOut,
     loading,
+    hasPermission,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

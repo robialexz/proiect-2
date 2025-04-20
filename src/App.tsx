@@ -9,18 +9,53 @@ import { useIsMobile } from "./hooks";
 // Importăm rutele aplicației
 import AppRoutes from "./routes";
 
+// Importăm componentele UI
 import ChatBotWidget from "./components/ai/ChatBotWidget";
-import TestRunner from "./components/TestRunner";
+
+// Importăm sistemul de monitorizare a erorilor
+import {
+  errorMonitoring,
+  ErrorSource,
+  ErrorSeverity,
+} from "./lib/error-monitoring";
+
+// Importăm componenta ErrorBoundary
+import { ErrorBoundary } from "./components/ErrorBoundary";
 
 function App() {
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  // Inițializăm sistemul de monitorizare a erorilor
+  // Dezactivat temporar pentru a evita buclele infinite
+  // useEffect(() => {
+  //   // Captăm informații despre sesiune la pornirea aplicației
+  //   errorMonitoring.captureError({
+  //     message: "Application started",
+  //     source: ErrorSource.CLIENT,
+  //     severity: ErrorSeverity.INFO,
+  //     context: {
+  //       url: window.location.href,
+  //       userAgent: navigator.userAgent,
+  //       timestamp: new Date().toISOString(),
+  //     },
+  //   });
+  // }, []);
+
   // Handler pentru evenimentul session-expired
   useEffect(() => {
     const handleSessionExpired = (event: any) => {
       console.log("Session expired event received");
+
+      // Dezactivat temporar pentru a evita buclele infinite
+      // // Captăm eroarea în sistemul de monitorizare
+      // errorMonitoring.captureError({
+      //   message: "Session expired",
+      //   source: ErrorSource.AUTH,
+      //   severity: ErrorSeverity.WARNING,
+      //   context: event.detail || {},
+      // });
 
       // Afișăm un mesaj de notificare utilizatorului
       toast({
@@ -76,7 +111,7 @@ function App() {
   const isMobile = useIsMobile();
 
   return (
-    <>
+    <ErrorBoundary>
       <AppRoutes />
 
       {/* Show chatbot only on protected routes */}
@@ -87,10 +122,7 @@ function App() {
           "/forgot-password",
           "/reset-password",
         ].includes(location.pathname) && <ChatBotWidget />}
-
-      {/* Adăugăm TestRunner pentru a putea rula testele direct din aplicație */}
-      {process.env.NODE_ENV !== "production" && <TestRunner />}
-    </>
+    </ErrorBoundary>
   );
 }
 

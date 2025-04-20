@@ -45,7 +45,8 @@ import { useNotification } from "@/components/ui/notification";
 import { fadeInLeft, fadeInRight } from "@/lib/animation-variants";
 
 // Importăm hook-uri personalizate
-import { useAuth, useUI } from "@/store";
+import { useAuth } from "@/contexts/AuthContext";
+import { useUI } from "@/store";
 
 interface NavItem {
   title: string;
@@ -69,17 +70,18 @@ interface NavGroup {
 
 const Sidebar = () => {
   const { t } = useTranslation();
-  const { userProfile, logout, role } = useAuth();
+  const { user, userProfile, signOut } = useAuth();
   const {
     sidebarCollapsed: collapsed,
     setSidebarCollapsed: setCollapsed,
     addNotification,
   } = useUI();
+
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Verificăm dacă utilizatorul are permisiunea de a administra rolurile
-  const isAdmin = role === "admin";
+  // Determinăm dacă utilizatorul este administrator
+  const isAdmin = userProfile?.role === "ADMIN";
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(
     {
       dashboard: true,
@@ -100,12 +102,6 @@ const Sidebar = () => {
             icon: <Home size={20} />,
             href: "/dashboard",
           },
-          // Eliminăm "sidebar overview" care nu ar trebui să existe
-          // {
-          //   title: t("sidebar.overview"),
-          //   icon: <BarChart size={20} />,
-          //   href: "/overview",
-          // },
         ],
       },
       {
@@ -116,15 +112,16 @@ const Sidebar = () => {
             title: t("sidebar.projects"),
             icon: <Briefcase size={20} />,
             href: "/projects",
-            badge: 3,
-            badgeColor: "bg-blue-500",
           },
           {
-            title: t("sidebar.inventory"),
+            title: t("sidebar.inventoryOverview", "Inventory Overview"),
+            icon: <BarChart size={20} />,
+            href: "/inventory-overview",
+          },
+          {
+            title: t("sidebar.inventory", "Inventar Proiect"),
             icon: <Package size={20} />,
             href: "/inventory-management",
-            badge: 12,
-            badgeColor: "bg-green-500",
           },
           {
             title: t("sidebar.companyInventory", "Company Inventory"),
@@ -200,7 +197,7 @@ const Sidebar = () => {
 
   // Gestionăm deconectarea - optimizat cu memoizare
   const handleSignOut = useMemoizedCallback(async () => {
-    await logout();
+    await signOut();
     addNotification({
       type: "success",
       title: "Deconectat",
@@ -208,7 +205,7 @@ const Sidebar = () => {
       duration: 3000,
     });
     navigate("/login");
-  }, [logout, addNotification, navigate]);
+  }, [signOut, addNotification, navigate]);
 
   // Când se schimbă ruta, expandăm automat grupul corespunzător
   useEffect(() => {
@@ -439,30 +436,6 @@ const Sidebar = () => {
             </TooltipProvider>
           )}
 
-          {/* Link către pagina de demo notificări */}
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className={cn(
-                    "w-full text-slate-400 hover:text-white hover:bg-slate-800 justify-start",
-                    collapsed && "justify-center"
-                  )}
-                  onClick={() => navigate("/notifications-demo")}
-                >
-                  <Bell size={20} />
-                  {!collapsed && <span className="ml-3">Notificări Demo</span>}
-                </Button>
-              </TooltipTrigger>
-              {collapsed && (
-                <TooltipContent side="right">
-                  <p>Notificări Demo</p>
-                </TooltipContent>
-              )}
-            </Tooltip>
-          </TooltipProvider>
-
           {/* Link către pagina de asistent AI */}
           <TooltipProvider>
             <Tooltip>
@@ -489,30 +462,6 @@ const Sidebar = () => {
               {collapsed && (
                 <TooltipContent side="right">
                   <p>Asistent Inventar AI</p>
-                </TooltipContent>
-              )}
-            </Tooltip>
-          </TooltipProvider>
-
-          {/* Link către dashboard-ul de testare */}
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className={cn(
-                    "w-full text-slate-400 hover:text-white hover:bg-slate-800 justify-start",
-                    collapsed && "justify-center"
-                  )}
-                  onClick={() => navigate("/test-dashboard")}
-                >
-                  <TestTube size={20} />
-                  {!collapsed && <span className="ml-3">Test Dashboard</span>}
-                </Button>
-              </TooltipTrigger>
-              {collapsed && (
-                <TooltipContent side="right">
-                  <p>Test Dashboard</p>
                 </TooltipContent>
               )}
             </Tooltip>
@@ -545,36 +494,6 @@ const Sidebar = () => {
               )}
             </Tooltip>
           </TooltipProvider>
-
-          {/* Link către pagina de debug - vizibil doar în modul de dezvoltare */}
-          {import.meta.env.DEV && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className={cn(
-                      "w-full text-slate-400 hover:text-white hover:bg-slate-800 justify-start",
-                      collapsed && "justify-center"
-                    )}
-                    onClick={() => navigate("/debug")}
-                  >
-                    <Bug size={20} />
-                    {!collapsed && (
-                      <span className="ml-3">
-                        {t("sidebar.debug", "Debug & Dezvoltare")}
-                      </span>
-                    )}
-                  </Button>
-                </TooltipTrigger>
-                {collapsed && (
-                  <TooltipContent side="right">
-                    <p>{t("sidebar.debug", "Debug & Dezvoltare")}</p>
-                  </TooltipContent>
-                )}
-              </Tooltip>
-            </TooltipProvider>
-          )}
 
           <TooltipProvider>
             <Tooltip>

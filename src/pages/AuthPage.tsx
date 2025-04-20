@@ -14,7 +14,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Loader2, AlertCircle, CheckCircle, Mail } from "lucide-react";
+import {
+  Loader2,
+  AlertCircle,
+  CheckCircle,
+  Mail,
+  Info as InfoIcon,
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Separator } from "@/components/ui/separator";
 
@@ -24,7 +30,36 @@ import { Separator } from "@/components/ui/separator";
 const AuthPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { signIn, signUp, authService } = useAuth();
+  const { signIn, signUp, authService, user } = useAuth();
+
+  // Dacă utilizatorul este deja autentificat, îl redirectăm către dashboard
+  React.useEffect(() => {
+    if (user) {
+      navigate("/dashboard", { replace: true });
+    } else {
+      // Ștergem toate datele de autentificare din localStorage și sessionStorage
+      // pentru a preveni problemele de sesiune persistentă
+      localStorage.removeItem("supabase.auth.token");
+      sessionStorage.removeItem("supabase.auth.token");
+      localStorage.removeItem("sb-btvpnzsmrfrlwczanbcg-auth-token");
+      sessionStorage.removeItem("sb-btvpnzsmrfrlwczanbcg-auth-token");
+      localStorage.removeItem("auth-storage");
+      sessionStorage.removeItem("auth-storage");
+
+      // Ștergem toate cheile care conțin "supabase" sau "auth"
+      Object.keys(localStorage).forEach((key) => {
+        if (key.includes("supabase") || key.includes("auth")) {
+          localStorage.removeItem(key);
+        }
+      });
+
+      Object.keys(sessionStorage).forEach((key) => {
+        if (key.includes("supabase") || key.includes("auth")) {
+          sessionStorage.removeItem(key);
+        }
+      });
+    }
+  }, [user, navigate]);
 
   // State pentru retrimiterea email-ului de confirmare
   const [resendEmail, setResendEmail] = useState("");
@@ -312,6 +347,15 @@ const AuthPage = () => {
                   </Alert>
                 )}
 
+                {/* Mesaj informativ despre conexiune */}
+                <Alert className="bg-blue-900/30 border-blue-800">
+                  <InfoIcon className="h-4 w-4 text-blue-400" />
+                  <AlertDescription className="text-blue-200">
+                    Notă: Autentificarea poate dura până la 60 de secunde în
+                    funcție de viteza conexiunii. Vă rugăm să aveți răbdare.
+                  </AlertDescription>
+                </Alert>
+
                 {/* Formular de login */}
                 {isLogin && (
                   <>
@@ -392,7 +436,7 @@ const AuthPage = () => {
                         {loginLoading ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Se procesează...
+                            Se procesează... (poate dura până la 60 secunde)
                           </>
                         ) : (
                           "Autentificare"
@@ -555,7 +599,7 @@ const AuthPage = () => {
                         {registerLoading ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Se creează contul...
+                            Se creează contul... (poate dura până la 60 secunde)
                           </>
                         ) : (
                           "Creează cont"

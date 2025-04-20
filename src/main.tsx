@@ -3,6 +3,23 @@ import ReactDOM from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 import { BrowserRouter } from "react-router-dom";
+
+// Înregistrăm service worker-ul pentru a gestiona cache-ul
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker
+      .register("/service-worker.js")
+      .then((registration) => {
+        console.log(
+          "Service Worker registered with scope:",
+          registration.scope
+        );
+      })
+      .catch((error) => {
+        console.error("Service Worker registration failed:", error);
+      });
+  });
+}
 // Importăm i18n pentru funcționalitatea de traducere
 import "./i18n";
 import { Toaster } from "./components/ui/toaster";
@@ -13,6 +30,7 @@ import { EnhancedThemeProvider } from "./contexts/EnhancedThemeContext";
 // Importăm AuthProvider pentru autentificare
 import { AuthProvider } from "./contexts/AuthContext";
 import { RoleProvider } from "./contexts/RoleContext";
+import { HelmetProvider } from "react-helmet-async";
 import { AdvancedRoleProvider } from "./contexts/AdvancedRoleContext";
 import { OfflineProvider } from "./contexts/OfflineContext";
 import ErrorBoundary from "./components/ErrorBoundary";
@@ -52,25 +70,27 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
   <ErrorBoundary>
     <BrowserRouter basename={basename}>
       <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <RoleProvider>
-            <AdvancedRoleProvider>
-              <OfflineProvider>
-                {/* Adăugăm ThemeProvider înainte de EnhancedThemeProvider pentru a rezolva eroarea */}
-                <ThemeProvider>
-                  <EnhancedThemeProvider>
-                    <EnhancedNotificationProvider>
-                      <NotificationProvider>
-                        <App />
-                        <Toaster />
-                      </NotificationProvider>
-                    </EnhancedNotificationProvider>
-                  </EnhancedThemeProvider>
-                </ThemeProvider>
-              </OfflineProvider>
-            </AdvancedRoleProvider>
-          </RoleProvider>
-        </AuthProvider>
+        <HelmetProvider>
+          <AuthProvider>
+            <RoleProvider>
+              <AdvancedRoleProvider>
+                <OfflineProvider>
+                  {/* Adăugăm ThemeProvider înainte de EnhancedThemeProvider pentru a rezolva eroarea */}
+                  <ThemeProvider>
+                    <EnhancedThemeProvider>
+                      <EnhancedNotificationProvider>
+                        <NotificationProvider>
+                          <App />
+                          <Toaster />
+                        </NotificationProvider>
+                      </EnhancedNotificationProvider>
+                    </EnhancedThemeProvider>
+                  </ThemeProvider>
+                </OfflineProvider>
+              </AdvancedRoleProvider>
+            </RoleProvider>
+          </AuthProvider>
+        </HelmetProvider>
       </QueryClientProvider>
     </BrowserRouter>
   </ErrorBoundary>

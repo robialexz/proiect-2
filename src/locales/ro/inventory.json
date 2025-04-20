@@ -3,6 +3,25 @@
     "pageTitle": "Gestionare Inventar",
     "title": "Inventar",
     "subtitle": "Gestionează materialele și stocurile",
+    "overview": {
+      "title": "Prezentare generală a inventarului",
+      "description": "Vizualizează statistici și informații despre inventar",
+      "refreshed": "Inventar reîmprospătat",
+      "refreshedDescription": "Datele au fost actualizate cu succes",
+      "recentMaterials": "Materiale recente",
+      "lowStock": "Stoc scăzut",
+      "allStockGood": "Toate stocurile sunt bune",
+      "noLowStockItems": "Nu există materiale cu stoc scăzut",
+      "recentActivity": "Activitate recentă",
+      "noRecentActivity": "Nicio activitate recentă",
+      "noRecentActivityDescription": "Nu există activitate recentă în inventar",
+      "quickActions": "Acțiuni rapide",
+      "viewLowStock": "Vezi stoc scăzut",
+      "searchInventory": "Caută în inventar",
+      "filterByCategory": "Filtrează după categorie",
+      "exportToCSV": "Exportă în CSV",
+      "generateReport": "Generează raport"
+    },
     "selectProject": "Selectează Proiect",
     "noProjects": "Nu există proiecte încă",
     "createNewProject": "Creează Proiect Nou",
@@ -18,11 +37,13 @@
     "stats": {
       "title": "Statistici",
       "description": "Informații despre inventar",
-      "totalMaterials": "Total materiale",
+      "totalItems": "Total materiale",
+      "totalValue": "Valoare totală",
       "categories": "Categorii",
       "lowStock": "Stoc scăzut",
       "lowStockDescription": "Materiale sub nivelul minim de stoc",
-      "lastUpdated": "Ultima actualizare"
+      "lastUpdated": "Ultima actualizare",
+      "addStock": "Adaugă"
     },
     "table": {
       "id": "ID",

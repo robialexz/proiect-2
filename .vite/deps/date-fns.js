@@ -129,7 +129,6 @@ import {
   isSameMonth,
   isSameQuarter,
   isSameSecond,
-  isSameWeek,
   isSameYear,
   isSaturday,
   isSunday,
@@ -226,7 +225,6 @@ import {
   startOfSecond,
   startOfToday,
   startOfTomorrow,
-  startOfWeek,
   startOfWeekYear,
   startOfYear,
   startOfYesterday,
@@ -242,13 +240,17 @@ import {
   subSeconds,
   subWeeks,
   subYears,
-  toDate,
   transpose,
   weeksToDays,
   yearsToDays,
   yearsToMonths,
   yearsToQuarters
-} from "./chunk-2PQOOP47.js";
+} from "./chunk-YT3GMGZL.js";
+import {
+  isSameWeek,
+  startOfWeek,
+  toDate
+} from "./chunk-UUAW7V2D.js";
 import "./chunk-OL46QLBJ.js";
 export {
   add,

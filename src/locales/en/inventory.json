@@ -3,6 +3,25 @@
     "pageTitle": "Inventory Management",
     "title": "Inventory",
     "subtitle": "Manage materials and stock levels",
+    "overview": {
+      "title": "Inventory Overview",
+      "description": "View statistics and information about inventory",
+      "refreshed": "Inventory Refreshed",
+      "refreshedDescription": "Data has been successfully updated",
+      "recentMaterials": "Recent Materials",
+      "lowStock": "Low Stock",
+      "allStockGood": "All stocks are good",
+      "noLowStockItems": "No materials with low stock",
+      "recentActivity": "Recent Activity",
+      "noRecentActivity": "No recent activity",
+      "noRecentActivityDescription": "No recent activity in inventory",
+      "quickActions": "Quick Actions",
+      "viewLowStock": "View Low Stock",
+      "searchInventory": "Search Inventory",
+      "filterByCategory": "Filter by Category",
+      "exportToCSV": "Export to CSV",
+      "generateReport": "Generate Report"
+    },
     "selectProject": "Select Project",
     "noProjects": "No projects yet",
     "createNewProject": "Create New Project",
@@ -18,11 +37,13 @@
     "stats": {
       "title": "Statistics",
       "description": "Inventory information",
-      "totalMaterials": "Total materials",
+      "totalItems": "Total items",
+      "totalValue": "Total value",
       "categories": "Categories",
       "lowStock": "Low stock",
       "lowStockDescription": "Materials below minimum stock level",
-      "lastUpdated": "Last updated"
+      "lastUpdated": "Last updated",
+      "addStock": "Add stock"
     },
     "table": {
       "id": "ID",

@@ -1,34 +1,83 @@
-import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { Helmet } from 'react-helmet-async';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { useInventory } from '@/hooks/useInventory';
-import { Material } from '@/types';
+import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
+import { Helmet } from "react-helmet-async";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { useInventory } from "@/hooks/useInventory";
+import { Material, Project } from "@/types";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
+import { FolderPlus } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 // Componente pentru inventar
-import ProjectSelector from '@/components/inventory/ProjectSelector';
-import InventoryFilters from '@/components/inventory/InventoryFilters';
-import InventoryActions from '@/components/inventory/InventoryActions';
-import MaterialsTable from '@/components/inventory/MaterialsTable';
-import VirtualizedMaterialsTable from '@/components/inventory/VirtualizedMaterialsTable';
-import MaterialDialog from '@/components/inventory/MaterialDialog';
-import DeleteConfirmationDialog from '@/components/inventory/DeleteConfirmationDialog';
-import ReorderList from '@/components/inventory/ReorderList';
-import ImportDialog from '@/components/inventory/ImportDialog';
-import InventoryAssistant from '@/components/inventory/InventoryAssistant';
+import ProjectSelector from "@/components/inventory/ProjectSelector";
+import InventoryFilters from "@/components/inventory/InventoryFilters";
+import InventoryActions from "@/components/inventory/InventoryActions";
+import MaterialsTable from "@/components/inventory/MaterialsTable";
+import VirtualizedMaterialsTable from "@/components/inventory/VirtualizedMaterialsTable";
+import MaterialDialog from "@/components/inventory/MaterialDialog";
+import DeleteConfirmationDialog from "@/components/inventory/DeleteConfirmationDialog";
+import ReorderList from "@/components/inventory/ReorderList";
+import ImportDialog from "@/components/inventory/ImportDialog";
 
 const InventoryManagementPage: React.FC = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
+  // State pentru proiecte
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loadingProjects, setLoadingProjects] = useState(false);
 
   // State pentru dialoguri
-  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
+    null
+  );
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isReorderListOpen, setIsReorderListOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
-  const [materialToDelete, setMaterialToDelete] = useState<Material | null>(null);
+  const [materialToDelete, setMaterialToDelete] = useState<Material | null>(
+    null
+  );
+
+  // Încărcăm proiectele utilizatorului
+  useEffect(() => {
+    const loadProjects = async () => {
+      if (!user) return;
+
+      setLoadingProjects(true);
+      try {
+        const { data, error } = await supabase
+          .from("projects")
+          .select("id, name, description, status, created_at")
+          .eq("manager_id", user.id);
+
+        if (error) throw error;
+        setProjects(data || []);
+      } catch (error) {
+        console.error("Error loading projects:", error);
+      } finally {
+        setLoadingProjects(false);
+      }
+    };
+
+    loadProjects();
+  }, [user]);
+
+  // Navigare către pagina de proiecte pentru a crea un proiect nou
+  const handleCreateProject = () => {
+    navigate("/projects");
+  };
 
   // Folosim hook-ul personalizat pentru gestionarea inventarului
   const {
@@ -50,7 +99,7 @@ const InventoryManagementPage: React.FC = () => {
     setFilters,
     setSort,
     setPagination,
-    selectMaterial
+    selectMaterial,
   } = useInventory(selectedProjectId);
 
   // Gestionăm schimbarea proiectului
@@ -65,7 +114,8 @@ const InventoryManagementPage: React.FC = () => {
 
   // Gestionăm sortarea
   const handleSort = (field: string) => {
-    const direction = sort.field === field && sort.direction === 'asc' ? 'desc' : 'asc';
+    const direction =
+      sort.field === field && sort.direction === "asc" ? "desc" : "asc";
     setSort(field, direction);
   };
 
@@ -88,7 +138,7 @@ const InventoryManagementPage: React.FC = () => {
 
   // Gestionăm ștergerea unui material
   const handleDeleteMaterial = (material: Material) => {
-    setMaterialToDelete(material);
+    setMaterialToDelete(material as Material);
     setIsDeleteDialogOpen(true);
   };
 
@@ -99,12 +149,42 @@ const InventoryManagementPage: React.FC = () => {
 
   // Gestionăm crearea unui material
   const handleCreateMaterial = async (material: Partial<Material>) => {
-    return await createMaterial(material);
+    // Ensure required fields are present before casting and sending
+    if (
+      !material.name ||
+      material.quantity === undefined ||
+      material.unit === undefined
+    ) {
+      console.error("Missing required fields for material creation");
+      return { success: false, error: "Missing required fields" };
+    }
+    // Create a new object with only the fields needed for material creation
+    const newMaterial = {
+      name: material.name,
+      quantity: material.quantity,
+      unit: material.unit,
+      description: material.description,
+      dimension: material.dimension,
+      manufacturer: material.manufacturer,
+      cost_per_unit: material.cost_per_unit,
+      supplier_id: material.supplier_id,
+      project_id: material.project_id,
+      category: material.category,
+      location: material.location,
+      min_stock_level: material.min_stock_level,
+      max_stock_level: material.max_stock_level,
+      suplimentar: material.suplimentar,
+      notes: material.notes,
+      image_url: material.image_url,
+    };
+
+    return await createMaterial(newMaterial);
   };
 
   // Gestionăm actualizarea unui material
   const handleUpdateMaterial = async (material: Partial<Material>) => {
-    if (!selectedMaterial) return { success: false, error: 'No material selected' };
+    if (!selectedMaterial)
+      return { success: false, error: "No material selected" };
     return await updateMaterial(selectedMaterial.id, material);
   };
 
@@ -114,7 +194,7 @@ const InventoryManagementPage: React.FC = () => {
   };
 
   // Gestionăm exportul inventarului
-  const handleExport = async (format: 'csv' | 'json') => {
+  const handleExport = async (format: "csv" | "json") => {
     return await exportInventory(format);
   };
 
@@ -148,20 +228,56 @@ const InventoryManagementPage: React.FC = () => {
     loadMaterials();
   };
 
+  // Verificare dacă există proiecte
+  const hasProjects = projects.length > 0;
+
+  // Render pentru starea fără proiecte
+  if (!loadingProjects && !hasProjects) {
+    return (
+      <>
+        <Helmet>
+          <title>{t("inventory.pageTitle", "Gestionare Inventar")}</title>
+        </Helmet>
+
+        <div className="container mx-auto py-12">
+          <div className="flex flex-col items-center justify-center text-center max-w-md mx-auto">
+            <FolderPlus className="h-16 w-16 text-slate-400 mb-4" />
+            <h1 className="text-2xl font-bold mb-2">
+              {t("inventory.noProjects.title", "Nu există proiecte")}
+            </h1>
+            <p className="text-slate-400 mb-6">
+              {t(
+                "inventory.noProjects.description",
+                "Pentru a gestiona inventarul, trebuie să creați mai întâi un proiect."
+              )}
+            </p>
+            <Button
+              onClick={handleCreateProject}
+              className="flex items-center gap-2"
+            >
+              <FolderPlus className="h-4 w-4" />
+              {t("inventory.noProjects.createButton", "Creați primul proiect")}
+            </Button>
+          </div>
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       <Helmet>
-        <title>{t('inventory.pageTitle', 'Gestionare Inventar')}</title>
+        <title>{t("inventory.pageTitle", "Gestionare Inventar")}</title>
       </Helmet>
 
       <div className="container mx-auto py-6 space-y-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">
-              {t('inventory.title', 'Inventar')}
+              {t("inventory.title", "Inventar")}
             </h1>
             <p className="text-muted-foreground">
-              {t('inventory.subtitle', 'Gestionează materialele și stocurile')}
+              {t("inventory.subtitle", "Gestionează materialele și stocurile")}
             </p>
           </div>
 
@@ -176,9 +292,14 @@ const InventoryManagementPage: React.FC = () => {
         <div className="grid gap-4 md:grid-cols-7">
           <Card className="md:col-span-5">
             <CardHeader className="pb-3">
-              <CardTitle>{t('inventory.materials.title', 'Materiale')}</CardTitle>
+              <CardTitle>
+                {t("inventory.materials.title", "Materiale")}
+              </CardTitle>
               <CardDescription>
-                {t('inventory.materials.description', 'Lista completă a materialelor din inventar')}
+                {t(
+                  "inventory.materials.description",
+                  "Lista completă a materialelor din inventar"
+                )}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -217,29 +338,26 @@ const InventoryManagementPage: React.FC = () => {
 
           <Card className="md:col-span-2">
             <CardHeader className="pb-3">
-              <CardTitle>{t('inventory.stats.title', 'Statistici')}</CardTitle>
-              <CardDescription>
-                {t('inventory.stats.description', 'Informații despre inventar')}
-              </CardDescription>
+              <CardTitle>{t("inventory.stats.title", "Statistici")}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <p className="text-sm text-muted-foreground">
-                      {t('inventory.stats.totalMaterials', 'Total materiale')}
+                      {t("inventory.stats.totalMaterials", "Total materiale")}
                     </p>
                     <p className="text-2xl font-bold">
-                      {loading ? '...' : materials.length}
+                      {loading ? "..." : materials.length}
                     </p>
                   </div>
 
                   <div className="space-y-1">
                     <p className="text-sm text-muted-foreground">
-                      {t('inventory.stats.categories', 'Categorii')}
+                      {t("inventory.stats.categories", "Categorii")}
                     </p>
                     <p className="text-2xl font-bold">
-                      {loading ? '...' : categories.length}
+                      {loading ? "..." : categories.length}
                     </p>
                   </div>
                 </div>
@@ -248,17 +366,23 @@ const InventoryManagementPage: React.FC = () => {
 
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">
-                    {t('inventory.stats.lowStock', 'Stoc scăzut')}
+                    {t("inventory.stats.lowStock", "Stoc scăzut")}
                   </p>
                   <p className="text-2xl font-bold text-yellow-500">
-                    {loading ? '...' : materials.filter(m =>
-                      m.min_stock_level !== undefined &&
-                      m.min_stock_level !== null &&
-                      m.quantity < m.min_stock_level
-                    ).length}
+                    {loading
+                      ? "..."
+                      : materials.filter(
+                          (m) =>
+                            m.min_stock_level !== undefined &&
+                            m.min_stock_level !== null &&
+                            m.quantity < m.min_stock_level
+                        ).length}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {t('inventory.stats.lowStockDescription', 'Materiale sub nivelul minim de stoc')}
+                    {t(
+                      "inventory.stats.lowStockDescription",
+                      "Materiale sub nivelul minim de stoc"
+                    )}
                   </p>
                 </div>
 
@@ -266,7 +390,7 @@ const InventoryManagementPage: React.FC = () => {
 
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">
-                    {t('inventory.stats.lastUpdated', 'Ultima actualizare')}
+                    {t("inventory.stats.lastUpdated", "Ultima actualizare")}
                   </p>
                   <p className="text-base font-medium">
                     {new Date().toLocaleString()}
@@ -312,13 +436,6 @@ const InventoryManagementPage: React.FC = () => {
         isOpen={isImportDialogOpen}
         onClose={() => setIsImportDialogOpen(false)}
         onSuccess={handleImportSuccess}
-      />
-
-      {/* Asistentul AI pentru inventar */}
-      <InventoryAssistant
-        materials={materials}
-        onAddMaterial={handleAddMaterial}
-        onGenerateReorderList={handleGenerateReorderList}
       />
     </>
   );

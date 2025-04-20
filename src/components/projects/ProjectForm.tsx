@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
 import { useTranslation } from "react-i18next";
 import { inputValidation } from "@/lib/input-validation";
+import { supabase } from "@/lib/supabase";
 
 import {
   Dialog,
@@ -103,47 +104,104 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
   const [loading, setLoading] = useState(false);
 
   // Define form schema with improved validation for security
-  const formSchema = z.object({
-    name: z.string()
-      .min(2, { message: t("projects.form.validation.nameRequired", "Project name is required") })
-      .refine(val => inputValidation.validateText(val), {
-        message: t("projects.form.validation.invalidName", "Project name contains invalid characters")
-      }),
-    description: z.string()
-      .optional()
-      .refine(val => val === undefined || val === "" || inputValidation.validateText(val), {
-        message: t("projects.form.validation.invalidDescription", "Description contains invalid characters")
-      }),
-    status: z.string().default("planning"),
-    start_date: z.date().nullable(),
-    end_date: z.date().nullable(),
-    budget: z.coerce.number().nonnegative().default(0),
-    client_name: z.string()
-      .optional()
-      .refine(val => val === undefined || val === "" || inputValidation.validateText(val), {
-        message: t("projects.form.validation.invalidClientName", "Client name contains invalid characters")
-      }),
-    client_contact: z.string()
-      .optional()
-      .refine(val => val === undefined || val === "" || inputValidation.validateEmail(val), {
-        message: t("projects.form.validation.invalidClientContact", "Client contact must be a valid email")
-      }),
-    location: z.string()
-      .optional()
-      .refine(val => val === undefined || val === "" || inputValidation.validateText(val), {
-        message: t("projects.form.validation.invalidLocation", "Location contains invalid characters")
-      }),
-    project_type: z.string().optional(),
-    priority: z.string().default("medium"),
-  }).refine(data => {
-    if (data.start_date && data.end_date) {
-      return data.end_date >= data.start_date;
-    }
-    return true;
-  }, {
-    message: t("projects.form.validation.endDateAfterStartDate", "End date must be after start date"),
-    path: ["end_date"],
-  });
+  const formSchema = z
+    .object({
+      name: z
+        .string()
+        .min(2, {
+          message: t(
+            "projects.form.validation.nameRequired",
+            "Project name is required"
+          ),
+        })
+        .refine((val) => inputValidation.validateText(val), {
+          message: t(
+            "projects.form.validation.invalidName",
+            "Project name contains invalid characters"
+          ),
+        }),
+      description: z
+        .string()
+        .optional()
+        .refine(
+          (val) =>
+            val === undefined ||
+            val === "" ||
+            inputValidation.validateText(val),
+          {
+            message: t(
+              "projects.form.validation.invalidDescription",
+              "Description contains invalid characters"
+            ),
+          }
+        ),
+      status: z.string().default("planning"),
+      start_date: z.date().nullable(),
+      end_date: z.date().nullable(),
+      budget: z.coerce.number().nonnegative().default(0),
+      client_name: z
+        .string()
+        .optional()
+        .refine(
+          (val) =>
+            val === undefined ||
+            val === "" ||
+            inputValidation.validateText(val),
+          {
+            message: t(
+              "projects.form.validation.invalidClientName",
+              "Client name contains invalid characters"
+            ),
+          }
+        ),
+      client_contact: z
+        .string()
+        .optional()
+        .refine(
+          (val) =>
+            val === undefined ||
+            val === "" ||
+            inputValidation.validateEmail(val),
+          {
+            message: t(
+              "projects.form.validation.invalidClientContact",
+              "Client contact must be a valid email"
+            ),
+          }
+        ),
+      location: z
+        .string()
+        .optional()
+        .refine(
+          (val) =>
+            val === undefined ||
+            val === "" ||
+            inputValidation.validateText(val),
+          {
+            message: t(
+              "projects.form.validation.invalidLocation",
+              "Location contains invalid characters"
+            ),
+          }
+        ),
+      project_type: z.string().optional(),
+      priority: z.string().default("medium"),
+    })
+    .refine(
+      (data) => {
+        if (data.start_date && data.end_date) {
+          return data.end_date >= data.start_date;
+        }
+        return true;
+      },
+      {
+        message: t(
+          "projects.form.validation.endDateAfterStartDate",
+          "End date must be after start date"
+        ),
+        path: ["end_date"],
+      }
+    );
 
   // Initialize form
   const form = useForm<z.infer<typeof formSchema>>({
@@ -202,41 +260,57 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
     try {
       setLoading(true);
 
-      // Simulăm salvarea proiectului fără a face apeluri la baza de date
-      // Acest lucru evită erorile 400 până când structura bazei de date este completă
-
-      // Creăm un obiect cu datele proiectului
+      // Pregătim datele proiectului pentru salvare în Supabase
       const projectData = {
-        id: project ? project.id : `mock-${Date.now()}`,
         name: values.name,
         description: values.description || "",
         status: values.status || "planning",
-        created_at: new Date().toISOString(),
-        // Adăugăm câmpuri suplimentare pentru a simula un proiect complet
-        start_date: values.start_date ? values.start_date.toISOString().split('T')[0] : null,
-        end_date: values.end_date ? values.end_date.toISOString().split('T')[0] : null,
-        progress: 0,
+        start_date: values.start_date
+          ? values.start_date.toISOString().split("T")[0]
+          : null,
+        end_date: values.end_date
+          ? values.end_date.toISOString().split("T")[0]
+          : null,
+        budget: values.budget || 0,
+        client_name: values.client_name || null,
+        client_contact: values.client_contact || null,
+        location: values.location || null,
+        project_type: values.project_type || null,
         priority: values.priority || "medium",
+        progress: project?.progress || 0,
+        manager_id: user.id,
       };
 
-      // Simulăm un delay pentru a face experiența mai realistă
-      await new Promise(resolve => setTimeout(resolve, 500));
+      let result;
 
       if (project) {
-        // Simulăm actualizarea proiectului
-        console.log("Proiect actualizat (simulare):", projectData);
+        // Actualizăm proiectul existent
+        result = await supabase
+          .from("projects")
+          .update(projectData)
+          .eq("id", project.id);
+
+        if (result.error) throw result.error;
 
         toast({
           title: t("projects.toasts.updated", "Project Updated"),
-          description: t("projects.toasts.updatedDesc", "The project has been updated successfully"),
+          description: t(
+            "projects.toasts.updatedDesc",
+            "The project has been updated successfully"
+          ),
         });
       } else {
-        // Simulăm crearea proiectului
-        console.log("Proiect creat (simulare):", projectData);
+        // Creăm un proiect nou
+        result = await supabase.from("projects").insert([projectData]).select();
+
+        if (result.error) throw result.error;
 
         toast({
           title: t("projects.toasts.created", "Project Created"),
-          description: t("projects.toasts.createdDesc", "The new project has been created successfully"),
+          description: t(
+            "projects.toasts.createdDesc",
+            "The new project has been created successfully"
+          ),
         });
       }
 
@@ -267,8 +341,14 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
           </DialogTitle>
           <DialogDescription className="text-slate-400">
             {project
-              ? t("projects.form.editDescription", "Update the details of your project")
-              : t("projects.form.createDescription", "Fill in the details to create a new project")}
+              ? t(
+                  "projects.form.editDescription",
+                  "Update the details of your project"
+                )
+              : t(
+                  "projects.form.createDescription",
+                  "Fill in the details to create a new project"
+                )}
           </DialogDescription>
         </DialogHeader>
 
@@ -280,10 +360,15 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
                 name="name"
                 render={({ field }) => (
                   <FormItem className="col-span-2">
-                    <FormLabel>{t("projects.form.fields.name", "Project Name")}</FormLabel>
+                    <FormLabel>
+                      {t("projects.form.fields.name", "Project Name")}
+                    </FormLabel>
                     <FormControl>
                       <Input
-                        placeholder={t("projects.form.placeholders.name", "Enter project name")}
+                        placeholder={t(
+                          "projects.form.placeholders.name",
+                          "Enter project name"
+                        )}
                         className="bg-slate-900 border-slate-700"
                         {...field}
                       />
@@ -298,10 +383,15 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
                 name="description"
                 render={({ field }) => (
                   <FormItem className="col-span-2">
-                    <FormLabel>{t("projects.form.fields.description", "Description")}</FormLabel>
+                    <FormLabel>
+                      {t("projects.form.fields.description", "Description")}
+                    </FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder={t("projects.form.placeholders.description", "Enter project description")}
+                        placeholder={t(
+                          "projects.form.placeholders.description",
+                          "Enter project description"
+                        )}
                         className="bg-slate-900 border-slate-700 min-h-[100px]"
                         {...field}
                       />
@@ -316,14 +406,21 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
                 name="status"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t("projects.form.fields.status", "Status")}</FormLabel>
+                    <FormLabel>
+                      {t("projects.form.fields.status", "Status")}
+                    </FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
                     >
                       <FormControl>
                         <SelectTrigger className="bg-slate-900 border-slate-700">
-                          <SelectValue placeholder={t("projects.form.placeholders.status", "Select status")} />
+                          <SelectValue
+                            placeholder={t(
+                              "projects.form.placeholders.status",
+                              "Select status"
+                            )}
+                          />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent className="bg-slate-800 border-slate-700">
@@ -344,20 +441,33 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
                 name="priority"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t("projects.form.fields.priority", "Priority")}</FormLabel>
+                    <FormLabel>
+                      {t("projects.form.fields.priority", "Priority")}
+                    </FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
                     >
                       <FormControl>
                         <SelectTrigger className="bg-slate-900 border-slate-700">
-                          <SelectValue placeholder={t("projects.form.placeholders.priority", "Select priority")} />
+                          <SelectValue
+                            placeholder={t(
+                              "projects.form.placeholders.priority",
+                              "Select priority"
+                            )}
+                          />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent className="bg-slate-800 border-slate-700">
                         {PRIORITY_LEVELS.map((priority) => (
-                          <SelectItem key={priority.value} value={priority.value}>
-                            {t(`projects.priority.${priority.value}`, priority.label)}
+                          <SelectItem
+                            key={priority.value}
+                            value={priority.value}
+                          >
+                            {t(
+                              `projects.priority.${priority.value}`,
+                              priority.label
+                            )}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -372,7 +482,9 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
                 name="start_date"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
-                    <FormLabel>{t("projects.form.fields.startDate", "Start Date")}</FormLabel>
+                    <FormLabel>
+                      {t("projects.form.fields.startDate", "Start Date")}
+                    </FormLabel>
                     <Popover>
                       <PopoverTrigger asChild>
                         <FormControl>
@@ -386,20 +498,26 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
                             {field.value ? (
                               format(field.value, "PPP")
                             ) : (
-                              <span>{t("projects.form.placeholders.date", "Select date")}</span>
+                              <span>
+                                {t(
+                                  "projects.form.placeholders.date",
+                                  "Select date"
+                                )}
+                              </span>
                             )}
                             <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                           </Button>
                         </FormControl>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0 bg-slate-800 border-slate-700" align="start">
+                      <PopoverContent
+                        className="w-auto p-0 bg-slate-800 border-slate-700"
+                        align="start"
+                      >
                         <Calendar
                           mode="single"
                           selected={field.value}
                           onSelect={field.onChange}
-                          disabled={(date) =>
-                            date < new Date("1900-01-01")
-                          }
+                          disabled={(date) => date < new Date("1900-01-01")}
                           initialFocus
                         />
                       </PopoverContent>
@@ -414,7 +532,9 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
                 name="end_date"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
-                    <FormLabel>{t("projects.form.fields.endDate", "End Date")}</FormLabel>
+                    <FormLabel>
+                      {t("projects.form.fields.endDate", "End Date")}
+                    </FormLabel>
                     <Popover>
                       <PopoverTrigger asChild>
                         <FormControl>
@@ -428,20 +548,26 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
                             {field.value ? (
                               format(field.value, "PPP")
                             ) : (
-                              <span>{t("projects.form.placeholders.date", "Select date")}</span>
+                              <span>
+                                {t(
+                                  "projects.form.placeholders.date",
+                                  "Select date"
+                                )}
+                              </span>
                             )}
                             <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                           </Button>
                         </FormControl>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0 bg-slate-800 border-slate-700" align="start">
+                      <PopoverContent
+                        className="w-auto p-0 bg-slate-800 border-slate-700"
+                        align="start"
+                      >
                         <Calendar
                           mode="single"
                           selected={field.value}
                           onSelect={field.onChange}
-                          disabled={(date) =>
-                            date < new Date("1900-01-01")
-                          }
+                          disabled={(date) => date < new Date("1900-01-01")}
                           initialFocus
                         />
                       </PopoverContent>
@@ -456,11 +582,16 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
                 name="budget"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t("projects.form.fields.budget", "Budget")}</FormLabel>
+                    <FormLabel>
+                      {t("projects.form.fields.budget", "Budget")}
+                    </FormLabel>
                     <FormControl>
                       <Input
                         type="number"
-                        placeholder={t("projects.form.placeholders.budget", "Enter budget amount")}
+                        placeholder={t(
+                          "projects.form.placeholders.budget",
+                          "Enter budget amount"
+                        )}
                         className="bg-slate-900 border-slate-700"
                         {...field}
                       />
@@ -475,14 +606,21 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
                 name="project_type"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t("projects.form.fields.type", "Project Type")}</FormLabel>
+                    <FormLabel>
+                      {t("projects.form.fields.type", "Project Type")}
+                    </FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value || ""}
                     >
                       <FormControl>
                         <SelectTrigger className="bg-slate-900 border-slate-700">
-                          <SelectValue placeholder={t("projects.form.placeholders.type", "Select type")} />
+                          <SelectValue
+                            placeholder={t(
+                              "projects.form.placeholders.type",
+                              "Select type"
+                            )}
+                          />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent className="bg-slate-800 border-slate-700">
@@ -503,10 +641,15 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
                 name="client_name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t("projects.form.fields.clientName", "Client Name")}</FormLabel>
+                    <FormLabel>
+                      {t("projects.form.fields.clientName", "Client Name")}
+                    </FormLabel>
                     <FormControl>
                       <Input
-                        placeholder={t("projects.form.placeholders.clientName", "Enter client name")}
+                        placeholder={t(
+                          "projects.form.placeholders.clientName",
+                          "Enter client name"
+                        )}
                         className="bg-slate-900 border-slate-700"
                         {...field}
                       />
@@ -521,10 +664,18 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
                 name="client_contact"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t("projects.form.fields.clientContact", "Client Contact")}</FormLabel>
+                    <FormLabel>
+                      {t(
+                        "projects.form.fields.clientContact",
+                        "Client Contact"
+                      )}
+                    </FormLabel>
                     <FormControl>
                       <Input
-                        placeholder={t("projects.form.placeholders.clientContact", "Enter client contact")}
+                        placeholder={t(
+                          "projects.form.placeholders.clientContact",
+                          "Enter client contact"
+                        )}
                         className="bg-slate-900 border-slate-700"
                         {...field}
                       />
@@ -539,10 +690,15 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
                 name="location"
                 render={({ field }) => (
                   <FormItem className="col-span-2">
-                    <FormLabel>{t("projects.form.fields.location", "Location")}</FormLabel>
+                    <FormLabel>
+                      {t("projects.form.fields.location", "Location")}
+                    </FormLabel>
                     <FormControl>
                       <Input
-                        placeholder={t("projects.form.placeholders.location", "Enter project location")}
+                        placeholder={t(
+                          "projects.form.placeholders.location",
+                          "Enter project location"
+                        )}
                         className="bg-slate-900 border-slate-700"
                         {...field}
                       />

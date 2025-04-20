@@ -79,48 +79,45 @@ export const authService = {
     password: string
   ): Promise<SupabaseResponse<{ session: any; user: any }>> {
     try {
-      // Adăugăm un timeout explicit pentru autentificare - mărim la 30 secunde
-      const timeoutPromise = new Promise<{ data: null; error: Error }>(
-        (_, reject) => {
-          setTimeout(() => {
-            console.log("Authentication timeout reached after 30 seconds");
-            reject(
-              new Error(
-                "Authentication timeout after 30 seconds. Please check your internet connection and try again."
-              )
-            );
-          }, 30000); // 30 secunde
-        }
-      );
+      console.log("Începe procesul de autentificare pentru email:", email);
 
-      // Promisiunea pentru autentificare
+      // Adăugăm un timeout explicit pentru autentificare
       const authPromise = supabase.auth.signInWithPassword({
         email,
         password,
-        options: {
-          // Adăugăm opțiuni suplimentare pentru autentificare
-          captchaToken: null,
-        },
+      });
+
+      // Creăm o promisiune care se rezolvă după 5 secunde
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => {
+          reject(
+            new Error(
+              "Autentificare eșuată: Timpul de așteptare a expirat. Vă rugăm să încercați din nou."
+            )
+          );
+        }, 5000); // 5 secunde
       });
 
       // Folosim Promise.race pentru a implementa timeout-ul
       const result = (await Promise.race([authPromise, timeoutPromise])) as any;
 
+      const { data, error } = result;
+
       // Verificăm dacă autentificarea a reușit
-      if (result.error) {
-        console.error("Authentication error:", result.error);
+      if (error) {
+        console.error("Authentication error:", error);
         return {
           data: null,
-          error: formatError(result.error),
+          error: formatError(error),
           status: "error",
         };
       }
 
       // Salvăm sesiunea în localStorage și sessionStorage pentru redundanță
-      if (result.data?.session) {
+      if (data?.session) {
         try {
           const sessionData = {
-            currentSession: result.data.session,
+            currentSession: data.session,
             expiresAt: Date.now() + 3600 * 1000, // 1 oră valabilitate
           };
 
@@ -133,15 +130,15 @@ export const authService = {
             JSON.stringify(sessionData)
           );
           console.log("Session saved manually after successful authentication");
+
+          // Setăm un flag pentru a indica o nouă logare
+          sessionStorage.setItem("newLoginDetected", "true");
         } catch (storageError) {
           console.error("Error saving session to storage:", storageError);
         }
       }
 
-      return handleResponse(
-        result.data,
-        result.error as unknown as PostgrestError
-      );
+      return handleResponse(data, error as unknown as PostgrestError);
     } catch (error) {
       console.error("Auth error caught:", error);
       return {
@@ -246,9 +243,26 @@ export const authService = {
         throw error;
       }
 
-      // Ștergem sesiunea din localStorage și sessionStorage
+      // Ștergem toate datele de autentificare din localStorage și sessionStorage
       localStorage.removeItem("supabase.auth.token");
       sessionStorage.removeItem("supabase.auth.token");
+      localStorage.removeItem("sb-btvpnzsmrfrlwczanbcg-auth-token");
+      sessionStorage.removeItem("sb-btvpnzsmrfrlwczanbcg-auth-token");
+      localStorage.removeItem("auth-storage");
+      sessionStorage.removeItem("auth-storage");
+
+      // Ștergem toate cheile care conțin "supabase" sau "auth"
+      Object.keys(localStorage).forEach((key) => {
+        if (key.includes("supabase") || key.includes("auth")) {
+          localStorage.removeItem(key);
+        }
+      });
+
+      Object.keys(sessionStorage).forEach((key) => {
+        if (key.includes("supabase") || key.includes("auth")) {
+          sessionStorage.removeItem(key);
+        }
+      });
 
       // Resetăm flag-ul
       sessionStorage.removeItem("intentional_signout");

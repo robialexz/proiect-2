@@ -1,11 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  Send,
-  X,
-  HelpCircle,
-  User,
-} from "lucide-react";
+import { Send, X, HelpCircle, User } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { cacheService } from "@/lib/cache-service";
 import { useAuth } from "@/contexts/AuthContext";
@@ -23,7 +18,10 @@ const getAIResponse = async (message: string) => {
     try {
       // Try to get inventory count from cache or database
       const cacheKey = "inventory_stats";
-      let stats = cacheService.get<{ totalItems: number; totalQuantity: number }>(cacheKey, { namespace: 'data' });
+      let stats = cacheService.get<{
+        totalItems: number;
+        totalQuantity: number;
+      }>(cacheKey, { namespace: "data" });
 
       if (!stats) {
         const { data, error } = await supabase
@@ -37,7 +35,10 @@ const getAIResponse = async (message: string) => {
           data?.reduce((sum, item) => sum + (item.quantity || 0), 0) || 0;
 
         stats = { totalItems, totalQuantity };
-        cacheService.set(cacheKey, stats, { namespace: 'data', ttl: 5 * 60 * 1000 }); // Cache for 5 minutes
+        cacheService.set(cacheKey, stats, {
+          namespace: "data",
+          ttl: 5 * 60 * 1000,
+        }); // Cache for 5 minutes
       }
 
       if (
@@ -102,7 +103,6 @@ const ChatBotWidget: React.FC<ChatBotWidgetProps> = ({
   contextType = "general",
 }) => {
   const { user } = useAuth();
-  if (!user) return null;
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<
     { sender: "user" | "bot"; text: string }[]
@@ -188,6 +188,9 @@ const ChatBotWidget: React.FC<ChatBotWidgetProps> = ({
     setTimeout(() => handleSend(), 100);
   };
 
+  // Verificăm dacă utilizatorul este autentificat
+  if (!user) return null;
+
   return (
     <div style={{ position: "fixed", bottom: 24, right: 24, zIndex: 9999 }}>
       <AnimatePresence>
@@ -240,7 +243,9 @@ const ChatBotWidget: React.FC<ChatBotWidgetProps> = ({
               {messages.map((msg, idx) => (
                 <div
                   key={idx}
-                  className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"}`}
+                  className={`flex ${
+                    msg.sender === "user" ? "justify-end" : "justify-start"
+                  }`}
                 >
                   {msg.sender === "bot" && (
                     <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center mr-2 mt-1">

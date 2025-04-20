@@ -81,10 +81,17 @@ const InventoryAssistantPage: React.FC = () => {
   // Efect pentru inițializarea recunoașterii vocale
   useEffect(() => {
     // Verificăm dacă browserul suportă Speech Recognition
-    if ("SpeechRecognition" in window || "webkitSpeechRecognition" in window) {
-      const SpeechRecognition =
-        (window as any).SpeechRecognition ||
-        (window as any).webkitSpeechRecognition;
+    const SpeechRecognition =
+      (window as any).SpeechRecognition ||
+      (window as any).webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      console.warn("Speech Recognition not supported in this browser.");
+      // Optionally, disable the mic button or show a message
+      return;
+    }
+
+    try {
       speechRecognition.current = new SpeechRecognition();
       speechRecognition.current.continuous = true;
       speechRecognition.current.interimResults = true;
@@ -112,6 +119,18 @@ const InventoryAssistantPage: React.FC = () => {
       speechRecognition.current.onend = () => {
         setIsSpeechRecognitionActive(false);
       };
+    } catch (error) {
+      console.error("Failed to initialize Speech Recognition:", error);
+      toast({
+        title: "Eroare inițializare recunoaștere vocală",
+        description: `Nu s-a putut inițializa recunoașterea vocală: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`,
+        variant: "destructive",
+      });
+      // Ensure the mic button is disabled if initialization fails
+      setIsSpeechRecognitionActive(false);
+      speechRecognition.current = null; // Clear the reference if initialization failed
     }
 
     return () => {
@@ -120,6 +139,64 @@ const InventoryAssistantPage: React.FC = () => {
       }
     };
   }, [toast]);
+
+  // Efect pentru abonarea la schimbări în timp real ale inventarului
+  useEffect(() => {
+    const handleInventoryUpdate = (payload: {
+      new: Material | null;
+      old: Material | null;
+      eventType: "INSERT" | "UPDATE" | "DELETE";
+    }) => {
+      let updateMessage = "";
+      if (payload.eventType === "INSERT" && payload.new) {
+        updateMessage = `Material nou adăugat: ${payload.new.name} (Cantitate: ${payload.new.quantity})`;
+      } else if (payload.eventType === "UPDATE" && payload.new) {
+        // Check if quantity or min_stock_level changed
+        const oldMaterial = payload.old;
+        const newMaterial = payload.new;
+        if (
+          oldMaterial &&
+          (oldMaterial.quantity !== newMaterial.quantity ||
+            oldMaterial.min_stock_level !== newMaterial.min_stock_level)
+        ) {
+          updateMessage = `Stoc actualizat pentru ${
+            newMaterial.name
+          }: Cantitate nouă ${newMaterial.quantity}, Nivel minim ${
+            newMaterial.min_stock_level || "nesetat"
+          }`;
+        } else {
+          // Ignore updates that don't affect quantity or min_stock_level for assistant chat
+          return;
+        }
+      } else if (payload.eventType === "DELETE" && payload.old) {
+        updateMessage = `Material șters: ${payload.old.name}`;
+      }
+
+      if (updateMessage) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: generateId(),
+            role: "assistant",
+            content: `[Notificare Inventar] ${updateMessage}`,
+            timestamp: new Date(),
+          },
+        ]);
+      }
+    };
+
+    // Subscribe to changes in the 'materials' table
+    const subscription = inventoryService.subscribeToInventoryChanges(
+      handleInventoryUpdate
+    );
+
+    // Clean up the subscription on component unmount
+    return () => {
+      if (subscription) {
+        inventoryService.unsubscribeFromInventoryChanges(subscription);
+      }
+    };
+  }, []); // Empty dependency array means this effect runs once on mount and cleans up on unmount
 
   // Funcție pentru a genera un ID unic
   const generateId = () => {

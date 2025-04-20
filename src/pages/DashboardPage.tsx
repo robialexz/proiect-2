@@ -4,6 +4,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Navigate, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import WelcomeMessage from "@/components/common/WelcomeMessage";
+import UserRoleInfo from "@/components/common/UserRoleInfo";
 import {
   Upload,
   BarChart2,
@@ -13,6 +15,7 @@ import {
   Sun,
   Moon,
   Coffee,
+  FolderPlus,
 } from "lucide-react";
 
 const DashboardPage = () => {
@@ -43,12 +46,8 @@ const DashboardPage = () => {
 
     setGreeting(newGreeting);
 
-    // Ascundem mesajul de bun venit după 5 secunde
-    const timer = setTimeout(() => {
-      setShowWelcome(false);
-    }, 5000);
-
-    return () => clearTimeout(timer);
+    // Nu mai afișăm mesajul de bun venit
+    setShowWelcome(false);
   }, []);
 
   // Folosim un loader mai simplu și mai eficient pentru a reduce timpul de încărcare
@@ -152,16 +151,7 @@ const DashboardPage = () => {
               Dashboard
             </motion.h1>
             <div className="flex items-center space-x-4">
-              <motion.div
-                className="text-sm bg-slate-800 px-3 py-1.5 rounded-full border border-slate-700"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.3, duration: 0.3 }}
-              >
-                <span className="text-slate-300 font-medium">
-                  Bună ziua, {user.email?.split("@")[0] || "Utilizator"}
-                </span>
-              </motion.div>
+              <WelcomeMessage />
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -169,11 +159,11 @@ const DashboardPage = () => {
                 <Button
                   size="sm"
                   variant="default"
-                  className="bg-blue-600 hover:bg-blue-700"
-                  onClick={() => navigate("/upload-excel")}
+                  className="bg-purple-600 hover:bg-purple-700"
+                  onClick={() => navigate("/projects")}
                 >
-                  <Upload className="h-4 w-4 mr-2" />
-                  Încărcare Excel
+                  <FolderPlus className="h-4 w-4 mr-2" />
+                  Proiecte
                 </Button>
               </motion.div>
             </div>
@@ -254,11 +244,12 @@ const DashboardPage = () => {
               ))}
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: 0.2 }}
+                className="lg:col-span-2"
               >
                 <Card className="bg-slate-800 border-slate-700 overflow-hidden relative">
                   <div className="absolute inset-0 bg-gradient-to-br from-blue-900/5 to-purple-900/10"></div>
@@ -274,62 +265,9 @@ const DashboardPage = () => {
                   </CardHeader>
                   <CardContent className="relative z-10">
                     <div className="space-y-4">
-                      {[
-                        {
-                          action: "Adăugat material nou: Plăci gips-carton",
-                          user: "Alexandru Popescu",
-                          time: "Acum 2 ore",
-                          icon: (
-                            <Package className="h-8 w-8 p-1.5 text-blue-400 bg-blue-400/10 rounded-full" />
-                          ),
-                        },
-                        {
-                          action: "Actualizat stoc pentru: Ciment Portland",
-                          user: "Maria Ionescu",
-                          time: "Acum 5 ore",
-                          icon: (
-                            <Upload className="h-8 w-8 p-1.5 text-green-400 bg-green-400/10 rounded-full" />
-                          ),
-                        },
-                        {
-                          action:
-                            "Generat raport pentru proiectul: Bloc Residence",
-                          user: "Andrei Dumitrescu",
-                          time: "Ieri, 15:30",
-                          icon: (
-                            <BarChart2 className="h-8 w-8 p-1.5 text-purple-400 bg-purple-400/10 rounded-full" />
-                          ),
-                        },
-                        {
-                          action: "Adăugat utilizator nou: Elena Stanciu",
-                          user: "Admin",
-                          time: "Ieri, 10:15",
-                          icon: (
-                            <Users className="h-8 w-8 p-1.5 text-amber-400 bg-amber-400/10 rounded-full" />
-                          ),
-                        },
-                      ].map((activity, i) => (
-                        <motion.div
-                          key={i}
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ duration: 0.3, delay: 0.1 * i }}
-                          className="flex items-center space-x-4 border-b border-slate-700/50 pb-3 last:border-0 last:pb-0"
-                        >
-                          {activity.icon}
-                          <div className="flex-1">
-                            <p className="font-medium text-slate-200">
-                              {activity.action}
-                            </p>
-                            <p className="text-sm text-slate-400">
-                              De către {activity.user}
-                            </p>
-                          </div>
-                          <span className="text-xs bg-slate-700/50 px-2 py-1 rounded-full text-slate-400">
-                            {activity.time}
-                          </span>
-                        </motion.div>
-                      ))}
+                      <div className="flex items-center justify-center py-8 text-slate-400">
+                        <p>Nu există activități recente.</p>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -339,6 +277,15 @@ const DashboardPage = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: 0.3 }}
+              >
+                <UserRoleInfo className="h-full" />
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: 0.4 }}
+                className="lg:col-span-2"
               >
                 <Card className="bg-slate-800 border-slate-700 overflow-hidden relative h-full">
                   <div className="absolute inset-0 bg-gradient-to-br from-blue-900/5 to-purple-900/10"></div>
