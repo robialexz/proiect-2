@@ -1,13 +1,49 @@
-// Export all models
-export * from './user.model';
-export * from './project.model';
-export * from './material.model';
-export * from './supplier.model';
-export * from './team.model';
+/**
+ * Exportă toate modelele
+ */
+
+// Exportăm modelele pentru utilizatori
+export * from "./user.model";
+
+// Exportăm modelele pentru proiecte
+export * from "./project.model";
+
+// Exportăm modelele pentru inventar
+export * from "./material.model";
+
+// Exportăm modelele pentru furnizori
+export * from "./supplier.model";
+
+// Exportăm modelele pentru echipe
+export * from "./team.model";
+
+// Exportăm modelele pentru sarcini
+export * from "./task.model";
+
+// Exportăm modelele pentru rapoarte
+export * from "./report.model";
+
+// Exportăm modelele pentru notificări
+export * from "./notification.model";
+
+// Exportăm modelele pentru documente
+export * from "./document.model";
+
+// Exportăm modelele pentru comentarii
+export * from "./comment.model";
+
+// Exportăm modelele pentru activități
+export * from "./activity.model";
+
+// Exportăm modelele pentru erori
+export * from "./error.model";
+
+// Exportăm modelele pentru setări
+export * from "./settings.model";
 
 // Export common types
 export type ID = string | number;
-export type Status = 'idle' | 'loading' | 'success' | 'error';
+export type Status = "idle" | "loading" | "success" | "error";
 
 export interface ErrorState {
   message: string;
@@ -21,7 +57,7 @@ export interface PaginationConfig {
   total: number;
 }
 
-export type SortDirection = 'asc' | 'desc';
+export type SortDirection = "asc" | "desc";
 
 export interface SortConfig {
   field: string;
@@ -43,3 +79,6 @@ export interface PaginatedResponse<T> {
   limit: number;
   totalPages: number;
 }
+
+// Export implicit pentru compatibilitate
+export default {};

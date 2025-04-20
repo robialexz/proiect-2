@@ -133,15 +133,25 @@ const AppLayout: React.FC = () => {
   // AuthContext now handles session state via onAuthStateChange.
 
   // If loading is finished or timeout has occurred and there's still no user, redirect to login.
-  if (!user || loadingTimeout) {
+  // Adăugăm o verificare suplimentară pentru a evita redirecționarea continuă
+  if (
+    (!user || loadingTimeout) &&
+    !window.location.pathname.includes("/login")
+  ) {
     console.log(
       "AppLayout: No authenticated user or loading timeout, redirecting to login."
     );
 
     // Nu mai ștergem datele de autentificare pentru a păstra sesiunea la refresh
 
+    // Adăugăm un flag pentru a preveni bucla de redirecționare
+    sessionStorage.setItem("redirecting_to_login", "true");
+
     return <Navigate to="/login" replace />;
   }
+
+  // Resetăm flag-ul de redirecționare
+  sessionStorage.removeItem("redirecting_to_login");
 
   // If loading is finished and there IS a user, render the layout.
 

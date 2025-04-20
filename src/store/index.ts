@@ -1,14 +1,38 @@
 // Export all stores
-export { default as useAuthStore } from './useAuthStore';
-export { default as useProjectStore } from './useProjectStore';
-export { default as useMaterialStore } from './useMaterialStore';
-export { default as useUIStore } from './useUIStore';
+export { default as useAuthStore } from "./useAuthStore";
+export { default as useProjectStore } from "./useProjectStore";
+export { default as useMaterialStore } from "./useMaterialStore";
+export { default as useUIStore } from "./useUIStore";
+
+// Export new Zustand stores
+export {
+  useStore,
+  useAppStore,
+  useAuthStore as useZustandAuthStore,
+  useInventoryStore,
+  useProjectsStore,
+} from "./store";
+
+// Re-exportăm tipurile pentru a fi utilizate în aplicație
+export type { RootState } from "./store";
+export type { AppState } from "./slices/app.slice";
+export type { AuthState, UserProfile } from "./slices/auth.slice";
+export type {
+  InventoryState,
+  Material,
+  MaterialFilter,
+} from "./slices/inventory.slice";
+export type {
+  ProjectsState,
+  Project,
+  ProjectFilter,
+} from "./slices/projects.slice";
 
 // Export hooks for accessing stores
-import { useAuthStore } from './useAuthStore';
-import { useProjectStore } from './useProjectStore';
-import { useMaterialStore } from './useMaterialStore';
-import { useUIStore } from './useUIStore';
+import { useAuthStore } from "./useAuthStore";
+import { useProjectStore } from "./useProjectStore";
+import { useMaterialStore } from "./useMaterialStore";
+import { useUIStore } from "./useUIStore";
 
 // Custom hooks for accessing store state and actions
 export const useAuth = () => {
@@ -28,9 +52,9 @@ export const useAuth = () => {
     updateProfile,
     updateSettings,
     refreshSession,
-    clearError
+    clearError,
   } = useAuthStore();
-  
+
   return {
     user,
     userProfile,
@@ -47,7 +71,7 @@ export const useAuth = () => {
     updateProfile,
     updateSettings,
     refreshSession,
-    clearError
+    clearError,
   };
 };
 
@@ -73,9 +97,9 @@ export const useProjects = () => {
     addProjectTask,
     updateProjectStatus,
     updateProjectProgress,
-    clearError
+    clearError,
   } = useProjectStore();
-  
+
   return {
     projects,
     currentProject,
@@ -97,7 +121,7 @@ export const useProjects = () => {
     addProjectTask,
     updateProjectStatus,
     updateProjectProgress,
-    clearError
+    clearError,
   };
 };
 
@@ -122,9 +146,9 @@ export const useMaterials = () => {
     transferMaterial,
     searchMaterials,
     addProjectMaterial,
-    clearError
+    clearError,
   } = useMaterialStore();
-  
+
   return {
     materials,
     projectMaterials,
@@ -145,7 +169,7 @@ export const useMaterials = () => {
     transferMaterial,
     searchMaterials,
     addProjectMaterial,
-    clearError
+    clearError,
   };
 };
 
@@ -166,9 +190,9 @@ export const useUI = () => {
     addNotification,
     removeNotification,
     markNotificationAsRead,
-    clearNotifications
+    clearNotifications,
   } = useUIStore();
-  
+
   return {
     theme,
     sidebarOpen,
@@ -185,6 +209,6 @@ export const useUI = () => {
     addNotification,
     removeNotification,
     markNotificationAsRead,
-    clearNotifications
+    clearNotifications,
   };
 };

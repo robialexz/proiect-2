@@ -4,7 +4,7 @@
  */
 
 // Versiunea curentă a aplicației - schimbă această valoare la fiecare versiune nouă
-export const APP_VERSION = "1.0.0";
+export const APP_VERSION = "1.0.1";
 
 /**
  * Verifică dacă versiunea aplicației s-a schimbat și forțează reîncărcarea paginii
@@ -106,5 +106,21 @@ if (import.meta.env.DEV) {
 }
 */
 
-// Verificăm versiunea la încărcarea paginii
-checkAppVersion();
+// Forțăm o reîncărcare completă a aplicației pentru a încărca versiunea corectă
+// Dar doar dacă nu am făcut deja acest lucru în această sesiune
+if (!sessionStorage.getItem("forced_reload_done")) {
+  console.log(
+    "Forțăm o reîncărcare completă a aplicației pentru a încărca versiunea corectă"
+  );
+
+  // Ștergem cache-ul
+  localStorage.clear();
+  sessionStorage.setItem("forced_reload_done", "true");
+  localStorage.setItem("app_version", APP_VERSION);
+
+  // Forțăm reîncărcarea paginii fără cache
+  window.location.reload(true);
+} else {
+  // Actualizăm versiunea în localStorage pentru a evita reîncărcarea la următoarea accesare
+  localStorage.setItem("app_version", APP_VERSION);
+}

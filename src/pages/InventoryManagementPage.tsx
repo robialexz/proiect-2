@@ -10,7 +10,8 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useInventory } from "@/hooks/useInventory";
-import { Material, Project } from "@/types";
+import { Material } from "@/types";
+import { Project, ProjectStatus } from "@/models/project.model";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -63,7 +64,14 @@ const InventoryManagementPage: React.FC = () => {
           .eq("manager_id", user.id);
 
         if (error) throw error;
-        setProjects(data || []);
+
+        // Convertim statusul la tipul ProjectStatus
+        const projectsWithCorrectStatus = (data || []).map((project) => ({
+          ...project,
+          status: project.status as ProjectStatus,
+        }));
+
+        setProjects(projectsWithCorrectStatus);
       } catch (error) {
         console.error("Error loading projects:", error);
       } finally {

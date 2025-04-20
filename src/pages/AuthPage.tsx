@@ -34,30 +34,18 @@ const AuthPage = () => {
 
   // Dacă utilizatorul este deja autentificat, îl redirectăm către dashboard
   React.useEffect(() => {
+    // Verificăm dacă suntem în proces de redirecționare pentru a evita bucla
+    const isRedirecting = sessionStorage.getItem("redirecting_to_login");
+
     if (user) {
       navigate("/dashboard", { replace: true });
-    } else {
-      // Ștergem toate datele de autentificare din localStorage și sessionStorage
-      // pentru a preveni problemele de sesiune persistentă
-      localStorage.removeItem("supabase.auth.token");
-      sessionStorage.removeItem("supabase.auth.token");
-      localStorage.removeItem("sb-btvpnzsmrfrlwczanbcg-auth-token");
-      sessionStorage.removeItem("sb-btvpnzsmrfrlwczanbcg-auth-token");
+    } else if (!isRedirecting) {
+      // Ștergem doar anumite date de autentificare pentru a preveni problemele, dar nu toate
+      // pentru a evita bucla de reîncărcare
       localStorage.removeItem("auth-storage");
       sessionStorage.removeItem("auth-storage");
 
-      // Ștergem toate cheile care conțin "supabase" sau "auth"
-      Object.keys(localStorage).forEach((key) => {
-        if (key.includes("supabase") || key.includes("auth")) {
-          localStorage.removeItem(key);
-        }
-      });
-
-      Object.keys(sessionStorage).forEach((key) => {
-        if (key.includes("supabase") || key.includes("auth")) {
-          sessionStorage.removeItem(key);
-        }
-      });
+      // Nu mai ștergem toate cheile pentru a evita problemele de reîncărcare continuă
     }
   }, [user, navigate]);
 

@@ -5,6 +5,7 @@
 
 // Importăm utilitățile pentru încărcarea leneșă
 import { lazyPage } from "./lazy-pages";
+import { RouteGroup, getRouteGroup } from "../routes/route-groups";
 
 // Definim rutele frecvent accesate care ar trebui preîncărcate
 const frequentRoutes = [
@@ -28,6 +29,40 @@ const routeComponents: Record<string, () => Promise<any>> = {
   "/suppliers": () => import("../pages/SuppliersPage"),
   "/teams": () => import("../pages/TeamsPage"),
   "/reports": () => import("../pages/ReportsPage"),
+};
+
+// Definim grupurile de rute care ar trebui preîncărcate
+const preloadGroups = [
+  RouteGroup.DASHBOARD,
+  RouteGroup.INVENTORY,
+  RouteGroup.PROJECTS,
+];
+
+// Mapăm grupurile la componentele corespunzătoare
+const groupComponents: Record<RouteGroup, Array<() => Promise<any>>> = {
+  [RouteGroup.DASHBOARD]: [
+    () => import("../pages/DashboardPage"),
+    () => import("../pages/OverviewPage"),
+  ],
+  [RouteGroup.INVENTORY]: [
+    () => import("../pages/InventoryManagementPage"),
+    () => import("../pages/InventoryOverviewPage"),
+    () => import("../pages/CompanyInventoryPage"),
+  ],
+  [RouteGroup.PROJECTS]: [() => import("../pages/ProjectsPage")],
+  [RouteGroup.AUTH]: [
+    () => import("../pages/AuthPage"),
+    () => import("../pages/ForgotPasswordPage"),
+  ],
+  [RouteGroup.REPORTS]: [() => import("../pages/ReportsPage")],
+  [RouteGroup.SETTINGS]: [
+    () => import("../pages/SettingsPage"),
+    () => import("../pages/ProfilePage"),
+  ],
+  [RouteGroup.USERS]: [() => import("../pages/UsersManagementPage")],
+  [RouteGroup.MISC]: [],
+  [RouteGroup.PUBLIC]: [],
+  [RouteGroup.DESKTOP]: [() => import("../pages/DesktopInfoPage")],
 };
 
 /**
@@ -149,6 +184,78 @@ export const preloadFrequentPages = (): void => {
   preloadPages(frequentPages);
 };
 
+/**
+ * Preîncarcă grupurile de rute
+ */
+export const preloadRouteGroups = (): void => {
+  if (typeof window === "undefined") return;
+
+  // Folosim requestIdleCallback pentru a preîncărca în timpul inactiv
+  const preloadFn = () => {
+    console.log("Preîncărcăm grupurile de rute...");
+
+    // Preîncărcăm grupurile de rute
+    preloadGroups.forEach((group, groupIndex) => {
+      const importFns = groupComponents[group];
+      if (importFns && importFns.length > 0) {
+        // Adăugăm o întârziere pentru a nu bloca thread-ul principal
+        setTimeout(() => {
+          importFns.forEach((importFn, index) => {
+            setTimeout(() => {
+              importFn().catch((err) => {
+                console.warn(`Failed to preload group ${group}:`, err);
+              });
+            }, index * 200);
+          });
+        }, groupIndex * 500);
+      }
+    });
+  };
+
+  if ("requestIdleCallback" in window) {
+    window.requestIdleCallback(preloadFn, { timeout: 2000 });
+  } else {
+    setTimeout(preloadFn, 1000);
+  }
+};
+
+/**
+ * Preîncarcă grupul de rute pentru o rută dată
+ * @param path Calea rutei
+ */
+export const preloadRouteGroup = (path: string): void => {
+  if (typeof window === "undefined") return;
+
+  // Obținem grupul rutei
+  const group = getRouteGroup(path);
+
+  // Verificăm dacă grupul există
+  if (group && groupComponents[group]) {
+    // Folosim requestIdleCallback pentru a preîncărca în timpul inactiv
+    const preloadFn = () => {
+      console.log(`Preîncărcăm grupul de rute ${group}...`);
+
+      // Preîncărcăm componentele grupului
+      const importFns = groupComponents[group];
+      if (importFns && importFns.length > 0) {
+        importFns.forEach((importFn, index) => {
+          setTimeout(() => {
+            importFn().catch((err) => {
+              console.warn(`Failed to preload group ${group}:`, err);
+            });
+          }, index * 200);
+        });
+      }
+    };
+
+    if ("requestIdleCallback" in window) {
+      window.requestIdleCallback(preloadFn, { timeout: 2000 });
+    } else {
+      setTimeout(preloadFn, 1000);
+    }
+  }
+};
+
 // Exportăm un obiect cu toate funcțiile
 export const routePreloader = {
   preloadRoute,
@@ -157,4 +264,6 @@ export const routePreloader = {
   preloadComponent,
   preloadPages,
   preloadFrequentPages,
+  preloadRouteGroups,
+  preloadRouteGroup,
 };

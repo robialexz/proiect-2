@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Curățare Site</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #0f172a;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+    .container {
+      max-width: 600px;
+      background-color: #1e293b;
+      border-radius: 8px;
+      padding: 30px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      color: #60a5fa;
+      margin-top: 0;
+    }
+    p {
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+    button {
+      background-color: #4f46e5;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+      transition: background-color 0.3s;
+    }
+    button:hover {
+      background-color: #4338ca;
+    }
+    .progress {
+      margin-top: 20px;
+      width: 100%;
+      display: none;
+    }
+    .progress-bar {
+      height: 10px;
+      background-color: #4f46e5;
+      width: 0%;
+      border-radius: 5px;
+      transition: width 0.3s;
+    }
+    .status {
+      margin-top: 20px;
+      font-size: 14px;
+    }
+    .success {
+      color: #34d399;
+    }
+    .error {
+      color: #f87171;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Curățare Site</h1>
+    <p>Acest utilitar va șterge toate datele vechi ale site-ului și va forța încărcarea versiunii noi.</p>
+    <p>Acest proces va șterge:</p>
+    <ul style="text-align: left;">
+      <li>Cache-ul browserului pentru acest site</li>
+      <li>Service Worker-ul</li>
+      <li>Datele din localStorage și sessionStorage</li>
+      <li>Datele din IndexedDB</li>
+    </ul>
+    <p><strong>Notă:</strong> Va trebui să vă autentificați din nou după acest proces.</p>
+    <button id="cleanButton">Curăță Site-ul</button>
+    <div class="progress" id="progressContainer">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+    <div class="status" id="statusText"></div>
+  </div>
+
+  <script>
+    document.getElementById('cleanButton').addEventListener('click', async function() {
+      // Dezactivăm butonul
+      this.disabled = true;
+      this.textContent = 'Se curăță...';
+      
+      // Afișăm bara de progres
+      const progressContainer = document.getElementById('progressContainer');
+      const progressBar = document.getElementById('progressBar');
+      const statusText = document.getElementById('statusText');
+      progressContainer.style.display = 'block';
+      
+      // Funcție pentru actualizarea progresului
+      function updateProgress(percent, message, isError = false) {
+        progressBar.style.width = `${percent}%`;
+        statusText.textContent = message;
+        statusText.className = isError ? 'status error' : 'status';
+      }
+      
+      try {
+        // 1. Ștergem localStorage și sessionStorage (20%)
+        updateProgress(20, 'Se șterge localStorage și sessionStorage...');
+        localStorage.clear();
+        sessionStorage.clear();
+        
+        // 2. Dezînregistrăm service worker-ul (40%)
+        updateProgress(40, 'Se dezînregistrează service worker-ul...');
+        if ('serviceWorker' in navigator) {
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          for (const registration of registrations) {
+            await registration.unregister();
+          }
+        }
+        
+        // 3. Ștergem cache-ul (60%)
+        updateProgress(60, 'Se șterge cache-ul...');
+        if ('caches' in window) {
+          const cacheNames = await caches.keys();
+          await Promise.all(
+            cacheNames.map(cacheName => caches.delete(cacheName))
+          );
+        }
+        
+        // 4. Ștergem IndexedDB (80%)
+        updateProgress(80, 'Se șterge IndexedDB...');
+        const databases = await indexedDB.databases();
+        databases.forEach(db => {
+          if (db.name) {
+            indexedDB.deleteDatabase(db.name);
+          }
+        });
+        
+        // 5. Finalizare (100%)
+        updateProgress(100, 'Curățare completă! Se reîncarcă pagina...', false);
+        statusText.className = 'status success';
+        
+        // 6. Redirecționăm către pagina principală după 2 secunde
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 2000);
+        
+      } catch (error) {
+        console.error('Eroare la curățarea site-ului:', error);
+        updateProgress(100, `Eroare: ${error.message}`, true);
+        
+        // Reactivăm butonul
+        this.disabled = false;
+        this.textContent = 'Încearcă din nou';
+      }
+    });
+  </script>
+</body>
+</html>

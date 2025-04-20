@@ -8,6 +8,7 @@ import { useTranslation } from "react-i18next";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/lib/supabase";
 import { Database } from "@/types/supabase";
+import { Project, ProjectStatus } from "@/models/project.model";
 import {
   PlusCircle,
   Search,
@@ -32,7 +33,7 @@ const ReportsPage: React.FC = () => {
   const navigate = useNavigate();
 
   // State pentru proiecte
-  const [projects, setProjects] = useState<any[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [loadingProjects, setLoadingProjects] = useState(false);
   const [reports, setReports] = useState<Report[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -55,7 +56,14 @@ const ReportsPage: React.FC = () => {
           .eq("manager_id", user.id);
 
         if (error) throw error;
-        setProjects(data || []);
+
+        // Convertim statusul la tipul ProjectStatus
+        const projectsWithCorrectStatus = (data || []).map((project) => ({
+          ...project,
+          status: project.status as ProjectStatus,
+        }));
+
+        setProjects(projectsWithCorrectStatus);
       } catch (error) {
         console.error("Error loading projects:", error);
       } finally {

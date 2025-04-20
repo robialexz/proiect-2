@@ -9,7 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/lib/supabase";
-import { Project } from "@/types";
+import { Project, ProjectStatus } from "@/models/project.model";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -47,7 +47,13 @@ const ProjectSelector: React.FC<ProjectSelectorProps> = React.memo(
             throw error;
           }
 
-          setProjects(data || []);
+          // Convertim statusul la tipul ProjectStatus
+          const projectsWithCorrectStatus = (data || []).map((project) => ({
+            ...project,
+            status: project.status as ProjectStatus,
+          }));
+
+          setProjects(projectsWithCorrectStatus);
         } catch (error: any) {
           console.error("Error loading projects:", error);
           toast({

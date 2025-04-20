@@ -7,40 +7,52 @@ import { BrowserRouter } from "react-router-dom";
 import "./utils/cache-buster";
 // Importăm fix-ul pentru React
 import "./utils/react-fix";
+// Importăm utilitar pentru curățarea site-ului
+import { cleanSite, isSiteCleaned } from "./utils/clean-site";
 
-// Înregistrăm service worker-ul pentru a gestiona cache-ul doar în producție
-if ("serviceWorker" in navigator && import.meta.env.PROD) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker
-      .register("/service-worker.js")
-      .then((registration) => {
-        console.log(
-          "Service Worker registered with scope:",
-          registration.scope
-        );
+// Dezactivăm service worker-ul temporar pentru a rezolva problema de reîncărcare continuă
+// if ("serviceWorker" in navigator && import.meta.env.PROD) {
+//   window.addEventListener("load", () => {
+//     navigator.serviceWorker
+//       .register("/service-worker.js")
+//       .then((registration) => {
+//         console.log(
+//           "Service Worker registered with scope:",
+//           registration.scope
+//         );
+//
+//         // Verificăm dacă există o versiune nouă a service worker-ului
+//         registration.addEventListener("updatefound", () => {
+//           const newWorker = registration.installing;
+//           console.log("Service Worker update found!");
+//
+//           newWorker?.addEventListener("statechange", () => {
+//             if (
+//               newWorker.state === "installed" &&
+//               navigator.serviceWorker.controller
+//             ) {
+//               console.log("Service Worker installed, reloading page...");
+//               window.location.reload();
+//             }
+//           });
+//         });
+//       })
+//       .catch((error) => {
+//         console.error("Service Worker registration failed:", error);
+//       });
+//   });
+// } else {
+//   console.log("Service Worker nu este înregistrat în modul de dezvoltare");
+// }
 
-        // Verificăm dacă există o versiune nouă a service worker-ului
-        registration.addEventListener("updatefound", () => {
-          const newWorker = registration.installing;
-          console.log("Service Worker update found!");
-
-          newWorker?.addEventListener("statechange", () => {
-            if (
-              newWorker.state === "installed" &&
-              navigator.serviceWorker.controller
-            ) {
-              console.log("Service Worker installed, reloading page...");
-              window.location.reload();
-            }
-          });
-        });
-      })
-      .catch((error) => {
-        console.error("Service Worker registration failed:", error);
-      });
-  });
-} else {
-  console.log("Service Worker nu este înregistrat în modul de dezvoltare");
+// Curățăm site-ul complet pentru a șterge versiunea veche
+// Dar doar dacă nu am făcut deja acest lucru în această sesiune
+if (!isSiteCleaned()) {
+  console.log("Curățăm site-ul pentru a șterge versiunea veche...");
+  // Folosim setTimeout pentru a permite încărcarea paginii înainte de curățare
+  setTimeout(() => {
+    cleanSite();
+  }, 1000);
 }
 // Importăm i18n pentru funcționalitatea de traducere
 import "./i18n";

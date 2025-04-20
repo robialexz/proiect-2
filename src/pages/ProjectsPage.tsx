@@ -13,11 +13,13 @@ import ProjectsList from "@/components/projects/ProjectsList";
 import ProjectForm from "@/components/projects/ProjectForm";
 import ProjectDetails from "@/components/projects/ProjectDetails";
 
+import { ProjectStatus } from "@/models/project.model";
+
 interface Project {
   id: string;
   name: string;
   description?: string;
-  status: string;
+  status: ProjectStatus;
   start_date?: string;
   end_date?: string;
   progress?: number;
@@ -60,7 +62,12 @@ const ProjectsPage: React.FC = () => {
 
       if (error) throw error;
 
-      setProjects(data as Project[]);
+      // Convertim statusul la tipul ProjectStatus
+      const projectsWithCorrectStatus = data.map((project) => ({
+        ...project,
+        status: project.status as ProjectStatus,
+      }));
+      setProjects(projectsWithCorrectStatus as Project[]);
     } catch (error: any) {
       console.error("Error fetching projects:", error);
       setFetchError(error.message);
