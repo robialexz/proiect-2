@@ -38,6 +38,7 @@ import {
   TestTube,
   Bot,
   Sparkles,
+  Laptop,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -490,6 +491,36 @@ const Sidebar = () => {
               {collapsed && (
                 <TooltipContent side="right">
                   <p>{t("sidebar.tutorial", "Tutoriale & Ajutor")}</p>
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </TooltipProvider>
+
+          {/* Link către pagina de informații despre aplicația desktop */}
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className={cn(
+                    "w-full text-slate-400 hover:text-white hover:bg-slate-800 justify-start",
+                    collapsed && "justify-center",
+                    location.pathname === "/desktop-info" &&
+                      "bg-slate-800 text-white"
+                  )}
+                  onClick={() => navigate("/desktop-info")}
+                >
+                  <Laptop size={20} />
+                  {!collapsed && (
+                    <span className="ml-3">
+                      {t("desktop.sidebar.desktopInfo")}
+                    </span>
+                  )}
+                </Button>
+              </TooltipTrigger>
+              {collapsed && (
+                <TooltipContent side="right">
+                  <p>{t("desktop.sidebar.desktopInfo")}</p>
                 </TooltipContent>
               )}
             </Tooltip>

@@ -95,7 +95,7 @@ export const authService = {
               "Autentificare eșuată: Timpul de așteptare a expirat. Vă rugăm să încercați din nou."
             )
           );
-        }, 5000); // 5 secunde
+        }, 15000); // 15 secunde
       });
 
       // Folosim Promise.race pentru a implementa timeout-ul

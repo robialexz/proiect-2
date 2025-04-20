@@ -5,7 +5,10 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + React + TS</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <title>Aplicație Management Proiecte</title>
 
     <!-- Script pentru a detecta și corecta problemele de MIME type -->
     <script>
@@ -30,6 +33,23 @@
             .catch(err => console.error('Failed to load script:', e.target.src, err));
         }
       }, true);
+
+      // Verificăm versiunea aplicației și forțăm reîncărcarea dacă este necesar
+      (function() {
+        const APP_VERSION = '1.0.0'; // Schimbă această valoare la fiecare versiune nouă
+        const lastVersion = localStorage.getItem('app_version');
+
+        // Dacă versiunea din localStorage nu corespunde cu versiunea curentă
+        if (lastVersion && lastVersion !== APP_VERSION) {
+          console.log(`Versiune diferită detectată: ${APP_VERSION} (stocată: ${lastVersion}). Forțăm reîncărcarea.`);
+
+          // Ștergem cache-ul pentru a forța încărcarea noii versiuni
+          localStorage.setItem('app_version', APP_VERSION);
+
+          // Forțăm reîncărcarea paginii fără cache
+          window.location.reload(true);
+        }
+      })();
     </script>
   </head>
   <body>

@@ -1,0 +1,29 @@
+{
+  "title": "Desktop Application Info",
+  "subtitle": "Information about the desktop application",
+  "description": "This application is running as a desktop application using Tauri.",
+  "webDescription": "This application is running in a web browser, but can also be used as a desktop application.",
+  "tauriDescription": "Tauri allows us to build lightweight, secure desktop applications using web technologies. This means we can use the same codebase for both web and desktop applications.",
+  "downloadInfo": "Want to use this as a desktop app?",
+  "downloadDescription": "You can download the desktop version of this application for Windows, macOS, or Linux. The desktop version provides additional features like file system access and improved performance.",
+  "systemInfo": "System Information",
+  "fileAccess": "File Access",
+  "directoryAccess": "Directory Access",
+  "noFileSelected": "No file selected",
+  "noDirectorySelected": "No directory selected",
+  "openFile": "Open File",
+  "openDirectory": "Open Directory",
+  "tauriDocumentation": "Tauri Documentation",
+  "features": {
+    "title": "Desktop Features",
+    "fileSystem": "Native file system access",
+    "performance": "Improved performance",
+    "offline": "Works offline",
+    "integration": "System integration",
+    "updates": "Automatic updates",
+    "windowControls": "Custom window controls"
+  },
+  "sidebar": {
+    "desktopInfo": "Desktop App Info"
+  }
+}

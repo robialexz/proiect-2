@@ -26,7 +26,12 @@
     "db:reset": "node scripts/reset-database.js",
     "db:seed": "node scripts/seed-database.js",
     "db:fresh": "npm run db:reset && npm run db:seed",
-    "db:check": "ts-node src/scripts/check-db.ts"
+    "db:check": "ts-node src/scripts/check-db.ts",
+    "tauri": "tauri",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build",
+    "desktop": "tauri dev",
+    "desktop:build": "tauri build"
   },
   "dependencies": {
     "@azure/msal-browser": "^4.8.0",
@@ -103,7 +108,7 @@
     "@babel/preset-env": "^7.26.9",
     "@babel/preset-react": "^7.26.3",
     "@babel/preset-typescript": "^7.27.0",
-    "@tauri-apps/cli": "^2.4.1",
+    "@tauri-apps/cli": "^2.5.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^14.3.1",
     "@testing-library/user-event": "^14.6.1",

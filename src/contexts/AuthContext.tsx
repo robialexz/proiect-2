@@ -132,6 +132,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Variabilă pentru a ține evidența dacă componenta este montată
     let isMounted = true;
 
+    // Verificăm dacă este o nouă versiune a aplicației
+    const appVersion = "1.0.0"; // Schimbă această valoare la fiecare versiune nouă
+    const lastVersion = localStorage.getItem("app_version");
+
+    if (lastVersion !== appVersion) {
+      console.log(
+        `Versiune nouă detectată: ${appVersion} (anterior: ${
+          lastVersion || "necunoscută"
+        })`
+      );
+      // Ștergem cache-ul pentru a forța încărcarea noii versiuni
+      localStorage.setItem("app_version", appVersion);
+
+      // Trimitem un mesaj către service worker pentru a forța actualizarea
+      if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage({
+          type: "SKIP_WAITING",
+        });
+      }
+    }
+
     // Funcție pentru a obține sesiunea curentă de la Supabase
     const getInitialSession = async () => {
       try {

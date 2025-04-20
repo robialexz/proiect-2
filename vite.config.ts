@@ -3,6 +3,11 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import { tempo } from "tempo-devtools/dist/vite";
 import { mimeTypesPlugin } from "./src/plugins/mime-types";
+import fs from "fs";
+import { resolve } from "path";
+
+// Suprimăm avertismentul CommonJS/ES Module
+process.env.NODE_NO_WARNINGS = "1";
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -18,8 +23,6 @@ export default defineConfig({
       "react-router-dom",
       "@supabase/supabase-js",
       "framer-motion",
-      "@splinetool/runtime",
-      "@splinetool/react-spline",
       "@tanstack/react-query",
       "zustand",
       "zustand/middleware",
@@ -112,7 +115,32 @@ export default defineConfig({
       ],
     },
   },
-  plugins: [react(), tempo(), mimeTypesPlugin()],
+  plugins: [
+    react(),
+    tempo(),
+    mimeTypesPlugin(),
+    {
+      name: "generate-service-worker",
+      closeBundle() {
+        // Copiem service worker-ul în directorul de build
+        const serviceWorkerPath = resolve(__dirname, "src/service-worker.ts");
+        const outputPath = resolve(__dirname, "dist/service-worker.js");
+
+        if (fs.existsSync(serviceWorkerPath)) {
+          const content = fs.readFileSync(serviceWorkerPath, "utf-8");
+          // Transpunem TypeScript în JavaScript
+          const jsContent = content
+            .replace(/: any/g, "")
+            .replace(/export \{\};/g, "");
+
+          fs.writeFileSync(outputPath, jsContent);
+          console.log("Service worker generat cu succes!");
+        } else {
+          console.error("Nu s-a găsit fișierul service-worker.ts");
+        }
+      },
+    },
+  ],
   // Opțiuni pentru commonjs
   commonjsOptions: {
     include: [/node_modules/],

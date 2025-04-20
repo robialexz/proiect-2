@@ -11,6 +11,8 @@ import enInventory from "./locales/en/inventory.json";
 import roInventory from "./locales/ro/inventory.json";
 import enDebug from "./locales/en/debug.json";
 import roDebug from "./locales/ro/debug.json";
+import enDesktop from "./locales/en/desktop.json";
+import roDesktop from "./locales/ro/desktop.json";
 
 // Define resources directly for simplicity initially
 // Later, you might switch to HttpApi to load from public/locales
@@ -293,6 +295,7 @@ const resources = {
       teams: roTeams,
       inventory: roInventory,
       debug: roDebug,
+      desktop: roDesktop,
       // Vechea definiție a inventarului - înlocuită cu fișierul de traducere
       /*inventory: {
         pageTitle: "Management Inventar",
@@ -750,6 +753,7 @@ const resources = {
       teams: enTeams,
       inventory: enInventory,
       debug: enDebug,
+      desktop: enDesktop,
       settings: {
         pageTitle: "Settings",
         title: "Settings",

@@ -125,6 +125,11 @@ const ErrorMonitoringPage = lazyPage(
 // OS Report page
 const OSReportPage = lazyPage(() => import("./pages/OSReportPage"));
 
+// Desktop Info page
+const DesktopInfoPage = lazyPage(() => import("./pages/DesktopInfoPage"), {
+  preload: true,
+});
+
 /**
  * Componenta pentru rutele aplicației
  * Utilizează încărcarea leneșă pentru a îmbunătăți performanța
@@ -188,6 +193,7 @@ export function AppRoutes() {
         <Route path="tester" element={<TesterPage />} />
         <Route path="error-monitoring" element={<ErrorMonitoringPage />} />
         <Route path="os-report" element={<OSReportPage />} />
+        <Route path="desktop-info" element={<DesktopInfoPage />} />
       </Route>
       {/* Add tempobook route to prevent catchall from capturing it */}
       {import.meta.env.VITE_TEMPO === "true" && <Route path="/tempobook/*" />}

@@ -4,6 +4,8 @@ import { Outlet, useLocation, Navigate } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import Navbar from "./Navbar";
 import { pageTransition } from "@/lib/animation-variants";
+import { clearAllCacheAndReload } from "@/utils/cache-buster";
+import { RefreshCw } from "lucide-react";
 import { useNotification } from "@/components/ui/notification";
 import { useMemoizedCallback } from "@/lib/performance";
 import ConnectionStatus from "@/components/ui/connection-status";
@@ -152,6 +154,19 @@ const AppLayout: React.FC = () => {
 
       {/* Componenta de stare a conexiunii */}
       <ConnectionStatus />
+
+      {/* Buton pentru forțarea reîncărcării paginii */}
+      {import.meta.env.DEV && (
+        <button
+          onClick={() => {
+            clearAllCacheAndReload();
+          }}
+          className="fixed bottom-4 right-4 z-50 flex items-center justify-center p-2 bg-red-600 text-white rounded-full shadow-lg hover:bg-red-700 transition-colors"
+          title="Forțează reîncărcarea paginii și șterge cache-ul"
+        >
+          <RefreshCw size={20} />
+        </button>
+      )}
       {/* Sidebar - ascuns pe mobil când este închis */}
       <div
         className={`fixed inset-y-0 left-0 z-40 transform ${
