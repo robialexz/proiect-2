@@ -64,7 +64,7 @@ const ReportViewer: React.FC<ReportViewerProps> = ({
         if (error) throw error;
         setProject(data);
       } catch (error) {
-        console.error("Error fetching project:", error);
+        // Removed console statement
       }
     };
 
@@ -90,7 +90,7 @@ const ReportViewer: React.FC<ReportViewerProps> = ({
       // 2. Get a download URL
       // 3. Trigger the download
     } catch (error) {
-      console.error("Error exporting report:", error);
+      // Removed console statement
       toast({
         variant: "destructive",
         title: "Export failed",

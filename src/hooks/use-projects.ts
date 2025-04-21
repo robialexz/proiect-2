@@ -106,7 +106,11 @@ export function useProjects() {
         );
         
         // Reîncărcăm proiectele
+        try {
         await fetchProjects();
+        } catch (error) {
+          // Handle error appropriately
+        }
         
         return { success: true, id: result.id };
       } else {
@@ -154,7 +158,11 @@ export function useProjects() {
         );
         
         // Reîncărcăm proiectele
+        try {
         await fetchProjects();
+        } catch (error) {
+          // Handle error appropriately
+        }
         
         return { success: true };
       } else {
@@ -201,7 +209,11 @@ export function useProjects() {
         );
         
         // Reîncărcăm proiectele
+        try {
         await fetchProjects();
+        } catch (error) {
+          // Handle error appropriately
+        }
         
         return { success: true };
       } else {

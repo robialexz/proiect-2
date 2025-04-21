@@ -37,12 +37,16 @@ export function memoize<T extends (...args: any[]) => Promise<any>>(
       });
 
       if (cachedResult) {
-        console.log(`[Performance] Using cached result for ${propertyKey}`);
+        // Removed console statement
         return cachedResult;
       }
 
       // Dacă nu este în cache, apelăm metoda originală
+      try {
       const result = await originalMethod.apply(this, args);
+      } catch (error) {
+        // Handle error appropriately
+      }
 
       // Salvăm rezultatul în cache
       cacheService.set(cacheKey, result, {
@@ -77,13 +81,17 @@ export async function preloadData<T>(
     });
 
     if (cachedData) {
-      console.log(`[Performance] Data already preloaded for ${cacheKey}`);
+      // Removed console statement
       return;
     }
 
     // Încărcăm datele
-    console.log(`[Performance] Preloading data for ${cacheKey}`);
+    // Removed console statement
+    try {
     const data = await fetcher(...args);
+    } catch (error) {
+      // Handle error appropriately
+    }
 
     // Salvăm datele în cache
     cacheService.set(cacheKey, data, {
@@ -91,12 +99,9 @@ export async function preloadData<T>(
       expireIn,
     });
 
-    console.log(`[Performance] Data preloaded for ${cacheKey}`);
+    // Removed console statement
   } catch (error) {
-    console.error(
-      `[Performance] Error preloading data for ${cacheKey}:`,
-      error
-    );
+    // Removed console statement
   }
 }
 
@@ -179,7 +184,7 @@ export function measurePerformance<T>(
 
   // Începem măsurătoarea
   const startTime = performance.now();
-  console.log(`[Performance] Starting measurement: ${id}`);
+  // Removed console statement
 
   try {
     // Executăm funcția
@@ -189,7 +194,7 @@ export function measurePerformance<T>(
     const endTime = performance.now();
     const duration = endTime - startTime;
 
-    console.log(`[Performance] ${id}: ${duration.toFixed(2)}ms`);
+    // Removed console statement
 
     // Stocăm măsurătoarea
     addMeasurement({
@@ -208,10 +213,7 @@ export function measurePerformance<T>(
     const endTime = performance.now();
     const duration = endTime - startTime;
 
-    console.error(
-      `[Performance] Error in ${id}: ${duration.toFixed(2)}ms`,
-      error
-    );
+    // Removed console statement
 
     // Stocăm măsurătoarea cu informații despre eroare
     addMeasurement({
@@ -286,7 +288,7 @@ export async function measureAsyncPerformance<T>(
 
   // Începem măsurătoarea
   const startTime = performance.now();
-  console.log(`[Performance] Starting async measurement: ${id}`);
+  // Removed console statement
 
   try {
     // Executăm funcția asincronă
@@ -296,7 +298,7 @@ export async function measureAsyncPerformance<T>(
     const endTime = performance.now();
     const duration = endTime - startTime;
 
-    console.log(`[Performance] ${id}: ${duration.toFixed(2)}ms`);
+    // Removed console statement
 
     // Stocăm măsurătoarea
     addMeasurement({
@@ -315,10 +317,7 @@ export async function measureAsyncPerformance<T>(
     const endTime = performance.now();
     const duration = endTime - startTime;
 
-    console.error(
-      `[Performance] Error in async ${id}: ${duration.toFixed(2)}ms`,
-      error
-    );
+    // Removed console statement
 
     // Stocăm măsurătoarea cu informații despre eroare
     addMeasurement({
@@ -425,7 +424,7 @@ export function measurePageLoad(route: string): () => void {
     const endTime = performance.now();
     const duration = endTime - startTime;
 
-    console.log(`[Performance] Page load ${route}: ${duration.toFixed(2)}ms`);
+    // Removed console statement
 
     // Stocăm măsurătoarea
     addMeasurement({

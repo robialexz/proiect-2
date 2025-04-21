@@ -88,7 +88,7 @@ export function withPerformanceMonitoring<P extends object>(
       
       // Log slow renders (over 50ms)
       if (renderTime > 50) {
-        console.warn(`Slow render detected in ${componentName}: ${renderTime.toFixed(2)}ms`);
+        // Removed console statement
       }
     });
     

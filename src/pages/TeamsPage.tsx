@@ -79,7 +79,7 @@ const TeamsPage: React.FC = () => {
       setIsLoading(true);
 
       // Folosim un cache key pentru a stoca datele în localStorage
-      const cacheKey = 'teams_data';
+      const cacheKey = "teams_data";
       const cachedData = localStorage.getItem(cacheKey);
 
       // Dacă avem date în cache, le folosim pentru afișarea inițială
@@ -91,7 +91,7 @@ const TeamsPage: React.FC = () => {
             // Continuăm cu încărcarea datelor noi în fundal
           }
         } catch (cacheError) {
-          console.error("Error parsing cached teams data:", cacheError);
+          // Removed console statement
           // Dacă cache-ul este corupt, îl ștergem
           localStorage.removeItem(cacheKey);
         }
@@ -113,7 +113,7 @@ const TeamsPage: React.FC = () => {
       const expireTime = Date.now() + 30 * 60 * 1000;
       localStorage.setItem(`${cacheKey}_expiry`, expireTime.toString());
     } catch (error: any) {
-      console.error("Error fetching teams:", error);
+      // Removed console statement
       toast({
         variant: "destructive",
         title: t("teams.errors.fetchFailed", "Error loading teams"),
@@ -138,11 +138,14 @@ const TeamsPage: React.FC = () => {
     }
 
     try {
-      const { data, error } = await supabase.from("teams").insert({
-        name: newTeam.name,
-        description: newTeam.description,
-        created_by: user?.id,
-      }).select();
+      const { data, error } = await supabase
+        .from("teams")
+        .insert({
+          name: newTeam.name,
+          description: newTeam.description,
+          created_by: user?.id,
+        })
+        .select();
 
       if (error) throw error;
 
@@ -158,7 +161,7 @@ const TeamsPage: React.FC = () => {
         ),
       });
     } catch (error: any) {
-      console.error("Error creating team:", error);
+      // Removed console statement
       toast({
         variant: "destructive",
         title: t("teams.form.createError", "Error creating team"),
@@ -169,10 +172,7 @@ const TeamsPage: React.FC = () => {
 
   const handleDeleteTeam = async (teamId: string) => {
     try {
-      const { error } = await supabase
-        .from("teams")
-        .delete()
-        .eq("id", teamId);
+      const { error } = await supabase.from("teams").delete().eq("id", teamId);
 
       if (error) throw error;
 
@@ -185,7 +185,7 @@ const TeamsPage: React.FC = () => {
         ),
       });
     } catch (error: any) {
-      console.error("Error deleting team:", error);
+      // Removed console statement
       toast({
         variant: "destructive",
         title: t("teams.errors.deleteFailed", "Error deleting team"),
@@ -219,14 +219,11 @@ const TeamsPage: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-slate-900 text-white">
-
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
         <header className="sticky top-0 z-10 bg-slate-900 border-b border-slate-800 px-6 py-4 shrink-0">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold">
-              {t("teams.title", "Teams")}
-            </h1>
+            <h1 className="text-2xl font-bold">{t("teams.title", "Teams")}</h1>
             <div className="flex items-center gap-4">
               <div className="relative w-64">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
@@ -329,7 +326,10 @@ const TeamsPage: React.FC = () => {
               {isLoading ? (
                 // Loading skeletons
                 Array.from({ length: 6 }).map((_, index) => (
-                  <Card key={index} className="bg-slate-800 border-slate-700 h-[200px] animate-pulse">
+                  <Card
+                    key={index}
+                    className="bg-slate-800 border-slate-700 h-[200px] animate-pulse"
+                  >
                     <CardHeader className="pb-2">
                       <div className="h-6 w-24 bg-slate-700 rounded"></div>
                     </CardHeader>
@@ -344,13 +344,25 @@ const TeamsPage: React.FC = () => {
                   <Users className="h-12 w-12 mx-auto text-slate-500 mb-4" />
                   <h3 className="text-xl font-medium mb-2">
                     {searchTerm
-                      ? t("teams.list.noSearchResults", "No teams found matching your search")
-                      : t("teams.list.noTeams", "No teams found. Create a new one!")}
+                      ? t(
+                          "teams.list.noSearchResults",
+                          "No teams found matching your search"
+                        )
+                      : t(
+                          "teams.list.noTeams",
+                          "No teams found. Create a new one!"
+                        )}
                   </h3>
                   <p className="text-slate-400 max-w-md mx-auto mb-6">
                     {searchTerm
-                      ? t("teams.list.tryDifferentSearch", "Try a different search term or clear the search")
-                      : t("teams.list.createTeamPrompt", "Create your first team to start collaborating with others")}
+                      ? t(
+                          "teams.list.tryDifferentSearch",
+                          "Try a different search term or clear the search"
+                        )
+                      : t(
+                          "teams.list.createTeamPrompt",
+                          "Create your first team to start collaborating with others"
+                        )}
                   </p>
                   {!searchTerm && (
                     <Button onClick={() => setIsCreateDialogOpen(true)}>
@@ -425,17 +437,21 @@ const TeamsPage: React.FC = () => {
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
-                        <CardTitle className="mt-2 text-xl">{team.name}</CardTitle>
+                        <CardTitle className="mt-2 text-xl">
+                          {team.name}
+                        </CardTitle>
                       </CardHeader>
                       <CardContent>
                         <p className="text-slate-400 text-sm mb-4">
-                          {team.description || t("teams.noDescription", "No description provided")}
+                          {team.description ||
+                            t("teams.noDescription", "No description provided")}
                         </p>
                         <div className="flex items-center justify-between text-sm">
                           <div className="flex items-center text-slate-500">
                             <Users className="h-4 w-4 mr-1" />
                             <span>
-                              {t("teams.createdAt", "Created")}: {new Date(team.created_at).toLocaleDateString()}
+                              {t("teams.createdAt", "Created")}:{" "}
+                              {new Date(team.created_at).toLocaleDateString()}
                             </span>
                           </div>
                           <Button
@@ -481,7 +497,10 @@ const TeamsPage: React.FC = () => {
               <div className="text-center py-8">
                 <UserPlus className="h-12 w-12 mx-auto text-slate-500 mb-4" />
                 <h3 className="text-xl font-medium mb-2">
-                  {t("teams.members.addMembersPrompt", "Add members to your team")}
+                  {t(
+                    "teams.members.addMembersPrompt",
+                    "Add members to your team"
+                  )}
                 </h3>
                 <p className="text-slate-400 max-w-md mx-auto mb-6">
                   {t(

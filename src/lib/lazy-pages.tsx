@@ -197,7 +197,7 @@ export function lazyPage<T extends ComponentType<any>>(
         return moduleExports;
       })
       .catch((error) => {
-        console.error("Error loading page:", error);
+        // Removed console statement
         // Măsurăm timpul de încărcare chiar și în caz de eroare
         performance.measure(`lazy-load-error-time`, startMark);
         throw error;

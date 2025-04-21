@@ -97,7 +97,7 @@ const ResourceAllocations: React.FC<ResourceAllocationsProps> = ({
 
       setAllocations(data || []);
     } catch (error) {
-      console.error("Error fetching allocations:", error);
+      // Removed console statement
       toast({
         variant: "destructive",
         title: "Error loading allocations",
@@ -131,7 +131,7 @@ const ResourceAllocations: React.FC<ResourceAllocationsProps> = ({
         })
       );
     } catch (error) {
-      console.error("Error fetching projects:", error);
+      // Removed console statement
     }
   };
 
@@ -152,7 +152,7 @@ const ResourceAllocations: React.FC<ResourceAllocationsProps> = ({
         description: "The allocation has been deleted successfully",
       });
     } catch (error) {
-      console.error("Error deleting allocation:", error);
+      // Removed console statement
       toast({
         variant: "destructive",
         title: "Error deleting allocation",

@@ -66,7 +66,7 @@ const ErrorMonitoringPage: React.FC = () => {
       const errorData = await errorMonitoring.getErrors(100);
       setErrors(errorData);
     } catch (error) {
-      console.error("Failed to load errors:", error);
+      // Removed console statement
       toast({
         title: "Error",
         description: "Failed to load error logs",
@@ -87,7 +87,7 @@ const ErrorMonitoringPage: React.FC = () => {
         description: "All error logs have been cleared",
       });
     } catch (error) {
-      console.error("Failed to clear errors:", error);
+      // Removed console statement
       toast({
         title: "Error",
         description: "Failed to clear error logs",
@@ -114,7 +114,7 @@ const ErrorMonitoringPage: React.FC = () => {
         description: "Error report has been downloaded",
       });
     } catch (error) {
-      console.error("Failed to generate report:", error);
+      // Removed console statement
       toast({
         title: "Error",
         description: "Failed to generate error report",

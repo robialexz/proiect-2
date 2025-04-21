@@ -39,30 +39,28 @@ export async function loadData<T>(
     });
 
     if (cachedData) {
-      console.log(`[DataLoader] Using cached data for ${key}`);
+      // Removed console statement
       return cachedData;
     }
 
     // Verificăm dacă suntem offline
     if (!offlineService.isOnline()) {
-      console.log(
-        `[DataLoader] Device is offline, checking offline data for ${key}`
-      );
+      // Removed console statement
 
       // Verificăm dacă avem date offline
       const offlineData = offlineService.getOfflineData<T[]>(key);
 
       if (offlineData) {
-        console.log(`[DataLoader] Using offline data for ${key}`);
+        // Removed console statement
         return offlineData;
       }
 
-      console.warn(`[DataLoader] No offline data available for ${key}`);
+      // Removed console statement
       return [];
     }
 
     // Încărcăm datele din Supabase
-    console.log(`[DataLoader] Fetching data for ${key}`);
+    // Removed console statement
 
     try {
       // Încercăm să obținem sesiunea curentă pentru a verifica autentificarea
@@ -70,7 +68,7 @@ export async function loadData<T>(
 
       // Dacă nu avem o sesiune validă și suntem în modul de dezvoltare, generam date de test
       if (!sessionData?.session) {
-        console.warn(`[DataLoader] No valid session for ${key}`);
+        // Removed console statement
 
         // Încercăm să obținem sesiunea din localStorage sau sessionStorage
         try {
@@ -80,9 +78,7 @@ export async function loadData<T>(
           if (localSession) {
             const parsedSession = JSON.parse(localSession);
             if (parsedSession?.currentSession?.access_token) {
-              console.log(
-                `[DataLoader] Found local session, using it for ${key}`
-              );
+              // Removed console statement
               // Adaugăm manual token-ul la header-ul de autorizare pentru Supabase
               const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
               const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -94,9 +90,7 @@ export async function loadData<T>(
               };
 
               // Folosim fetch direct cu header-urile personalizate
-              console.log(
-                `[DataLoader] Making direct fetch with custom headers for ${key}`
-              );
+              // Removed console statement
               const directResponse = await fetch(
                 `${supabaseUrl}/rest/v1/${table}?select=${encodeURIComponent(
                   columns
@@ -109,56 +103,44 @@ export async function loadData<T>(
 
               if (directResponse.ok) {
                 const data = await directResponse.json();
-                console.log(`[DataLoader] Direct fetch successful for ${key}`);
+                // Removed console statement
                 return data as T[];
               }
             }
           }
         } catch (localSessionError) {
-          console.error(
-            `[DataLoader] Error using local session:`,
-            localSessionError
-          );
+          // Removed console statement
         }
 
         // Dacă suntem în modul de dezvoltare, generam date de test
         if (import.meta.env.DEV) {
-          console.log(
-            `[DataLoader] No valid session, using test data for ${key}`
-          );
+          // Removed console statement
           return generateTestData<T>(table, 10);
         }
       }
     } catch (sessionError) {
-      console.warn(`[DataLoader] Error checking session:`, sessionError);
+      // Removed console statement
       // Continuăm oricum, poate avem acces public la date
     }
 
     const response = await supabaseService.select(table, columns, options);
 
     if (response.status === "error") {
-      console.error(
-        `[DataLoader] Error fetching data for ${key}:`,
-        response.error
-      );
+      // Removed console statement
 
       // Verificăm dacă eroarea este de autentificare (401)
       if (
         response.error?.code === "401" ||
         response.error?.message?.includes("JWT")
       ) {
-        console.warn(
-          `[DataLoader] Authentication error for ${key}, trying to refresh session`
-        );
+        // Removed console statement
 
         try {
           // Încercăm să reîmprospătăm sesiunea
           const { data: refreshData } = await supabase.auth.refreshSession();
 
           if (refreshData?.session) {
-            console.log(
-              `[DataLoader] Session refreshed, retrying fetch for ${key}`
-            );
+            // Removed console statement
             // Reîncercam cererea după reîmprospătarea sesiunii
             const retryResponse = await supabaseService.select(
               table,
@@ -170,30 +152,24 @@ export async function loadData<T>(
             }
           } else if (import.meta.env.DEV) {
             // În modul de dezvoltare, generam date de test dacă reîmprospătarea eșuează
-            console.log(
-              `[DataLoader] Session refresh failed, using test data for ${key}`
-            );
+            // Removed console statement
             return generateTestData<T>(table, 10);
           }
         } catch (refreshError) {
-          console.error(`[DataLoader] Error refreshing session:`, refreshError);
+          // Removed console statement
         }
       }
 
       // Verificăm dacă avem date offline ca fallback în caz de eroare
       const offlineData = offlineService.getOfflineData<T[]>(key);
       if (offlineData) {
-        console.log(
-          `[DataLoader] Using offline data as fallback after error for ${key}`
-        );
+        // Removed console statement
         return offlineData;
       }
 
       // În modul de dezvoltare, generam date de test ca ultim fallback
       if (import.meta.env.DEV) {
-        console.log(
-          `[DataLoader] Using generated test data as last resort for ${key}`
-        );
+        // Removed console statement
         return generateTestData<T>(table, 10);
       }
 
@@ -215,10 +191,7 @@ export async function loadData<T>(
 
     return data;
   } catch (error) {
-    console.error(
-      `[DataLoader] Unexpected error fetching data for ${key}:`,
-      error
-    );
+    // Removed console statement
 
     // Încercăm să recuperăm date din cache sau offline în caz de eroare
     const cachedData = cacheService.get<T[]>(key, {
@@ -226,13 +199,13 @@ export async function loadData<T>(
     });
 
     if (cachedData) {
-      console.log(`[DataLoader] Using cached data after error for ${key}`);
+      // Removed console statement
       return cachedData;
     }
 
     const offlineData = offlineService.getOfflineData<T[]>(key);
     if (offlineData) {
-      console.log(`[DataLoader] Using offline data after error for ${key}`);
+      // Removed console statement
       return offlineData;
     }
 
@@ -266,17 +239,17 @@ export async function preloadData<T>(
     });
 
     if (cachedData) {
-      console.log(`[DataLoader] Data already preloaded for ${key}`);
+      // Removed console statement
       return;
     }
 
     // Preîncărcăm datele
-    console.log(`[DataLoader] Preloading data for ${key}`);
+    // Removed console statement
     await loadData<T>(table, columns, options, key, expireIn);
 
-    console.log(`[DataLoader] Data preloaded for ${key}`);
+    // Removed console statement
   } catch (error) {
-    console.error("[DataLoader] Error preloading data:", error);
+    // Removed console statement
   }
 }
 
@@ -288,7 +261,7 @@ export function invalidateCache(cacheKey: string): void {
   cacheService.delete(cacheKey, {
     namespace: DATA_CACHE_NAMESPACE,
   });
-  console.log(`[DataLoader] Cache invalidated for ${cacheKey}`);
+  // Removed console statement
 }
 
 /**
@@ -296,7 +269,7 @@ export function invalidateCache(cacheKey: string): void {
  */
 export function invalidateAllCache(): void {
   cacheService.clearNamespace(DATA_CACHE_NAMESPACE);
-  console.log("[DataLoader] All data cache invalidated");
+  // Removed console statement
 }
 
 /**
@@ -306,7 +279,7 @@ export function invalidateAllCache(): void {
  * @returns Array de date de test
  */
 function generateTestData<T>(table: string, count: number = 10): T[] {
-  console.log(`Generating ${count} test records for ${table}`);
+  // Removed console statement
 
   const result: any[] = [];
 

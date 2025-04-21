@@ -51,7 +51,7 @@ class NotificationService {
    */
   public async requestPermission(): Promise<boolean> {
     if (!this.isSupported) {
-      console.warn("Notifications are not supported in this browser");
+      // Removed console statement
       return false;
     }
 
@@ -60,7 +60,7 @@ class NotificationService {
       this.permission = permission;
       return permission === "granted";
     } catch (error) {
-      console.error("Error requesting notification permission:", error);
+      // Removed console statement
       return false;
     }
   }
@@ -72,14 +72,18 @@ class NotificationService {
    */
   public async showNotification(options: NotificationOptions): Promise<Notification | null> {
     if (!this.isSupported) {
-      console.warn("Notifications are not supported in this browser");
+      // Removed console statement
       return null;
     }
 
     if (this.permission !== "granted") {
+      try {
       const granted = await this.requestPermission();
+      } catch (error) {
+        // Handle error appropriately
+      }
       if (!granted) {
-        console.warn("Notification permission not granted");
+        // Removed console statement
         return null;
       }
     }
@@ -94,7 +98,7 @@ class NotificationService {
 
       return notification;
     } catch (error) {
-      console.error("Error showing notification:", error);
+      // Removed console statement
       return null;
     }
   }

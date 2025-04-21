@@ -35,7 +35,7 @@ jest.mock('../../lib/supabase', () => ({
     storage: {
       from: jest.fn().mockReturnValue({
         upload: jest.fn().mockResolvedValue({ data: { path: 'avatars/user123.jpg' }, error: null }),
-        getPublicUrl: jest.fn().mockReturnValue({ data: { publicUrl: 'https://example.com/avatars/user123.jpg' } }),
+        getPublicUrl: jest.fn().mockReturnValue({ data: { publicUrl: '{process.env.EXAMPLE_COM_AVATARS_USER123}' } }),
       }),
     },
   },

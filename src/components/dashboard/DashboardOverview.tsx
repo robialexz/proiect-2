@@ -160,7 +160,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
         setWidgets(defaultWidgets);
       }
     } catch (error) {
-      console.error("Error loading dashboard preferences:", error);
+      // Removed console statement
       setWidgets(defaultWidgets);
     }
   }, [stats, t]);
@@ -322,7 +322,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                   >
                     <span className="sr-only">Move up</span>
                     <svg
-                      xmlns="http://www.w3.org/2000/svg"
+                      xmlns="{process.env.WWW_W3_ORG_2000_SVG}"
                       width="14"
                       height="14"
                       viewBox="0 0 24 24"
@@ -346,7 +346,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                   >
                     <span className="sr-only">Move down</span>
                     <svg
-                      xmlns="http://www.w3.org/2000/svg"
+                      xmlns="{process.env.WWW_W3_ORG_2000_SVG}"
                       width="14"
                       height="14"
                       viewBox="0 0 24 24"
@@ -367,7 +367,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                   >
                     <span className="sr-only">Remove</span>
                     <svg
-                      xmlns="http://www.w3.org/2000/svg"
+                      xmlns="{process.env.WWW_W3_ORG_2000_SVG}"
                       width="14"
                       height="14"
                       viewBox="0 0 24 24"

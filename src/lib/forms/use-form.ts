@@ -164,7 +164,11 @@ export function useForm<T extends Record<string, any>>(
         }
         
         if (isFormValid && options.onSubmit) {
+          try {
           await options.onSubmit(values);
+          } catch (error) {
+            // Handle error appropriately
+          }
         }
       } finally {
         setIsSubmitting(false);

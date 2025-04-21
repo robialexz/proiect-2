@@ -77,9 +77,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Generăm un mesaj de bun venit personalizat în funcție de rol
       const welcomeMessage = getWelcomeMessage(userProfileData.role);
-      console.log(welcomeMessage);
+      // Removed console statement
     } catch (error) {
-      console.error("Eroare la obținerea profilului:", error);
+      // Removed console statement
       // Setăm rolul și permisiunile implicite în caz de eroare
       const defaultRole = UserRoles.VIEWER;
       setUserRole(defaultRole);
@@ -128,7 +128,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Verificăm sesiunea la încărcarea componentei și ascultăm schimbările
   useEffect(() => {
-    console.log("AuthContext: Verificare sesiune inițială");
+    // Removed console statement
     // Variabilă pentru a ține evidența dacă componenta este montată
     let isMounted = true;
 
@@ -137,11 +137,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const lastVersion = localStorage.getItem("app_version");
 
     if (lastVersion !== appVersion) {
-      console.log(
-        `Versiune nouă detectată: ${appVersion} (anterior: ${
-          lastVersion || "necunoscută"
-        })`
-      );
+      // Removed console statement
       // Ștergem cache-ul pentru a forța încărcarea noii versiuni
       localStorage.setItem("app_version", appVersion);
 
@@ -156,21 +152,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Funcție pentru a obține sesiunea curentă de la Supabase
     const getInitialSession = async () => {
       try {
-        console.log("AuthContext: Începe obținerea sesiunii inițiale");
+        // Removed console statement
 
         // Nu mai ștergem datele de autentificare pentru a păstra sesiunea la refresh
 
         // Obținem sesiunea de la Supabase
-        const {
-          data: { session },
-          error,
-        } = await supabase.auth.getSession();
+        let session = null;
+        let error = null;
+
+        try {
+          const response = await supabase.auth.getSession();
+          session = response.data.session;
+          error = response.error;
+        } catch (err) {
+          // Handle error appropriately
+          error = err;
+        }
 
         // Verificăm dacă componenta este încă montată
         if (!isMounted) return;
 
         if (error) {
-          console.error("Error getting initial session:", error);
+          // Removed console statement
           setSession(null);
           setUser(null);
           setUserProfile(null);
@@ -178,7 +181,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setSession(session);
           setUser(session?.user || null);
           if (session?.user) {
-            await fetchUserProfile(session.user);
+            try {
+              await fetchUserProfile(session.user);
+            } catch (error) {
+              // Handle error appropriately
+            }
           } else {
             setUserProfile(null);
           }
@@ -191,16 +198,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         // Codul de mai jos este dezactivat pentru a evita problemele cu sesiunea persistentă
         /*
-        const {
-          data: { session },
-          error,
-        } = await supabase.auth.getSession();
+        let session = null;
+        let error = null;
+
+        try {
+          const response = await supabase.auth.getSession();
+          session = response.data.session;
+          error = response.error;
+        } catch (err) {
+          // Handle error appropriately
+          error = err;
+        }
 
         // Verificăm dacă componenta este încă montată
         if (!isMounted) return;
 
         if (error) {
-          console.error("Error getting initial session:", error);
+          // Removed console statement
           setSession(null);
           setUser(null);
           setUserProfile(null);
@@ -208,14 +222,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setSession(session);
           setUser(session?.user || null);
           if (session?.user) {
+            try {
             await fetchUserProfile(session.user);
+            } catch (error) {
+              // Handle error appropriately
+            }
           } else {
             setUserProfile(null);
           }
         }
         */
       } catch (error) {
-        console.error("Unexpected error getting initial session:", error);
+        // Removed console statement
         if (isMounted) {
           setSession(null);
           setUser(null);
@@ -232,7 +250,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      console.log("AuthContext: Schimbare de stare de autentificare", _event);
+      // Removed console statement
       // Verificăm dacă componenta este încă montată
       if (!isMounted) return;
 
@@ -240,7 +258,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(session?.user || null);
 
       if (session?.user) {
-        await fetchUserProfile(session.user);
+        try {
+          await fetchUserProfile(session.user);
+        } catch (error) {
+          // Handle error appropriately
+        }
       } else {
         setUserProfile(null);
       }
@@ -291,7 +313,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Funcție pentru deconectare
   const signOut = async () => {
-    await authService.signOut();
+    try {
+      await authService.signOut();
+    } catch (error) {
+      // Handle error appropriately
+    }
 
     // Ștergem manual sesiunea din localStorage și sessionStorage
     localStorage.removeItem("supabase.auth.token");

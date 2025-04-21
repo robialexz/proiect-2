@@ -110,10 +110,16 @@ const AuthPage = () => {
     try {
       // Doar în dezvoltare, nu în producție
       if (process.env.NODE_ENV !== "production") {
-        console.log("Trimit cerere de retrimitere email pentru:", resendEmail);
+        // Removed console statement
       }
 
-      const { error } = await authService.resendConfirmationEmail(resendEmail);
+      try {
+        const { error } = await authService.resendConfirmationEmail(
+          resendEmail
+        );
+      } catch (error) {
+        // Handle error appropriately
+      }
 
       if (error) {
         throw new Error(
@@ -133,7 +139,7 @@ const AuthPage = () => {
     } catch (err: any) {
       // Doar în dezvoltare, nu în producție
       if (process.env.NODE_ENV !== "production") {
-        console.error("Eroare la retrimiterea email-ului:", err);
+        // Removed console statement
       }
       setResendError(
         err.message || "A apărut o eroare la retrimiterea email-ului"
@@ -160,10 +166,14 @@ const AuthPage = () => {
     try {
       // Doar în dezvoltare, nu în producție
       if (process.env.NODE_ENV !== "production") {
-        console.log("Trimit cerere de autentificare pentru:", loginEmail);
+        // Removed console statement
       }
 
-      const { data, error } = await signIn(loginEmail, loginPassword);
+      try {
+        const { data, error } = await signIn(loginEmail, loginPassword);
+      } catch (error) {
+        // Handle error appropriately
+      }
 
       if (error) {
         throw new Error(error.message || "Autentificare eșuată");
@@ -176,7 +186,7 @@ const AuthPage = () => {
     } catch (err: any) {
       // Doar în dezvoltare, nu în producție
       if (process.env.NODE_ENV !== "production") {
-        console.error("Eroare la autentificare:", err);
+        // Removed console statement
       }
       setLoginError(err.message || "A apărut o eroare la autentificare");
     } finally {
@@ -200,7 +210,7 @@ const AuthPage = () => {
     try {
       // Doar în dezvoltare, nu în producție
       if (process.env.NODE_ENV !== "production") {
-        console.log("Trimit cerere de înregistrare pentru:", registerEmail);
+        // Removed console statement
       }
 
       const { data, error } = await signUp(
@@ -287,7 +297,7 @@ const AuthPage = () => {
     } catch (err: any) {
       // Doar în dezvoltare, nu în producție
       if (process.env.NODE_ENV !== "production") {
-        console.error("Eroare la înregistrare:", err);
+        // Removed console statement
       }
       setRegisterError(err.message || "A apărut o eroare la crearea contului");
     } finally {

@@ -163,7 +163,7 @@ export class ErrorReporter {
     
     // Logăm eroarea în consolă
     if (this.config.logToConsole) {
-      console.error('[ErrorReporter]', appError);
+      // Removed console statement
     }
     
     // Creăm raportul de eroare
@@ -212,14 +212,14 @@ export class ErrorReporter {
           .insert(errors);
         
         if (error) {
-          console.error('[ErrorReporter] Failed to report errors to Supabase:', error);
+          // Removed console statement
           
           // Readăugăm erorile în coadă
           this.errorQueue.push(...errors);
         }
       }
     } catch (error) {
-      console.error('[ErrorReporter] Error while flushing error queue:', error);
+      // Removed console statement
       
       // Readăugăm erorile în coadă în caz de eroare
       this.errorQueue.push(...this.errorQueue);

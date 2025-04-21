@@ -103,7 +103,7 @@ const ExpensesList: React.FC<ExpensesListProps> = ({
       setTotalSpent(total);
       setRemaining(budget.total_amount - total);
     } catch (error) {
-      console.error("Error fetching expenses:", error);
+      // Removed console statement
       toast({
         variant: "destructive",
         title: "Error loading expenses",
@@ -130,7 +130,7 @@ const ExpensesList: React.FC<ExpensesListProps> = ({
 
       setCategories(data || []);
     } catch (error) {
-      console.error("Error fetching categories:", error);
+      // Removed console statement
     }
   };
 

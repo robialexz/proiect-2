@@ -116,7 +116,7 @@ const TeamMembers: React.FC<TeamMembersProps> = ({
 
       setMembers(data || []);
     } catch (error) {
-      console.error("Error fetching team members:", error);
+      // Removed console statement
       toast({
         variant: "destructive",
         title: t("teams.members.errors.fetchFailed"),
@@ -144,7 +144,7 @@ const TeamMembers: React.FC<TeamMembersProps> = ({
         description: t("teams.members.notifications.memberDeletedDescription"),
       });
     } catch (error) {
-      console.error("Error deleting team member:", error);
+      // Removed console statement
       toast({
         variant: "destructive",
         title: t("teams.members.errors.deleteFailed"),
@@ -433,7 +433,11 @@ const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
         });
       } else {
         // Create new member
+        try {
         const { error } = await supabase.from("team_members").insert({
+        } catch (error) {
+          // Handle error appropriately
+        }
           team_id: teamId,
           name: values.name,
           email: values.email,
@@ -452,7 +456,7 @@ const TeamMemberForm: React.FC<TeamMemberFormProps> = ({
       onOpenChange(false);
       onSuccess();
     } catch (error) {
-      console.error("Error saving team member:", error);
+      // Removed console statement
       toast({
         variant: "destructive",
         title: member

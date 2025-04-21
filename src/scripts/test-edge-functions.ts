@@ -1,107 +1,151 @@
-import { supabase } from '../lib/supabase';
-import { requestSuplimentar, confirmSuplimentar, adjustSuplimentar, deleteMaterial } from '../lib/edge-functions';
+import { supabase } from "../lib/supabase";
+import {
+  requestSuplimentar,
+  confirmSuplimentar,
+  adjustSuplimentar,
+  deleteMaterial,
+} from "../lib/edge-functions";
 
 async function testEdgeFunctions() {
-  console.log('Testing edge functions...');
-  
+  // Removed console statement
+
   try {
     // First, create a test project
-    console.log('Creating test project...');
+    // Removed console statement
     const { data: projectData, error: projectError } = await supabase
-      .from('projects')
-      .insert([{ name: 'Test Project' }])
+      .from("projects")
+      .insert([{ name: "Test Project" }])
       .select()
       .single();
-    
+
     if (projectError) {
-      console.error('Error creating test project:', projectError);
+      // Removed console statement
       return;
     }
-    
-    console.log('Test project created:', projectData);
-    
+
+    // Removed console statement
+
     // Create a test material
-    console.log('Creating test material...');
+    // Removed console statement
+    try {
     const { data: materialData, error: materialError } = await supabase
-      .from('materials')
-      .insert([{
-        project_id: projectData.id,
-        name: 'Test Material',
-        dimension: '10x10',
-        unit: 'pcs',
-        quantity: 100,
-        manufacturer: 'Test Manufacturer',
-        category: 'Test Category',
-        suplimentar: 0
-      }])
+    } catch (error) {
+      // Handle error appropriately
+    }
+      .from("materials")
+      .insert([
+        {
+          project_id: projectData.id,
+          name: "Test Material",
+          dimension: "10x10",
+          unit: "pcs",
+          quantity: 100,
+          manufacturer: "Test Manufacturer",
+          category: "Test Category",
+          suplimentar: 0,
+        },
+      ])
       .select()
       .single();
-    
+
     if (materialError) {
-      console.error('Error creating test material:', materialError);
+      // Removed console statement
       return;
     }
-    
-    console.log('Test material created:', materialData);
-    
+
+    // Removed console statement
+
     // Test requestSuplimentar
-    console.log('Testing requestSuplimentar...');
-    const { data: requestData, error: requestError } = await requestSuplimentar(materialData.id, 10);
-    
+    // Removed console statement
+    try {
+    const { data: requestData, error: requestError } = await requestSuplimentar(
+    } catch (error) {
+      // Handle error appropriately
+    }
+      materialData.id,
+      10
+    );
+
     if (requestError) {
-      console.error('Error requesting supplementary quantity:', requestError);
+      // Removed console statement
     } else {
-      console.log('Supplementary quantity requested:', requestData);
+      // Removed console statement
     }
-    
+
     // Test adjustSuplimentar
-    console.log('Testing adjustSuplimentar...');
-    const { data: adjustData, error: adjustError } = await adjustSuplimentar(materialData.id, 5);
-    
+    // Removed console statement
+    try {
+    const { data: adjustData, error: adjustError } = await adjustSuplimentar(
+    } catch (error) {
+      // Handle error appropriately
+    }
+      materialData.id,
+      5
+    );
+
     if (adjustError) {
-      console.error('Error adjusting supplementary quantity:', adjustError);
+      // Removed console statement
     } else {
-      console.log('Supplementary quantity adjusted:', adjustData);
+      // Removed console statement
     }
-    
+
     // Test confirmSuplimentar
-    console.log('Testing confirmSuplimentar...');
-    const { data: confirmData, error: confirmError } = await confirmSuplimentar(materialData.id);
-    
+    // Removed console statement
+    try {
+    const { data: confirmData, error: confirmError } = await confirmSuplimentar(
+    } catch (error) {
+      // Handle error appropriately
+    }
+      materialData.id
+    );
+
     if (confirmError) {
-      console.error('Error confirming supplementary quantity:', confirmError);
+      // Removed console statement
     } else {
-      console.log('Supplementary quantity confirmed:', confirmData);
+      // Removed console statement
     }
-    
+
     // Test deleteMaterial
-    console.log('Testing deleteMaterial...');
-    const { data: deleteData, error: deleteError } = await deleteMaterial(materialData.id);
-    
+    // Removed console statement
+    try {
+    const { data: deleteData, error: deleteError } = await deleteMaterial(
+    } catch (error) {
+      // Handle error appropriately
+    }
+      materialData.id
+    );
+
     if (deleteError) {
-      console.error('Error deleting material:', deleteError);
+      // Removed console statement
     } else {
-      console.log('Material deleted:', deleteData);
+      // Removed console statement
     }
-    
+
     // Clean up - delete the test project
-    console.log('Cleaning up...');
+    // Removed console statement
+    try {
     const { error: cleanupError } = await supabase
-      .from('projects')
-      .delete()
-      .eq('id', projectData.id);
-    
-    if (cleanupError) {
-      console.error('Error cleaning up:', cleanupError);
-    } else {
-      console.log('Cleanup successful');
+    } catch (error) {
+      // Handle error appropriately
     }
-    
-    console.log('Edge function tests completed');
+      .from("projects")
+      .delete()
+      .eq("id", projectData.id);
+
+    if (cleanupError) {
+      // Removed console statement
+    } else {
+      // Removed console statement
+    }
+
+    // Removed console statement
   } catch (error) {
-    console.error('Unexpected error during tests:', error);
+    // Removed console statement
   }
 }
 
 // Run the tests
-testEdgeFunctions().catch(console.error);
+testEdgeFunctions().catch((error) => {
+  // Handle error appropriately
+  // Removed console statement
+});

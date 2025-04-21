@@ -36,7 +36,11 @@ const DatabaseManager: React.FC = () => {
         : { status: 'ok' };
       
       // Verificăm tabela projects
+      try {
       const { data: projectsData, error: projectsError } = await supabase
+      } catch (error) {
+        // Handle error appropriately
+      }
         .from('projects')
         .select('*')
         .limit(1);
@@ -46,7 +50,11 @@ const DatabaseManager: React.FC = () => {
         : { status: 'ok' };
       
       // Verificăm tabela materials
+      try {
       const { data: materialsData, error: materialsError } = await supabase
+      } catch (error) {
+        // Handle error appropriately
+      }
         .from('materials')
         .select('*')
         .limit(1);
@@ -60,7 +68,7 @@ const DatabaseManager: React.FC = () => {
         description: t('debug.databaseStatus', 'Starea bazei de date a fost actualizată'),
       });
     } catch (error) {
-      console.error('Error checking database:', error);
+      // Removed console statement
       toast({
         variant: 'destructive',
         title: t('debug.checkFailed', 'Verificare eșuată'),
@@ -93,9 +101,13 @@ const DatabaseManager: React.FC = () => {
       });
 
       // Verificăm starea bazei de date după resetare
+      try {
       await checkDatabase();
+      } catch (error) {
+        // Handle error appropriately
+      }
     } catch (error) {
-      console.error('Error resetting database:', error);
+      // Removed console statement
       toast({
         variant: 'destructive',
         title: t('debug.resetFailed', 'Resetare eșuată'),
@@ -123,9 +135,13 @@ const DatabaseManager: React.FC = () => {
       });
 
       // Verificăm starea bazei de date după populare
+      try {
       await checkDatabase();
+      } catch (error) {
+        // Handle error appropriately
+      }
     } catch (error) {
-      console.error('Error seeding database:', error);
+      // Removed console statement
       toast({
         variant: 'destructive',
         title: t('debug.seedFailed', 'Populare eșuată'),
@@ -152,7 +168,11 @@ const DatabaseManager: React.FC = () => {
       }
 
       // Populăm baza de date
+      try {
       const { error: seedError } = await supabase.rpc('seed_database');
+      } catch (error) {
+        // Handle error appropriately
+      }
       
       if (seedError) {
         throw seedError;
@@ -164,9 +184,13 @@ const DatabaseManager: React.FC = () => {
       });
 
       // Verificăm starea bazei de date după operațiuni
+      try {
       await checkDatabase();
+      } catch (error) {
+        // Handle error appropriately
+      }
     } catch (error) {
-      console.error('Error refreshing database:', error);
+      // Removed console statement
       toast({
         variant: 'destructive',
         title: t('debug.freshFailed', 'Operațiune eșuată'),

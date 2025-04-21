@@ -25,7 +25,7 @@ export const roleService = {
         .single();
 
       if (profileError) {
-        console.error("Eroare la obținerea profilului:", profileError);
+        // Removed console statement
       }
 
       // Dacă avem un profil cu rol, îl returnăm
@@ -34,18 +34,26 @@ export const roleService = {
       }
 
       // Dacă nu avem un profil cu rol, verificăm în tabelul de roluri utilizatori
-      const { data: userRole, error: userRoleError } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", userId)
-        .single();
+      let userRole = null;
+      let userRoleError = null;
+
+      try {
+        const response = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", userId)
+          .single();
+
+        userRole = response.data;
+        userRoleError = response.error;
+      } catch (error) {
+        // Handle error appropriately
+        userRoleError = error;
+      }
 
       if (userRoleError && userRoleError.code !== "PGRST116") {
         // PGRST116 = not found
-        console.error(
-          "Eroare la obținerea rolului utilizatorului:",
-          userRoleError
-        );
+        // Removed console statement
       }
 
       // Dacă avem un utilizator cu rol, îl returnăm
@@ -56,7 +64,7 @@ export const roleService = {
       // Dacă nu avem nici un rol, returnăm rolul implicit
       return UserRoles.VIEWER;
     } catch (error) {
-      console.error("Eroare neașteptată la obținerea rolului:", error);
+      // Removed console statement
       return UserRoles.VIEWER;
     }
   },
@@ -88,13 +96,13 @@ export const roleService = {
         .eq("id", userId);
 
       if (profileError) {
-        console.error("Eroare la actualizarea profilului:", profileError);
+        // Removed console statement
         return { success: false, error: profileError.message };
       }
 
       return { success: true };
     } catch (error: any) {
-      console.error("Eroare neașteptată la actualizarea rolului:", error);
+      // Removed console statement
       return { success: false, error: error.message || "Eroare neașteptată" };
     }
   },
@@ -125,7 +133,7 @@ export const roleService = {
         .single();
 
       if (error) {
-        console.error("Eroare la obținerea profilului:", error);
+        // Removed console statement
       }
 
       // Construim profilul utilizatorului
@@ -137,7 +145,7 @@ export const roleService = {
         permissions,
       };
     } catch (error) {
-      console.error("Eroare neașteptată la obținerea profilului:", error);
+      // Removed console statement
 
       // Returnăm un profil implicit în caz de eroare
       return {
@@ -169,7 +177,7 @@ export const roleService = {
       // Verificăm dacă utilizatorul are permisiunea
       return permissions[permission] === true;
     } catch (error) {
-      console.error("Eroare la verificarea permisiunii:", error);
+      // Removed console statement
       return false;
     }
   },
@@ -188,7 +196,7 @@ export const roleService = {
         .select("id, email, role");
 
       if (error) {
-        console.error("Eroare la obținerea utilizatorilor:", error);
+        // Removed console statement
         return [];
       }
 
@@ -198,7 +206,7 @@ export const roleService = {
         role: (user.role as UserRoles) || UserRoles.VIEWER,
       }));
     } catch (error) {
-      console.error("Eroare neașteptată la obținerea utilizatorilor:", error);
+      // Removed console statement
       return [];
     }
   },

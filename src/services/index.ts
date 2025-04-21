@@ -2,25 +2,26 @@
  * Exportă toate serviciile
  */
 
-// API Services
-export { supabase } from "./api/supabase-client";
-export { supabaseService } from "./api/supabase-service";
-export { enhancedSupabaseService } from "./api/enhanced-supabase-service";
+// Importăm serviciile
+import { supabase as supabaseClient } from "./api/supabase-client";
+import { supabaseService as supabaseServiceImport } from "./api/supabase-service";
+import { enhancedSupabaseService as enhancedSupabaseServiceImport } from "./api/enhanced-supabase-service";
+import { authService as authServiceImport } from "./auth/auth-service";
+import { cacheService as cacheServiceImport } from "./cache/cache-service";
+import { DataService as DataServiceImport, userService as userServiceImport } from "./data";
+import { projectService as projectServiceImport } from "./project.service";
+import { materialService as materialServiceImport } from "./material.service";
 
-// Auth Services
-export { authService } from "./auth/auth-service";
-
-// Cache Services
-export { cacheService } from "./cache/cache-service";
-
-// Data Services
-export { DataService, userService } from "./data";
-
-// Exportăm serviciul pentru proiecte
-export { projectService } from "./project.service";
-
-// Exportăm serviciul pentru materiale
-export { materialService } from "./material.service";
+// Exportăm serviciile
+export const supabase = supabaseClient;
+export const supabaseService = supabaseServiceImport;
+export const enhancedSupabaseService = enhancedSupabaseServiceImport;
+export const authService = authServiceImport;
+export const cacheService = cacheServiceImport;
+export const DataService = DataServiceImport;
+export const userService = userServiceImport;
+export const projectService = projectServiceImport;
+export const materialService = materialServiceImport;
 
 // Export types
 export type {
@@ -29,12 +30,14 @@ export type {
 } from "./api/supabase-service";
 
 // Export implicit pentru compatibilitate
-export default {
-  projectService,
-  materialService,
-  userService,
-  authService,
-  cacheService,
-  supabaseService,
-  enhancedSupabaseService,
+const services = {
+  projectService: projectServiceImport,
+  materialService: materialServiceImport,
+  userService: userServiceImport,
+  authService: authServiceImport,
+  cacheService: cacheServiceImport,
+  supabaseService: supabaseServiceImport,
+  enhancedSupabaseService: enhancedSupabaseServiceImport,
 };
+
+export default services;

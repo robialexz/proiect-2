@@ -41,7 +41,7 @@ const LanguageSwitcher: React.FC = () => {
     if (i18n && typeof i18n.changeLanguage === 'function') {
       i18n.changeLanguage(lng);
     } else {
-      console.warn('i18n is not initialized or changeLanguage is not available');
+      // Removed console statement
     }
   };
 

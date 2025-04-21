@@ -310,7 +310,7 @@ export const useAuthStore = create<AuthState>()(
             set({ role });
           }
         } catch (error) {
-          console.error('Eroare la încărcarea datelor utilizatorului:', error);
+          // Removed console statement
         }
       },
       

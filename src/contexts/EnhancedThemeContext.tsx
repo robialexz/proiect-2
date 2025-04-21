@@ -77,7 +77,7 @@ export const EnhancedThemeProvider: React.FC<{ children: React.ReactNode }> = ({
       // Încercăm să parsăm ca JSON
       return JSON.parse(storedTheme);
     } catch (error) {
-      console.error("Failed to parse theme from localStorage:", error);
+      // Removed console statement
 
       // În caz de eroare, ștergem valoarea invalidă din localStorage
       localStorage.removeItem("enhanced_theme");
@@ -105,7 +105,7 @@ export const EnhancedThemeProvider: React.FC<{ children: React.ReactNode }> = ({
       try {
         localStorage.setItem("enhanced_theme", JSON.stringify(updatedTheme));
       } catch (error) {
-        console.error("Failed to save theme to localStorage:", error);
+        // Removed console statement
       }
 
       return updatedTheme;
@@ -120,7 +120,7 @@ export const EnhancedThemeProvider: React.FC<{ children: React.ReactNode }> = ({
     try {
       localStorage.setItem("enhanced_theme", JSON.stringify(defaultTheme));
     } catch (error) {
-      console.error("Failed to save theme to localStorage:", error);
+      // Removed console statement
     }
   }, []);
 

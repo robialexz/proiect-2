@@ -86,7 +86,7 @@ const InventoryAssistantPage: React.FC = () => {
       (window as any).webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
-      console.warn("Speech Recognition not supported in this browser.");
+      // Removed console statement
       // Optionally, disable the mic button or show a message
       return;
     }
@@ -107,7 +107,7 @@ const InventoryAssistantPage: React.FC = () => {
       };
 
       speechRecognition.current.onerror = (event: any) => {
-        console.error("Speech recognition error", event.error);
+        // Removed console statement
         setIsSpeechRecognitionActive(false);
         toast({
           title: "Eroare recunoaștere vocală",
@@ -120,7 +120,7 @@ const InventoryAssistantPage: React.FC = () => {
         setIsSpeechRecognitionActive(false);
       };
     } catch (error) {
-      console.error("Failed to initialize Speech Recognition:", error);
+      // Removed console statement
       toast({
         title: "Eroare inițializare recunoaștere vocală",
         description: `Nu s-a putut inițializa recunoașterea vocală: ${
@@ -267,7 +267,7 @@ const InventoryAssistantPage: React.FC = () => {
         window.speechSynthesis.speak(utterance);
       }
     } catch (error) {
-      console.error("Error processing message:", error);
+      // Removed console statement
 
       // Actualizăm mesajul asistentului cu eroarea
       setMessages((prev) =>
@@ -379,7 +379,7 @@ const InventoryAssistantPage: React.FC = () => {
         });
       })
       .catch((err) => {
-        console.error("Failed to copy conversation:", err);
+        // Removed console statement
         toast({
           title: "Eroare",
           description: "Nu am putut copia conversația în clipboard.",
@@ -452,7 +452,7 @@ const InventoryAssistantPage: React.FC = () => {
                     title="Șterge conversația"
                   >
                     <svg
-                      xmlns="http://www.w3.org/2000/svg"
+                      xmlns="{process.env.WWW_W3_ORG_2000_SVG}"
                       width="16"
                       height="16"
                       viewBox="0 0 24 24"

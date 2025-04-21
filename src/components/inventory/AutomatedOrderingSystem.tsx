@@ -92,7 +92,7 @@ const AutomatedOrderingSystem: React.FC<AutomatedOrderingSystemProps> = ({
         .single();
 
       if (error && error.code !== "PGRST116") {
-        console.error("Error loading order settings:", error);
+        // Removed console statement
         return;
       }
 
@@ -107,7 +107,7 @@ const AutomatedOrderingSystem: React.FC<AutomatedOrderingSystemProps> = ({
         });
       }
     } catch (error) {
-      console.error("Unexpected error loading settings:", error);
+      // Removed console statement
     } finally {
       setLoading(false);
     }
@@ -121,7 +121,7 @@ const AutomatedOrderingSystem: React.FC<AutomatedOrderingSystemProps> = ({
         .order("name");
 
       if (error) {
-        console.error("Error loading suppliers:", error);
+        // Removed console statement
         return;
       }
 
@@ -129,7 +129,7 @@ const AutomatedOrderingSystem: React.FC<AutomatedOrderingSystemProps> = ({
         setSuppliers(data);
       }
     } catch (error) {
-      console.error("Unexpected error loading suppliers:", error);
+      // Removed console statement
     }
   };
 
@@ -152,7 +152,7 @@ const AutomatedOrderingSystem: React.FC<AutomatedOrderingSystemProps> = ({
         .select();
 
       if (error) {
-        console.error("Error saving order settings:", error);
+        // Removed console statement
         toast({
           variant: "destructive",
           title: t("inventory.autoOrder.saveError", "Error Saving Settings"),
@@ -169,7 +169,7 @@ const AutomatedOrderingSystem: React.FC<AutomatedOrderingSystemProps> = ({
         ),
       });
     } catch (error: any) {
-      console.error("Unexpected error saving settings:", error);
+      // Removed console statement
       toast({
         variant: "destructive",
         title: t("inventory.autoOrder.saveError", "Error Saving Settings"),
@@ -195,7 +195,7 @@ const AutomatedOrderingSystem: React.FC<AutomatedOrderingSystemProps> = ({
         .order("name");
 
       if (error) {
-        console.error("Error checking low stock items:", error);
+        // Removed console statement
         return;
       }
 
@@ -219,7 +219,7 @@ const AutomatedOrderingSystem: React.FC<AutomatedOrderingSystemProps> = ({
 
       setLowStockItems(lowStock);
     } catch (error) {
-      console.error("Unexpected error checking stock:", error);
+      // Removed console statement
     }
   };
 
@@ -235,7 +235,7 @@ const AutomatedOrderingSystem: React.FC<AutomatedOrderingSystemProps> = ({
         .order("created_at", { ascending: false });
 
       if (error) {
-        console.error("Error loading pending orders:", error);
+        // Removed console statement
         return;
       }
 
@@ -254,7 +254,7 @@ const AutomatedOrderingSystem: React.FC<AutomatedOrderingSystemProps> = ({
         setPendingOrders(formattedOrders);
       }
     } catch (error) {
-      console.error("Unexpected error loading pending orders:", error);
+      // Removed console statement
     }
   };
 
@@ -285,7 +285,7 @@ const AutomatedOrderingSystem: React.FC<AutomatedOrderingSystemProps> = ({
         .select();
 
       if (error) {
-        console.error("Error creating order:", error);
+        // Removed console statement
         toast({
           variant: "destructive",
           title: t("inventory.autoOrder.orderError", "Error Creating Order"),
@@ -308,7 +308,7 @@ const AutomatedOrderingSystem: React.FC<AutomatedOrderingSystemProps> = ({
       // Remove item from low stock list
       setLowStockItems((prev) => prev.filter((i) => i.id !== item.id));
     } catch (error: any) {
-      console.error("Unexpected error creating order:", error);
+      // Removed console statement
       toast({
         variant: "destructive",
         title: t("inventory.autoOrder.orderError", "Error Creating Order"),
@@ -325,7 +325,7 @@ const AutomatedOrderingSystem: React.FC<AutomatedOrderingSystemProps> = ({
         .eq("id", orderId);
 
       if (error) {
-        console.error("Error approving order:", error);
+        // Removed console statement
         toast({
           variant: "destructive",
           title: t("inventory.autoOrder.approveError", "Error Approving Order"),
@@ -345,7 +345,7 @@ const AutomatedOrderingSystem: React.FC<AutomatedOrderingSystemProps> = ({
       // Refresh pending orders
       loadPendingOrders();
     } catch (error: any) {
-      console.error("Unexpected error approving order:", error);
+      // Removed console statement
       toast({
         variant: "destructive",
         title: t("inventory.autoOrder.approveError", "Error Approving Order"),
@@ -362,7 +362,7 @@ const AutomatedOrderingSystem: React.FC<AutomatedOrderingSystemProps> = ({
         .eq("id", orderId);
 
       if (error) {
-        console.error("Error rejecting order:", error);
+        // Removed console statement
         toast({
           variant: "destructive",
           title: t("inventory.autoOrder.rejectError", "Error Rejecting Order"),
@@ -382,7 +382,7 @@ const AutomatedOrderingSystem: React.FC<AutomatedOrderingSystemProps> = ({
       // Refresh pending orders
       loadPendingOrders();
     } catch (error: any) {
-      console.error("Unexpected error rejecting order:", error);
+      // Removed console statement
       toast({
         variant: "destructive",
         title: t("inventory.autoOrder.rejectError", "Error Rejecting Order"),
@@ -418,7 +418,7 @@ const AutomatedOrderingSystem: React.FC<AutomatedOrderingSystemProps> = ({
       // Refresh low stock items
       checkLowStockItems();
     } catch (error: any) {
-      console.error("Error in automated ordering:", error);
+      // Removed console statement
       toast({
         variant: "destructive",
         title: t(

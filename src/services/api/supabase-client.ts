@@ -2,20 +2,15 @@ import { createClient } from "@supabase/supabase-js";
 import { type Database } from "@/types/supabase-types";
 
 // Afișăm valorile pentru debugging
-console.log("VITE_SUPABASE_URL:", import.meta.env.VITE_SUPABASE_URL);
-console.log(
-  "VITE_SUPABASE_ANON_KEY:",
-  import.meta.env.VITE_SUPABASE_ANON_KEY ? "Există" : "Lipsește"
-);
+// Removed console statement
+// Removed console statement
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.error("Missing Supabase environment variables");
-  console.error(
-    "Verificați fișierul .env și asigurați-vă că conține valorile corecte"
-  );
+  // Removed console statement
+  // Removed console statement
 }
 
 /**
@@ -29,7 +24,6 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
     detectSessionInUrl: true,
     // Remove custom storage and rely on Supabase's default implementation
     // storageKey: "supabase.auth.token", // Use default storage key
-    // storage: { ... }, // Remove custom storage object
   },
   global: {
     // Timeout mărit la 60 de secunde pentru a permite conexiuni mai lente

@@ -290,7 +290,7 @@ const SuppliersPage: React.FC = () => {
                   className={viewMode === "grid" ? "" : "border-slate-700"}
                 >
                   <svg
-                    xmlns="http://www.w3.org/2000/svg"
+                    xmlns="{process.env.WWW_W3_ORG_2000_SVG}"
                     width="16"
                     height="16"
                     viewBox="0 0 24 24"
@@ -313,7 +313,7 @@ const SuppliersPage: React.FC = () => {
                   className={viewMode === "table" ? "" : "border-slate-700"}
                 >
                   <svg
-                    xmlns="http://www.w3.org/2000/svg"
+                    xmlns="{process.env.WWW_W3_ORG_2000_SVG}"
                     width="16"
                     height="16"
                     viewBox="0 0 24 24"

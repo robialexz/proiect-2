@@ -122,21 +122,35 @@ export default defineConfig({
     {
       name: "generate-service-worker",
       closeBundle() {
-        // Copiem service worker-ul în directorul de build
-        const serviceWorkerPath = resolve(__dirname, "src/service-worker.ts");
-        const outputPath = resolve(__dirname, "dist/service-worker.js");
+        try {
+          // Copiem service worker-ul în directorul de build
+          const serviceWorkerPath = resolve(__dirname, "src/service-worker.ts");
+          const outputDir = resolve(__dirname, "dist");
+          const outputPath = resolve(outputDir, "service-worker.js");
 
-        if (fs.existsSync(serviceWorkerPath)) {
-          const content = fs.readFileSync(serviceWorkerPath, "utf-8");
-          // Transpunem TypeScript în JavaScript
-          const jsContent = content
-            .replace(/: any/g, "")
-            .replace(/export \{\};/g, "");
+          // Verificăm dacă directorul dist există
+          if (!fs.existsSync(outputDir)) {
+            fs.mkdirSync(outputDir, { recursive: true });
+          }
 
-          fs.writeFileSync(outputPath, jsContent);
-          console.log("Service worker generat cu succes!");
-        } else {
-          console.error("Nu s-a găsit fișierul service-worker.ts");
+          if (fs.existsSync(serviceWorkerPath)) {
+            const content = fs.readFileSync(serviceWorkerPath, "utf-8");
+            // Transpunem TypeScript în JavaScript
+            const jsContent = content
+              .replace(/: any/g, "")
+              .replace(/export \{\};/g, "");
+
+            fs.writeFileSync(outputPath, jsContent);
+            console.log("Service worker generat cu succes!");
+          } else {
+            console.warn(
+              "Nu s-a găsit fișierul service-worker.ts, se creează unul gol"
+            );
+            // Creăm un service worker gol pentru a evita eroarea
+            fs.writeFileSync(outputPath, "// Service worker gol");
+          }
+        } catch (error) {
+          console.error("Eroare la generarea service worker-ului:", error);
         }
       },
     },

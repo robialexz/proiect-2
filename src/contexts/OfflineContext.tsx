@@ -190,7 +190,7 @@ export function OfflineProvider({ children }: { children: React.ReactNode }) {
       // Actualizăm numărul de operațiuni în așteptare
       updatePendingOperationsCount();
     } catch (error) {
-      console.error("Error syncing data:", error);
+      // Removed console statement
       toast({
         title: t("offline.syncErrorTitle", "Sync Error"),
         description: t(

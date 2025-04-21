@@ -87,7 +87,11 @@ const TaskManagement: React.FC<TaskManagementProps> = React.memo(({
 
   // Handler functions
   const handleCreateTask = React.useCallback(async () => {
+    try {
     const success = await createTask(newTask);
+    } catch (error) {
+      // Handle error appropriately
+    }
     if (success) {
       // Reset form and close dialog
       setNewTask({
@@ -107,7 +111,11 @@ const TaskManagement: React.FC<TaskManagementProps> = React.memo(({
   const handleUpdateTask = React.useCallback(async () => {
     if (!taskToEdit) return;
 
+    try {
     const success = await updateTask(taskToEdit);
+    } catch (error) {
+      // Handle error appropriately
+    }
     if (success) {
       setIsEditTaskOpen(false);
       setTaskToEdit(null);

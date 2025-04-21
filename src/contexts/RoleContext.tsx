@@ -50,7 +50,6 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
       // Adăugăm un timeout pentru a evita blocarea la "se încarcă..."
       const timeoutId = setTimeout(() => {
         if (loading) {
-          console.log("Role loading timeout reached, forcing loading to false");
           setLoading(false);
           setUserRole("user"); // Setăm rolul implicit în caz de timeout
         }
@@ -58,7 +57,6 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
 
       // Verificăm dacă este un utilizator de test
       if (user.id && user.id.toString().startsWith('test-user-id')) {
-        console.log('Using test user role');
         // Pentru utilizatorii de test, setăm rolul de director pentru a asigura acces complet
         setUserRole('director');
         clearTimeout(timeoutId);
@@ -98,52 +96,60 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
       }
 
       // Fetch user role from the database
-      const { data, error } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", user.id)
-        .single();
+      try {
+        const { data, error } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", user.id)
+          .single();
 
-      clearTimeout(timeoutId);
+        clearTimeout(timeoutId);
 
-      if (error) {
-        console.error("Error fetching user role:", error);
+        if (error) {
+          // Încercăm să creăm un rol implicit pentru utilizator
+          try {
+            await supabase
+              .from("user_roles")
+              .insert([{ user_id: user.id, role: "user" }]);
+          } catch (insertError) {
+            // Eroare la inserare
+          }
 
-        // Încercăm să creăm un rol implicit pentru utilizator
-        try {
-          await supabase
-            .from("user_roles")
-            .insert([{ user_id: user.id, role: "user" }]);
-        } catch (insertError) {
-          console.error("Error creating default user role:", insertError);
+          setUserRole("user"); // Default to user role if there's an error
+        } else if (data) {
+          setUserRole(data.role as UserRole);
+        } else {
+          // If no role is found, create and default to user
+          try {
+            await supabase
+              .from("user_roles")
+              .insert([{ user_id: user.id, role: "user" }]);
+          } catch (insertError) {
+            // Eroare la inserare
+          }
+
+          setUserRole("user");
         }
-
-        setUserRole("user"); // Default to user role if there's an error
-      } else if (data) {
-        setUserRole(data.role as UserRole);
-      } else {
-        // If no role is found, create and default to user
-        try {
-          await supabase
-            .from("user_roles")
-            .insert([{ user_id: user.id, role: "user" }]);
-        } catch (insertError) {
-          console.error("Error creating default user role:", insertError);
-        }
-
+      } catch (error) {
+        // Eroare la interogare
         setUserRole("user");
+      } finally {
+        setLoading(false);
       }
     } catch (error) {
-      console.error("Unexpected error fetching role:", error);
+      // Eroare generală
       setUserRole("user");
-    } finally {
       setLoading(false);
     }
   };
 
   // Refresh role function that can be called from components
   const refreshRole = async () => {
-    await fetchUserRole();
+    try {
+      await fetchUserRole();
+    } catch (error) {
+      // Handle error appropriately
+    }
   };
 
   // Effect to fetch role when user changes

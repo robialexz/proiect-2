@@ -28,7 +28,7 @@ export const AUTH_CONSTANTS = {
 // Constante pentru API
 export const API_CONSTANTS = {
   // URL-ul API-ului
-  API_URL: import.meta.env.VITE_API_URL || 'https://btvpnzsmrfrlwczanbcg.supabase.co',
+  API_URL: import.meta.env.VITE_API_URL || '{process.env.BTVPNZSMRFRLWCZANBCG_SUPABASE}',
   // Timeout-ul pentru request-uri în milisecunde (30 secunde)
   REQUEST_TIMEOUT: 30000,
   // Numărul de reîncercări pentru request-uri
@@ -358,7 +358,7 @@ export const APP_CONSTANTS = {
     import.meta.env.VITE_APP_DESCRIPTION ||
     'Aplicație pentru gestionarea proiectelor și inventarului',
   // URL-ul aplicației
-  APP_URL: import.meta.env.VITE_APP_URL || 'https://proiect-2.vercel.app',
+  APP_URL: import.meta.env.VITE_APP_URL || '{process.env.PROIECT_2_VERCEL}',
   // Email-ul de contact
   CONTACT_EMAIL: import.meta.env.VITE_CONTACT_EMAIL || 'contact@proiect-2.ro',
   // Numărul de telefon de contact
@@ -380,9 +380,9 @@ export const APP_CONSTANTS = {
   // URL-ul pentru documentație
   DOCS_URL: import.meta.env.VITE_DOCS_URL || '/docs',
   // URL-ul pentru API
-  API_URL: import.meta.env.VITE_API_URL || 'https://btvpnzsmrfrlwczanbcg.supabase.co',
+  API_URL: import.meta.env.VITE_API_URL || '{process.env.BTVPNZSMRFRLWCZANBCG_SUPABASE}',
   // URL-ul pentru Supabase
-  SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL || 'https://btvpnzsmrfrlwczanbcg.supabase.co',
+  SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL || '{process.env.BTVPNZSMRFRLWCZANBCG_SUPABASE}',
   // Cheia publică pentru Supabase
   SUPABASE_KEY:
     import.meta.env.VITE_SUPABASE_KEY ||

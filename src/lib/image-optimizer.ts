@@ -69,7 +69,7 @@ export function optimizeCloudinaryUrl(
 
     return `${baseUrl}${transformParams.join(',')}/${imagePathWithParams}`;
   } catch (error) {
-    console.error('Error optimizing Cloudinary URL:', error);
+    // Removed console statement
     return url;
   }
 }
@@ -112,7 +112,7 @@ export function optimizeImgixUrl(
 
     return urlObj.toString();
   } catch (error) {
-    console.error('Error optimizing Imgix URL:', error);
+    // Removed console statement
     return url;
   }
 }
@@ -143,7 +143,7 @@ export function optimizeImageUrl(
     // Pentru alte surse, returnăm URL-ul original
     return url;
   } catch (error) {
-    console.error('Error optimizing image URL:', error);
+    // Removed console statement
     return url;
   }
 }

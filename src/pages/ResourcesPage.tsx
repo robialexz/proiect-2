@@ -66,7 +66,7 @@ const ResourcesPage: React.FC = () => {
 
         setProjects(projectsWithCorrectStatus);
       } catch (error) {
-        console.error("Error loading projects:", error);
+        // Removed console statement
       } finally {
         setLoadingProjects(false);
       }
@@ -104,7 +104,7 @@ const ResourcesPage: React.FC = () => {
     setIsLoading(resourcesLoading);
 
     if (resourcesError) {
-      console.error("Error fetching resources:", resourcesError);
+      // Removed console statement
       // Evităm afișarea de notificări multiple pentru aceeași eroare
       // Folosim un timeout pentru a evita problemele de performanță
       const timer = setTimeout(() => {
@@ -135,7 +135,7 @@ const ResourcesPage: React.FC = () => {
 
       setResources(data || []);
     } catch (error: any) {
-      console.error("Error fetching resources (fallback):", error);
+      // Removed console statement
       toast({
         variant: "destructive",
         title: "Error loading resources",
@@ -168,7 +168,7 @@ const ResourcesPage: React.FC = () => {
         description: "The resource has been successfully deleted",
       });
     } catch (error: any) {
-      console.error("Error deleting resource:", error);
+      // Removed console statement
       toast({
         variant: "destructive",
         title: "Error deleting resource",

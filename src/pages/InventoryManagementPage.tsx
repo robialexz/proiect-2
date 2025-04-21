@@ -73,7 +73,7 @@ const InventoryManagementPage: React.FC = () => {
 
         setProjects(projectsWithCorrectStatus);
       } catch (error) {
-        console.error("Error loading projects:", error);
+        // Removed console statement
       } finally {
         setLoadingProjects(false);
       }
@@ -152,7 +152,11 @@ const InventoryManagementPage: React.FC = () => {
 
   // Gestionăm confirmarea cantității suplimentare
   const handleConfirmSuplimentar = async (id: string) => {
+    try {
     await confirmSuplimentar(id);
+    } catch (error) {
+      // Handle error appropriately
+    }
   };
 
   // Gestionăm crearea unui material
@@ -163,7 +167,7 @@ const InventoryManagementPage: React.FC = () => {
       material.quantity === undefined ||
       material.unit === undefined
     ) {
-      console.error("Missing required fields for material creation");
+      // Removed console statement
       return { success: false, error: "Missing required fields" };
     }
     // Create a new object with only the fields needed for material creation
@@ -186,29 +190,49 @@ const InventoryManagementPage: React.FC = () => {
       image_url: material.image_url,
     };
 
+    try {
     return await createMaterial(newMaterial);
+    } catch (error) {
+      // Handle error appropriately
+    }
   };
 
   // Gestionăm actualizarea unui material
   const handleUpdateMaterial = async (material: Partial<Material>) => {
     if (!selectedMaterial)
       return { success: false, error: "No material selected" };
+    try {
     return await updateMaterial(selectedMaterial.id, material);
+    } catch (error) {
+      // Handle error appropriately
+    }
   };
 
   // Gestionăm confirmarea ștergerii
   const handleConfirmDelete = async (id: string) => {
+    try {
     return await deleteMaterial(id);
+    } catch (error) {
+      // Handle error appropriately
+    }
   };
 
   // Gestionăm exportul inventarului
   const handleExport = async (format: "csv" | "json") => {
+    try {
     return await exportInventory(format);
+    } catch (error) {
+      // Handle error appropriately
+    }
   };
 
   // Gestionăm generarea listei de reaprovizionare
   const handleGenerateReorderList = async () => {
+    try {
     return await generateReorderList();
+    } catch (error) {
+      // Handle error appropriately
+    }
   };
 
   // Gestionăm importul

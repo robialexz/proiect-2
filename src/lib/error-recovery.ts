@@ -171,7 +171,7 @@ export function handleError(error: any, silent: boolean = false): boolean {
   
   // Logăm eroarea
   if (!silent) {
-    console.error('Error handled:', structuredError);
+    // Removed console statement
   }
   
   // Verificăm dacă eroarea este recuperabilă

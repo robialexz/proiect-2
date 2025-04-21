@@ -324,7 +324,11 @@ export const useInventory = (projectId?: string) => {
       // Validăm câmpurile actualizate
       materialSchema.partial().parse(fieldsToValidate);
       
+      try {
       const response = await inventoryService.updateItem(id, material);
+      } catch (error) {
+        // Handle error appropriately
+      }
       
       if (response.error) {
         throw new Error(response.error.message);

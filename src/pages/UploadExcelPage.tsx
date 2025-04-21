@@ -164,20 +164,20 @@ const UploadExcelPage: React.FC = () => {
             });
           }, 500);
         } catch (error) {
-          console.error("Error processing Excel file:", error);
+          // Removed console statement
           handleUploadError(error);
         }
       };
 
       reader.onerror = (error) => {
-        console.error("FileReader error:", error);
+        // Removed console statement
         handleUploadError(error);
       };
 
       // Read the file as an ArrayBuffer
       reader.readAsArrayBuffer(selectedFile);
     } catch (error) {
-      console.error("Upload error:", error);
+      // Removed console statement
       handleUploadError(error);
     }
   };

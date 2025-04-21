@@ -198,7 +198,11 @@ const Sidebar = () => {
 
   // Gestionăm deconectarea - optimizat cu memoizare
   const handleSignOut = useMemoizedCallback(async () => {
+    try {
     await signOut();
+    } catch (error) {
+      // Handle error appropriately
+    }
     addNotification({
       type: "success",
       title: "Deconectat",
@@ -256,7 +260,7 @@ const Sidebar = () => {
         <div className="flex items-center">
           <Avatar className="h-10 w-10">
             <AvatarImage
-              src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${
+              src={`https:
                 userProfile?.displayName || "user"
               }`}
               alt={userProfile?.displayName || "User"}

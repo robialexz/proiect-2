@@ -21,7 +21,7 @@ export function useSessionStorage<T>(key: string, initialValue: T): [T, (value: 
       // Returnăm valoarea parsată sau valoarea implicită
       return item ? JSON.parse(item) : initialValue;
     } catch (error) {
-      console.warn(`Error reading sessionStorage key "${key}":`, error);
+      // Removed console statement
       return initialValue;
     }
   };
@@ -47,7 +47,7 @@ export function useSessionStorage<T>(key: string, initialValue: T): [T, (value: 
         window.dispatchEvent(new Event('session-storage'));
       }
     } catch (error) {
-      console.warn(`Error setting sessionStorage key "${key}":`, error);
+      // Removed console statement
     }
   };
   

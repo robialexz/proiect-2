@@ -37,18 +37,18 @@ async function checkTable(
   tableName: string
 ): Promise<{ status: "ok" | "error"; message?: string }> {
   try {
-    console.log(chalk.blue(`Checking table: ${tableName}`));
+    // Removed console statement
     const { data, error } = await supabase.from(tableName).select("*").limit(1);
 
     if (error) {
-      console.error(chalk.red(`Error checking table ${tableName}:`), error);
+      // Removed console statement
       return { status: "error", message: error.message };
     }
 
-    console.log(chalk.green(`Table ${tableName} exists and is accessible`));
+    // Removed console statement
     return { status: "ok" };
   } catch (error) {
-    console.error(chalk.red(`Error checking table ${tableName}:`), error);
+    // Removed console statement
     return {
       status: "error",
       message: error instanceof Error ? error.message : "Unknown error",
@@ -60,64 +60,50 @@ async function checkTable(
  * Funcție principală pentru verificarea bazei de date
  */
 async function checkDatabase() {
-  console.log(chalk.yellow("Starting database check..."));
+  // Removed console statement
 
   const results: Record<string, { status: "ok" | "error"; message?: string }> =
     {};
   let hasErrors = false;
 
   for (const table of TABLES_TO_CHECK) {
+    try {
     results[table] = await checkTable(table);
+    } catch (error) {
+      // Handle error appropriately
+    }
     if (results[table].status === "error") {
       hasErrors = true;
     }
   }
 
-  console.log(chalk.yellow("\nDatabase check summary:"));
-  console.log("----------------------------------------");
+  // Removed console statement
+  // Removed console statement
 
   for (const [table, result] of Object.entries(results)) {
     if (result.status === "ok") {
-      console.log(`${chalk.green("✓")} ${table}: ${chalk.green("OK")}`);
+      // Removed console statement
     } else {
-      console.log(
-        `${chalk.red("✗")} ${table}: ${chalk.red("ERROR")} - ${result.message}`
-      );
+      // Removed console statement
     }
   }
 
-  console.log("----------------------------------------");
+  // Removed console statement
 
   if (hasErrors) {
-    console.log(
-      chalk.red(
-        "\nSome tables have issues. Please check the database configuration."
-      )
-    );
-    console.log(
-      chalk.yellow("You can use the following commands to fix the database:")
-    );
-    console.log(
-      chalk.blue("  npm run db:reset    - Reset the database (delete all data)")
-    );
-    console.log(
-      chalk.blue("  npm run db:seed     - Seed the database with test data")
-    );
-    console.log(
-      chalk.blue("  npm run db:fresh    - Reset and seed the database")
-    );
-    console.log(
-      chalk.yellow(
-        "\nOr use the Database Manager in the Debug page of the application."
-      )
-    );
+    // Removed console statement
+    // Removed console statement
+    // Removed console statement
+    // Removed console statement
+    // Removed console statement
+    // Removed console statement
   } else {
-    console.log(chalk.green("\nAll tables are OK!"));
+    // Removed console statement
   }
 }
 
 // Executăm funcția principală
 checkDatabase().catch((error) => {
-  console.error(chalk.red("Error checking database:"), error);
+  // Removed console statement
   process.exit(1);
 });

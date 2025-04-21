@@ -89,7 +89,7 @@ const OverviewPage: React.FC = () => {
       const { data: materialsData, error: materialsError } = await supabase
         .from("materials")
         .select(
-          "id, name, quantity, unit, suplimentar, project_id, projects(name)",
+          "id, name, quantity, unit, suplimentar, project_id, projects(name)"
         )
         .or("suplimentar.gt.0,quantity.lt.10")
         .limit(10);
@@ -101,7 +101,7 @@ const OverviewPage: React.FC = () => {
         await supabase
           .from("supplier_announcements")
           .select(
-            "id, supplier_name, status, created_at, project_id, projects(name)",
+            "id, supplier_name, status, created_at, project_id, projects(name)"
           )
           .order("created_at", { ascending: false })
           .limit(10);
@@ -133,7 +133,7 @@ const OverviewPage: React.FC = () => {
             materials_count: materialsCount || 0,
             pending_announcements: pendingCount || 0,
           };
-        }),
+        })
       );
 
       // Process materials data
@@ -161,7 +161,7 @@ const OverviewPage: React.FC = () => {
       setMaterials(processedMaterials);
       setAnnouncements(processedAnnouncements);
     } catch (error) {
-      console.error("Error fetching overview data:", error);
+      // Removed console statement
     } finally {
       setIsLoading(false);
     }
@@ -214,7 +214,6 @@ const OverviewPage: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-slate-900 text-white">
-      
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
         <header className="sticky top-0 z-10 bg-slate-900 border-b border-slate-800 px-6 py-4 shrink-0">
@@ -262,7 +261,7 @@ const OverviewPage: React.FC = () => {
                   <p className="text-sm text-slate-400 mt-1">
                     {t(
                       "overview.materialsNeedingAttention",
-                      "Materials needing attention",
+                      "Materials needing attention"
                     )}
                   </p>
                 </CardContent>
@@ -384,13 +383,13 @@ const OverviewPage: React.FC = () => {
                     <CardTitle>
                       {t(
                         "overview.materialsNeedingAttention",
-                        "Materials Needing Attention",
+                        "Materials Needing Attention"
                       )}
                     </CardTitle>
                     <CardDescription className="text-slate-400">
                       {t(
                         "overview.materialsDescription",
-                        "Materials with low stock or pending supplementary quantities",
+                        "Materials with low stock or pending supplementary quantities"
                       )}
                     </CardDescription>
                   </CardHeader>
@@ -400,7 +399,7 @@ const OverviewPage: React.FC = () => {
                         <p className="text-slate-400">
                           {t(
                             "overview.noMaterialsNeedingAttention",
-                            "No materials currently need attention",
+                            "No materials currently need attention"
                           )}
                         </p>
                       </div>
@@ -429,7 +428,7 @@ const OverviewPage: React.FC = () => {
                                   <p className="text-sm text-yellow-400">
                                     {t(
                                       "overview.supplementary",
-                                      "Supplementary",
+                                      "Supplementary"
                                     )}
                                     :{" "}
                                     <span className="font-medium">
@@ -464,13 +463,13 @@ const OverviewPage: React.FC = () => {
                     <CardTitle>
                       {t(
                         "overview.recentAnnouncements",
-                        "Recent Supplier Announcements",
+                        "Recent Supplier Announcements"
                       )}
                     </CardTitle>
                     <CardDescription className="text-slate-400">
                       {t(
                         "overview.announcementsDescription",
-                        "Recent delivery announcements from suppliers",
+                        "Recent delivery announcements from suppliers"
                       )}
                     </CardDescription>
                   </CardHeader>
@@ -480,7 +479,7 @@ const OverviewPage: React.FC = () => {
                         <p className="text-slate-400">
                           {t(
                             "overview.noAnnouncements",
-                            "No recent supplier announcements",
+                            "No recent supplier announcements"
                           )}
                         </p>
                       </div>
@@ -499,7 +498,7 @@ const OverviewPage: React.FC = () => {
                                 {announcement.project_name} •{" "}
                                 {format(
                                   new Date(announcement.created_at),
-                                  "dd MMM yyyy",
+                                  "dd MMM yyyy"
                                 )}
                               </p>
                             </div>
@@ -532,5 +531,3 @@ const OverviewPage: React.FC = () => {
 };
 
 export default OverviewPage;
-
-

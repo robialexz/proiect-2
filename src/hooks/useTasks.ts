@@ -34,7 +34,11 @@ export const useTasks = (projectId: string | null = null) => {
         query = query.eq("project_id", projectId);
       }
 
+      try {
       const { data, error } = await query;
+      } catch (error) {
+        // Handle error appropriately
+      }
 
       if (error) throw error;
 
@@ -47,7 +51,7 @@ export const useTasks = (projectId: string | null = null) => {
         setFilteredTasks(formattedTasks);
       }
     } catch (error: any) {
-      console.error("Error loading tasks:", error);
+      // Removed console statement
       toast({
         variant: "destructive",
         title: t("tasks.loadError", "Error Loading Tasks"),
@@ -71,7 +75,7 @@ export const useTasks = (projectId: string | null = null) => {
         setUsers(data);
       }
     } catch (error: any) {
-      console.error("Error loading users:", error);
+      // Removed console statement
     }
   }, []);
 
@@ -144,7 +148,7 @@ export const useTasks = (projectId: string | null = null) => {
       loadTasks();
       return true;
     } catch (error: any) {
-      console.error("Error creating task:", error);
+      // Removed console statement
       toast({
         variant: "destructive",
         title: t("tasks.createError", "Error Creating Task"),
@@ -190,7 +194,7 @@ export const useTasks = (projectId: string | null = null) => {
       loadTasks();
       return true;
     } catch (error: any) {
-      console.error("Error updating task:", error);
+      // Removed console statement
       toast({
         variant: "destructive",
         title: t("tasks.updateError", "Error Updating Task"),
@@ -218,7 +222,7 @@ export const useTasks = (projectId: string | null = null) => {
       setTasks(tasks.filter(task => task.id !== taskId));
       return true;
     } catch (error: any) {
-      console.error("Error deleting task:", error);
+      // Removed console statement
       toast({
         variant: "destructive",
         title: t("tasks.deleteError", "Error Deleting Task"),
@@ -248,7 +252,7 @@ export const useTasks = (projectId: string | null = null) => {
       });
       return true;
     } catch (error: any) {
-      console.error("Error updating task status:", error);
+      // Removed console statement
       toast({
         variant: "destructive",
         title: t("tasks.updateError", "Error Updating Task"),

@@ -179,7 +179,7 @@ export const enhancedSupabaseService = {
         })
         .subscribe();
     } catch (error) {
-      console.error(`Error subscribing to ${table}:`, error);
+      // Removed console statement
       throw error;
     }
   },
@@ -280,7 +280,11 @@ export const enhancedSupabaseService = {
         });
       }
 
+      try {
       const { data, error } = await query;
+      } catch (error) {
+        // Handle error appropriately
+      }
 
       if (error) {
         throw error;
@@ -340,7 +344,11 @@ export const enhancedSupabaseService = {
         });
       }
 
+      try {
       const { data, error } = await dbQuery;
+      } catch (error) {
+        // Handle error appropriately
+      }
 
       if (error) {
         throw error;

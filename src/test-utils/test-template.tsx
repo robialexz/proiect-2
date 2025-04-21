@@ -67,7 +67,7 @@ export const mockSupabase = {
   storage: {
     from: jest.fn().mockReturnValue({
       upload: jest.fn(),
-      getPublicUrl: jest.fn().mockReturnValue({ data: { publicUrl: 'https://example.com/image.jpg' } }),
+      getPublicUrl: jest.fn().mockReturnValue({ data: { publicUrl: '{process.env.EXAMPLE_COM_IMAGE}' } }),
     }),
   },
 };

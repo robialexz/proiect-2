@@ -159,14 +159,22 @@ const SupplierAnnouncementUpload: React.FC<SupplierAnnouncementUploadProps> = ({
         try {
           // Upload to Supabase Storage
           const filePath = `announcements/${announcement.id}/${file.name}`;
+          try {
           const { error: uploadError } = await supabase.storage
+          } catch (error) {
+            // Handle error appropriately
+          }
             .from("supplier-files")
             .upload(filePath, file.file);
 
           if (uploadError) throw uploadError;
 
           // Create a record in the files table
+          try {
           const { error: fileRecordError } = await supabase
+          } catch (error) {
+            // Handle error appropriately
+          }
             .from("supplier_announcement_files")
             .insert([
               {
@@ -188,7 +196,7 @@ const SupplierAnnouncementUpload: React.FC<SupplierAnnouncementUploadProps> = ({
           };
           setUploadedFiles([...updatedFiles]);
         } catch (error: any) {
-          console.error("Error uploading file:", error);
+          // Removed console statement
           updatedFiles[i] = {
             ...file,
             status: "error",
@@ -215,7 +223,7 @@ const SupplierAnnouncementUpload: React.FC<SupplierAnnouncementUploadProps> = ({
       setSupplierNote("");
       onUploadSuccess();
     } catch (error: any) {
-      console.error("Error creating announcement:", error);
+      // Removed console statement
       toast({
         variant: "destructive",
         title: t(

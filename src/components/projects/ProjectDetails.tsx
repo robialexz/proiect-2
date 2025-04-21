@@ -172,7 +172,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
       ];
       setTeams(mockTeams);
     } catch (error: any) {
-      console.error("Error fetching project data:", error);
+      // Removed console statement
       toast({
         variant: "destructive",
         title: t("projects.errors.fetchDataFailed", "Error fetching project data"),

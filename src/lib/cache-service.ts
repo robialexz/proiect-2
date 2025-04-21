@@ -126,7 +126,11 @@ class CacheService {
       return cachedItem;
     }
 
+    try {
     const data = await loader();
+    } catch (error) {
+      // Handle error appropriately
+    }
     this.set(key, data, options);
     return data;
   }

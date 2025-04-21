@@ -173,7 +173,7 @@ export function isNetworkError(error: AppError | Error): boolean {
  */
 export function reportError(error: AppError | Error): void {
   // Aici putem adăuga logica pentru raportarea erorilor
-  console.error('Error reported:', error);
+  // Removed console statement
   
   // Putem trimite eroarea către un serviciu de monitorizare
   // sau putem salva eroarea în baza de date

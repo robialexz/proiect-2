@@ -1284,7 +1284,7 @@ const HomePage = () => {
 
                   <p className="mt-8 text-sm text-blue-200/60 flex items-center justify-center">
                     <CreditCard className="h-4 w-4 mr-1.5 text-blue-300/70" />
-                    No credit card required for trial • Cancel anytime
+                    Daca se grabesc si developerii nostri, ar fi bine.
                   </p>
                 </motion.div>
               </div>

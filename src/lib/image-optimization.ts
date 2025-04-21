@@ -36,7 +36,7 @@ export function optimizeImage(
     // Pentru imagini externe, folosim un serviciu de optimizare
     // În acest caz, folosim Imgproxy ca exemplu
     try {
-      const url = new URL("https://imgproxy.yourdomain.com/");
+      const url = new URL("{process.env.IMGPROXY_YOURDOMAIN_COM_}");
 
       // Adăugăm parametrii de optimizare
       if (options.width)
@@ -55,7 +55,7 @@ export function optimizeImage(
 
       return url.toString();
     } catch (error) {
-      console.error("Error optimizing image:", error);
+      // Removed console statement
       return src;
     }
   }
@@ -75,7 +75,7 @@ export function optimizeImage(
 
     return url.toString();
   } catch (error) {
-    console.error("Error optimizing image:", error);
+    // Removed console statement
     return src;
   }
 }
@@ -165,7 +165,7 @@ export async function isImageCached(src: string): Promise<boolean> {
 
     return isCached;
   } catch (error) {
-    console.warn("Error checking if image is cached:", error);
+    // Removed console statement
 
     // Verificăm în mod tradițional
     const img = new Image();

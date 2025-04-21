@@ -91,7 +91,11 @@ const TesterPage: React.FC = () => {
       setTestSuites([...updatedSuites]);
       
       // Simulate delay between tests
+      try {
       await new Promise(resolve => setTimeout(resolve, 500));
+      } catch (error) {
+        // Handle error appropriately
+      }
     } catch (error) {
       updatedSuites[suiteIndex].tests[0].passed = false;
       updatedSuites[suiteIndex].tests[0].error = error instanceof Error ? error.message : "Unknown error";
@@ -122,7 +126,11 @@ const TesterPage: React.FC = () => {
       updatedSuites[suiteIndex].tests[1].duration = 700;
       setTestSuites([...updatedSuites]);
       
+      try {
       await new Promise(resolve => setTimeout(resolve, 700));
+      } catch (error) {
+        // Handle error appropriately
+      }
     } catch (error) {
       updatedSuites[suiteIndex].tests[1].passed = false;
       updatedSuites[suiteIndex].tests[1].error = error instanceof Error ? error.message : "Unknown error";
@@ -140,7 +148,11 @@ const TesterPage: React.FC = () => {
       updatedSuites[suiteIndex].tests[2].duration = 600;
       setTestSuites([...updatedSuites]);
       
+      try {
       await new Promise(resolve => setTimeout(resolve, 600));
+      } catch (error) {
+        // Handle error appropriately
+      }
     } catch (error) {
       updatedSuites[suiteIndex].tests[2].passed = false;
       updatedSuites[suiteIndex].tests[2].error = error instanceof Error ? error.message : "Unknown error";
@@ -158,7 +170,11 @@ const TesterPage: React.FC = () => {
       updatedSuites[suiteIndex].tests[3].duration = 800;
       setTestSuites([...updatedSuites]);
       
+      try {
       await new Promise(resolve => setTimeout(resolve, 800));
+      } catch (error) {
+        // Handle error appropriately
+      }
     } catch (error) {
       updatedSuites[suiteIndex].tests[3].passed = false;
       updatedSuites[suiteIndex].tests[3].error = error instanceof Error ? error.message : "Unknown error";
@@ -195,7 +211,11 @@ const TesterPage: React.FC = () => {
       const testDuration = Math.floor(Math.random() * 500) + 500;
       
       // Simulate test execution
+      try {
       await new Promise(resolve => setTimeout(resolve, testDuration));
+      } catch (error) {
+        // Handle error appropriately
+      }
       
       // Randomly determine if test passed (for demo purposes)
       const passed = Math.random() > 0.3;
@@ -239,7 +259,11 @@ const TesterPage: React.FC = () => {
       const testDuration = Math.floor(Math.random() * 500) + 500;
       
       // Simulate test execution
+      try {
       await new Promise(resolve => setTimeout(resolve, testDuration));
+      } catch (error) {
+        // Handle error appropriately
+      }
       
       // Randomly determine if test passed (for demo purposes)
       const passed = Math.random() > 0.2;
@@ -273,9 +297,21 @@ const TesterPage: React.FC = () => {
 
   // Function to run all tests
   const runAllTests = async () => {
+    try {
     await runDatabaseTests();
+    } catch (error) {
+      // Handle error appropriately
+    }
+    try {
     await runAuthTests();
+    } catch (error) {
+      // Handle error appropriately
+    }
+    try {
     await runInventoryTests();
+    } catch (error) {
+      // Handle error appropriately
+    }
     
     toast({
       title: "All Tests Completed",

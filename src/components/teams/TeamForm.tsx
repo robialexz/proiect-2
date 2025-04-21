@@ -105,7 +105,11 @@ const TeamForm: React.FC<TeamFormProps> = ({
         });
       } else {
         // Create new team
+        try {
         const { error } = await supabase.from("teams").insert({
+        } catch (error) {
+          // Handle error appropriately
+        }
           name: values.name,
           description: values.description,
           created_by: user.id,
@@ -122,7 +126,7 @@ const TeamForm: React.FC<TeamFormProps> = ({
       onOpenChange(false);
       onSuccess();
     } catch (error) {
-      console.error("Error saving team:", error);
+      // Removed console statement
       toast({
         variant: "destructive",
         title: team

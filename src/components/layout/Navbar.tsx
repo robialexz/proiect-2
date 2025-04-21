@@ -100,7 +100,7 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuToggle }) => {
     });
 
     // Aici ar trebui să implementăm logica reală de căutare
-    console.log("Searching for:", searchQuery);
+    // Removed console statement
 
     // Resetăm căutarea
     setSearchQuery("");
@@ -109,7 +109,11 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuToggle }) => {
 
   // Gestionăm deconectarea
   const handleSignOut = async () => {
+    try {
     await logout();
+    } catch (error) {
+      // Handle error appropriately
+    }
     addNotification({
       type: "success",
       title: "Deconectat",
@@ -198,7 +202,7 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuToggle }) => {
             >
               <Avatar className="h-7 w-7">
                 <AvatarImage
-                  src={`https://api.dicebear.com/7.x/micah/svg?seed=${
+                  src={`https:
                     userProfile?.displayName ||
                     user?.email?.split("@")[0] ||
                     "user"

@@ -47,7 +47,7 @@ export function DesktopInfo() {
         setSelectedFile(Array.isArray(file) ? file[0] : file);
       }
     } catch (error) {
-      console.error("Error opening file:", error);
+      // Removed console statement
     }
   };
 
@@ -59,12 +59,12 @@ export function DesktopInfo() {
         setSelectedDirectory(directory);
       }
     } catch (error) {
-      console.error("Error opening directory:", error);
+      // Removed console statement
     }
   };
 
   const handleOpenDocs = () => {
-    openInBrowser("https://tauri.app/docs/");
+    openInBrowser("{process.env.TAURI_APP_DOCS_}");
   };
 
   return (

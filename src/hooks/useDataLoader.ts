@@ -43,7 +43,7 @@ export function useDataLoader<T>(
         });
       }
     } catch (err) {
-      console.error(`Error loading data for ${key}:`, err);
+      // Removed console statement
       setError(err instanceof Error ? err : new Error('Unknown error'));
 
       // Afișăm o notificare doar dacă este solicitată explicit

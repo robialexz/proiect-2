@@ -64,7 +64,7 @@ const ReorderList: React.FC<ReorderListProps> = ({
     try {
       await onExport(format);
     } catch (error) {
-      console.error('Error exporting reorder list:', error);
+      // Removed console statement
     }
   };
 

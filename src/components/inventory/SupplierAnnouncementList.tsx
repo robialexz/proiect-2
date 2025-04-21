@@ -89,19 +89,30 @@ const SupplierAnnouncementList: React.FC<SupplierAnnouncementListProps> = ({
     try {
       // Fetch announcements
       const { data: announcementsData, error: announcementsError } =
-        await supabase
-          .from("supplier_announcements")
+        try {
+  await supabase.from("supplier_announcements")
           .select("*")
           .eq("project_id", projectId)
-          .order("created_at", { ascending: false });
+          .order("created_at", { ascending: false })
+} catch (error) {
+  // Handle error appropriately
+};
 
       if (announcementsError) throw announcementsError;
 
       if (announcementsData) {
         // Fetch files for each announcement
+        try {
         const announcementsWithFiles = await Promise.all(
+        } catch (error) {
+          // Handle error appropriately
+        }
           announcementsData.map(async (announcement) => {
+            try {
             const { data: filesData, error: filesError } = await supabase
+            } catch (error) {
+              // Handle error appropriately
+            }
               .from("supplier_announcement_files")
               .select("*")
               .eq("announcement_id", announcement.id);
@@ -118,7 +129,7 @@ const SupplierAnnouncementList: React.FC<SupplierAnnouncementListProps> = ({
         setAnnouncements(announcementsWithFiles);
       }
     } catch (error: any) {
-      console.error("Error fetching announcements:", error);
+      // Removed console statement
       toast({
         variant: "destructive",
         title: t(
@@ -175,7 +186,7 @@ const SupplierAnnouncementList: React.FC<SupplierAnnouncementListProps> = ({
               ),
       });
     } catch (error: any) {
-      console.error("Error updating announcement status:", error);
+      // Removed console statement
       toast({
         variant: "destructive",
         title: t(
@@ -255,7 +266,7 @@ const SupplierAnnouncementList: React.FC<SupplierAnnouncementListProps> = ({
       URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } catch (error: any) {
-      console.error("Error downloading file:", error);
+      // Removed console statement
       toast({
         variant: "destructive",
         title: t("inventory.errors.downloadFailed", "Failed to download file"),
@@ -281,7 +292,7 @@ const SupplierAnnouncementList: React.FC<SupplierAnnouncementListProps> = ({
         handleDownloadFile(file);
       }
     } catch (error: any) {
-      console.error("Error viewing file:", error);
+      // Removed console statement
       toast({
         variant: "destructive",
         title: t("inventory.errors.viewFailed", "Failed to view file"),

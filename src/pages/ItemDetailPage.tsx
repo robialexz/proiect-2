@@ -45,7 +45,11 @@ const ItemDetailPage: React.FC = () => {
     queryKey: ["item", id],
     queryFn: async () => {
       if (!id) throw new Error("ID is required");
+      try {
       const res = await supabaseService.select<ItemDetail>("resources", "*", {
+      } catch (error) {
+        // Handle error appropriately
+      }
         filters: { id },
         single: true,
       });
@@ -92,7 +96,7 @@ const ItemDetailPage: React.FC = () => {
       await supabaseService.delete("resources", { id });
       navigate("/inventory-list");
     } catch (error) {
-      console.error("Error deleting item:", error);
+      // Removed console statement
       alert("A apărut o eroare la ștergerea elementului.");
     }
   };

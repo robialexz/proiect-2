@@ -116,7 +116,11 @@ export async function apiRequest<T>(
   }
   
   // Adăugăm token-ul de autentificare
+  try {
   const { data: { session } } = await supabase.auth.getSession();
+  } catch (error) {
+    // Handle error appropriately
+  }
   
   if (session?.access_token) {
     headers['Authorization'] = `Bearer ${session.access_token}`;
@@ -156,7 +160,11 @@ export async function apiRequest<T>(
         if (contentType && contentType.includes('application/json')) {
           data = await response.json();
         } else {
+          try {
           data = await response.text() as unknown as T;
+          } catch (error) {
+            // Handle error appropriately
+          }
         }
         
         // Adăugăm răspunsul în cache
@@ -200,7 +208,11 @@ export async function apiRequest<T>(
         apiLogger.warn(`Retrying request to ${urlWithParams.toString()} (${retry} attempts left)`);
         
         // Așteptăm înainte de a reîncerca
+        try {
         await new Promise((resolve) => setTimeout(resolve, retryDelay));
+        } catch (error) {
+          // Handle error appropriately
+        }
         
         // Reîncercăm request-ul
         return apiRequest<T>(url, {
@@ -252,7 +264,11 @@ export async function apiRequest<T>(
       apiLogger.warn(`Retrying request to ${urlWithParams.toString()} (${retry} attempts left)`);
       
       // Așteptăm înainte de a reîncerca
+      try {
       await new Promise((resolve) => setTimeout(resolve, retryDelay));
+      } catch (error) {
+        // Handle error appropriately
+      }
       
       // Reîncercăm request-ul
       return apiRequest<T>(url, {

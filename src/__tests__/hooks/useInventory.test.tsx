@@ -383,7 +383,7 @@ describe('useInventory', () => {
   test('exports inventory', async () => {
     // Mock the exportInventory function to return success
     inventoryService.exportInventory.mockResolvedValue({
-      data: { url: 'http://example.com/export.xlsx' },
+      data: { url: '{process.env.EXAMPLE_COM_EXPORT}' },
       error: null,
     });
     

@@ -2,39 +2,53 @@
  * Exportă toate hook-urile
  */
 
-// Exportăm hook-urile de utilitate
-export { useLocalStorage } from "./useLocalStorage";
-export { useSessionStorage } from "./useSessionStorage";
-export { useDebounce } from "./useDebounce";
-export {
-  useMediaQuery,
-  useIsMobile,
-  useIsTablet,
-  useIsDesktop,
-  useIsDarkMode,
+// Importăm hook-urile
+import { useLocalStorage as useLocalStorageImport } from "./useLocalStorage";
+import { useSessionStorage as useSessionStorageImport } from "./useSessionStorage";
+import { useDebounce as useDebounceImport } from "./useDebounce";
+import {
+  useMediaQuery as useMediaQueryImport,
+  useIsMobile as useIsMobileImport,
+  useIsTablet as useIsTabletImport,
+  useIsDesktop as useIsDesktopImport,
+  useIsDarkMode as useIsDarkModeImport,
 } from "./useMediaQuery";
-export { useOnClickOutside } from "./useOnClickOutside";
-export { useAsync } from "./useAsync";
+import { useOnClickOutside as useOnClickOutsideImport } from "./useOnClickOutside";
+import { useAsync as useAsyncImport } from "./useAsync";
+import { useProjects as useProjectsImport } from "./use-projects";
+import { useMaterials as useMaterialsImport } from "./use-materials";
+
+// Exportăm hook-urile
+export const useLocalStorage = useLocalStorageImport;
+export const useSessionStorage = useSessionStorageImport;
+export const useDebounce = useDebounceImport;
+export const useMediaQuery = useMediaQueryImport;
+export const useIsMobile = useIsMobileImport;
+export const useIsTablet = useIsTabletImport;
+export const useIsDesktop = useIsDesktopImport;
+export const useIsDarkMode = useIsDarkModeImport;
+export const useOnClickOutside = useOnClickOutsideImport;
+export const useAsync = useAsyncImport;
+export const useProjects = useProjectsImport;
+export const useMaterials = useMaterialsImport;
+
+// Exportăm tipurile
 export type { AsyncState, AsyncStatus, AsyncOptions } from "./useAsync";
 
-// Exportăm hook-ul pentru proiecte
-export { useProjects } from "./use-projects";
-
-// Exportăm hook-ul pentru materiale
-export { useMaterials } from "./use-materials";
-
 // Export implicit pentru compatibilitate
-export default {
-  useLocalStorage,
-  useSessionStorage,
-  useDebounce,
-  useMediaQuery,
-  useIsMobile,
-  useIsTablet,
-  useIsDesktop,
-  useIsDarkMode,
-  useOnClickOutside,
-  useAsync,
-  useProjects,
-  useMaterials,
+const hooks = {
+  useLocalStorage: useLocalStorageImport,
+  useSessionStorage: useSessionStorageImport,
+  useDebounce: useDebounceImport,
+  useMediaQuery: useMediaQueryImport,
+  useIsMobile: useIsMobileImport,
+  useIsTablet: useIsTabletImport,
+  useIsDesktop: useIsDesktopImport,
+  useIsDarkMode: useIsDarkModeImport,
+  useOnClickOutside: useOnClickOutsideImport,
+  useAsync: useAsyncImport,
+  useProjects: useProjectsImport,
+  useMaterials: useMaterialsImport,
 };
+
+export default hooks;

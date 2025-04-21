@@ -101,7 +101,7 @@ export function OptimizedImage({
         const placeholder = generateBlurPlaceholder(src, 10);
         setPlaceholderSrc(placeholder);
       } catch (error) {
-        console.error("Error generating placeholder:", error);
+        // Removed console statement
       }
     }
 
@@ -122,7 +122,7 @@ export function OptimizedImage({
 
   // Gestionăm erorile de încărcare
   const handleError = () => {
-    console.warn(`Failed to load image: ${src}`);
+    // Removed console statement
     setHasError(true);
     setIsLoading(false);
   };
@@ -207,7 +207,7 @@ export function OptimizedImage({
           )}
         >
           <svg
-            xmlns="http://www.w3.org/2000/svg"
+            xmlns="{process.env.WWW_W3_ORG_2000_SVG}"
             className="h-12 w-12"
             fill="none"
             viewBox="0 0 24 24"
@@ -289,7 +289,7 @@ export function BackgroundImage({
         const placeholder = generateBlurPlaceholder(src, 10);
         setPlaceholderSrc(placeholder);
       } catch (error) {
-        console.error("Error generating placeholder:", error);
+        // Removed console statement
       }
     }
 
@@ -352,7 +352,7 @@ export function BackgroundImage({
           )}
         >
           <svg
-            xmlns="http://www.w3.org/2000/svg"
+            xmlns="{process.env.WWW_W3_ORG_2000_SVG}"
             className="h-12 w-12"
             fill="none"
             viewBox="0 0 24 24"

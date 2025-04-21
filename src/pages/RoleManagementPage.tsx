@@ -84,7 +84,11 @@ const RoleManagementPage = () => {
     try {
       // Obținem toți utilizatorii din autentificare
       const { data: authUsers, error: authError } =
+        try {
         await supabase.auth.admin.listUsers();
+        } catch (error) {
+          // Handle error appropriately
+        }
 
       if (authError) throw authError;
 
@@ -94,7 +98,11 @@ const RoleManagementPage = () => {
       }
 
       // Obținem rolurile utilizatorilor
+      try {
       const { data: roleData, error: roleError } = await supabase
+      } catch (error) {
+        // Handle error appropriately
+      }
         .from("user_roles")
         .select("*");
 
@@ -113,7 +121,7 @@ const RoleManagementPage = () => {
 
       setUsers(usersWithRoles);
     } catch (error) {
-      console.error("Error fetching users:", error);
+      // Removed console statement
       toast({
         variant: "destructive",
         title: t("roleManagement.errors.fetchFailed", "Error loading users"),
@@ -150,7 +158,11 @@ const RoleManagementPage = () => {
 
       if (data) {
         // Actualizăm rolul existent
+        try {
         const { error: updateError } = await supabase
+        } catch (error) {
+          // Handle error appropriately
+        }
           .from("user_roles")
           .update({ role: newRole })
           .eq("user_id", selectedUser.id);
@@ -158,7 +170,11 @@ const RoleManagementPage = () => {
         if (updateError) throw updateError;
       } else {
         // Creăm un nou rol pentru utilizator
+        try {
         const { error: insertError } = await supabase
+        } catch (error) {
+          // Handle error appropriately
+        }
           .from("user_roles")
           .insert([{ user_id: selectedUser.id, role: newRole }]);
 
@@ -182,7 +198,7 @@ const RoleManagementPage = () => {
 
       setIsEditDialogOpen(false);
     } catch (error) {
-      console.error("Error updating user role:", error);
+      // Removed console statement
       toast({
         variant: "destructive",
         title: t("roleManagement.errors.updateFailed", "Error updating role"),

@@ -228,7 +228,11 @@ export const enhancedSupabaseService = {
       }
 
       // Executăm operațiunea de actualizare
-      const result = await handlePromise<T>(query.select());
+      try {
+        const result = await handlePromise<T>(query.select());
+      } catch (error) {
+        // Handle error appropriately
+      }
 
       // Invalidăm cache-ul pentru acest tabel
       if (result.status === "success") {
@@ -530,7 +534,7 @@ export const enhancedSupabaseService = {
       return enhancedSubscription;
     } catch (error) {
       errorHandler.handleError(error, false);
-      console.error("Error creating subscription:", error);
+      // Removed console statement
 
       // Returnăm un obiect de abonament fals pentru a evita erorile
       return {

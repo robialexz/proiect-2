@@ -105,13 +105,13 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       const { data, error } = await projectService.getProjectMilestones(projectId);
       
       if (error || !data) {
-        console.error('Eroare la încărcarea milestone-urilor:', error?.message);
+        // Removed console statement
         return;
       }
       
       set({ projectMilestones: data });
     } catch (error) {
-      console.error('Eroare la încărcarea milestone-urilor:', error.message);
+      // Removed console statement
     }
   },
   
@@ -120,13 +120,13 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       const { data, error } = await projectService.getProjectBudget(projectId);
       
       if (error || !data) {
-        console.error('Eroare la încărcarea bugetelor:', error?.message);
+        // Removed console statement
         return;
       }
       
       set({ projectBudgets: data });
     } catch (error) {
-      console.error('Eroare la încărcarea bugetelor:', error.message);
+      // Removed console statement
     }
   },
   
@@ -135,13 +135,13 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       const { data, error } = await projectService.getProjectTasks(projectId);
       
       if (error || !data) {
-        console.error('Eroare la încărcarea sarcinilor:', error?.message);
+        // Removed console statement
         return;
       }
       
       set({ projectTasks: data });
     } catch (error) {
-      console.error('Eroare la încărcarea sarcinilor:', error.message);
+      // Removed console statement
     }
   },
   

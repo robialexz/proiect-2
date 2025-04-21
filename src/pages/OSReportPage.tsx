@@ -33,7 +33,7 @@ const OSReportPage: React.FC = () => {
       const newReport = generateOSReport();
       setReport(newReport);
     } catch (error) {
-      console.error("Failed to generate OS report:", error);
+      // Removed console statement
       toast({
         title: "Error",
         description: "Failed to generate OS report",
@@ -51,7 +51,7 @@ const OSReportPage: React.FC = () => {
         description: "OS report has been downloaded",
       });
     } catch (error) {
-      console.error("Failed to download OS report:", error);
+      // Removed console statement
       toast({
         title: "Error",
         description: "Failed to download OS report",
@@ -72,7 +72,7 @@ const OSReportPage: React.FC = () => {
         description: "OS report has been copied to clipboard",
       });
     } catch (error) {
-      console.error("Failed to copy OS report:", error);
+      // Removed console statement
       toast({
         title: "Error",
         description: "Failed to copy OS report to clipboard",

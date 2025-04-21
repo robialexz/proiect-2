@@ -30,7 +30,11 @@ const simulateAIResponse = async (
   t: (key: string, defaultValue: string) => string
 ): Promise<string> => {
   // Simulăm un timp de răspuns
+  try {
   await new Promise(resolve => setTimeout(resolve, 1000));
+  } catch (error) {
+    // Handle error appropriately
+  }
 
   // Răspunsuri predefinite bazate pe cuvinte cheie
   const lowStockItems = materials.filter(
@@ -157,7 +161,11 @@ const InventoryAssistant: React.FC<InventoryAssistantProps> = ({
         setMessages(prev => [...prev, assistantMessage]);
       }
       else if (input.toLowerCase().includes('/reaprovizionare')) {
+        try {
         const result = await onGenerateReorderList();
+        } catch (error) {
+          // Handle error appropriately
+        }
 
         let responseContent = t('inventory.assistant.responses.error', 'Nu am putut genera lista de reaprovizionare.');
 
@@ -186,7 +194,11 @@ const InventoryAssistant: React.FC<InventoryAssistantProps> = ({
       }
       else {
         // Obținem răspunsul de la AI
+        try {
         const aiResponse = await simulateAIResponse(input, materials, t);
+        } catch (error) {
+          // Handle error appropriately
+        }
 
         // Adăugăm răspunsul asistentului
         const assistantMessage: Message = {
@@ -199,7 +211,7 @@ const InventoryAssistant: React.FC<InventoryAssistantProps> = ({
         setMessages(prev => [...prev, assistantMessage]);
       }
     } catch (error) {
-      console.error('Error processing message:', error);
+      // Removed console statement
 
       // Adăugăm un mesaj de eroare
       const errorMessage: Message = {

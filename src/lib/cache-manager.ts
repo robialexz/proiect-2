@@ -58,7 +58,7 @@ export function setCacheItem<T>(
       })
     );
   } catch (error) {
-    console.warn('Failed to store cache item in localStorage:', error);
+    // Removed console statement
   }
   
   // Verificăm dimensiunea cache-ului din memorie
@@ -96,7 +96,7 @@ export function getCacheItem<T>(
       try {
         localStorage.removeItem(`cache:${fullKey}`);
       } catch (error) {
-        console.warn('Failed to remove expired cache item from localStorage:', error);
+        // Removed console statement
       }
       return null;
     }
@@ -124,7 +124,7 @@ export function getCacheItem<T>(
       return parsedItem.data;
     }
   } catch (error) {
-    console.warn('Failed to retrieve cache item from localStorage:', error);
+    // Removed console statement
   }
   
   // Nu există în cache
@@ -152,7 +152,7 @@ export function removeCacheItem(
   try {
     localStorage.removeItem(`cache:${fullKey}`);
   } catch (error) {
-    console.warn('Failed to remove cache item from localStorage:', error);
+    // Removed console statement
   }
 }
 
@@ -177,7 +177,7 @@ export function clearCacheNamespace(namespace: string = 'default'): void {
       }
     }
   } catch (error) {
-    console.warn('Failed to clear cache namespace from localStorage:', error);
+    // Removed console statement
   }
 }
 
@@ -213,7 +213,7 @@ export function clearExpiredCache(): void {
       }
     }
   } catch (error) {
-    console.warn('Failed to clear expired cache from localStorage:', error);
+    // Removed console statement
   }
 }
 
@@ -250,7 +250,11 @@ export async function getCacheItemOrGenerate<T>(
   }
   
   // Nu există în cache, îl generăm
+  try {
   const generatedData = await generator();
+  } catch (error) {
+    // Handle error appropriately
+  }
   
   // Îl stocăm în cache
   setCacheItem(key, generatedData, options);

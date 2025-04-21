@@ -197,9 +197,12 @@ const ProjectsList: React.FC<ProjectsListProps> = ({
             <CardHeader className="pb-2">
               <div className="flex justify-between items-start">
                 <div className="space-y-1">
-                  <CardTitle className="text-lg line-clamp-1">{project.name}</CardTitle>
+                  <CardTitle className="text-lg line-clamp-1">
+                    {project.name}
+                  </CardTitle>
                   <CardDescription className="line-clamp-2">
-                    {project.description || t("projects.noDescription", "No description provided")}
+                    {project.description ||
+                      t("projects.noDescription", "No description provided")}
                   </CardDescription>
                 </div>
                 <DropdownMenu>
@@ -212,8 +215,13 @@ const ProjectsList: React.FC<ProjectsListProps> = ({
                       <MoreHorizontal className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="bg-slate-800 border-slate-700">
-                    <DropdownMenuLabel>{t("common.actions", "Actions")}</DropdownMenuLabel>
+                  <DropdownMenuContent
+                    align="end"
+                    className="bg-slate-800 border-slate-700"
+                  >
+                    <DropdownMenuLabel>
+                      {t("common.actions", "Actions")}
+                    </DropdownMenuLabel>
                     <DropdownMenuSeparator className="bg-slate-700" />
                     <DropdownMenuItem
                       className="cursor-pointer hover:bg-slate-700"
@@ -247,14 +255,17 @@ const ProjectsList: React.FC<ProjectsListProps> = ({
                   <Badge className={getStatusColor(project.status)}>
                     {t(`projects.status.${project.status}`, project.status)}
                   </Badge>
-                  
+
                   {project.priority && (
                     <Badge className={getPriorityColor(project.priority)}>
                       <Flag className="h-3 w-3 mr-1" />
-                      {t(`projects.priority.${project.priority}`, project.priority)}
+                      {t(
+                        `projects.priority.${project.priority}`,
+                        project.priority
+                      )}
                     </Badge>
                   )}
-                  
+
                   {project.project_type && (
                     <Badge className="bg-primary/20 text-primary border-primary/20">
                       <Building className="h-3 w-3 mr-1" />
@@ -278,7 +289,7 @@ const ProjectsList: React.FC<ProjectsListProps> = ({
                       <span className="truncate">{project.location}</span>
                     </div>
                   )}
-                  
+
                   {project.budget && (
                     <div className="flex items-center text-slate-400">
                       <DollarSign className="h-3.5 w-3.5 mr-2 shrink-0" />
@@ -290,12 +301,13 @@ const ProjectsList: React.FC<ProjectsListProps> = ({
                       </span>
                     </div>
                   )}
-                  
+
                   {project.end_date && (
                     <div className="flex items-center text-slate-400">
                       <Clock className="h-3.5 w-3.5 mr-2 shrink-0" />
                       <span>
-                        {t("projects.dueDate", "Due")}: {format(new Date(project.end_date), "PP")}
+                        {t("projects.dueDate", "Due")}:{" "}
+                        {format(new Date(project.end_date), "PP")}
                       </span>
                     </div>
                   )}

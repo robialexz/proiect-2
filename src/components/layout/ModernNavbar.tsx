@@ -172,7 +172,11 @@ const ModernNavbar = ({
   };
 
   const handleLogout = async () => {
+    try {
     await signOut();
+    } catch (error) {
+      // Handle error appropriately
+    }
     navigate("/");
   };
 

@@ -44,17 +44,12 @@ const RegisterPage = () => {
     setLoading(true);
 
     try {
-      console.log("Trimit cerere de înregistrare pentru:", {
-        email,
-        firstName,
-        lastName,
-        company,
-      });
+      // Removed console statement
 
       const { data, error } = await signUp(email, password);
 
       if (error) {
-        console.error("Eroare returnată de signUp:", error);
+        // Removed console statement
 
         // Verificăm dacă este o eroare de utilizator existent
         if (
@@ -71,18 +66,19 @@ const RegisterPage = () => {
         }
       }
 
-      console.log("Răspuns înregistrare:", data);
+      // Removed console statement
 
       // Verificăm dacă utilizatorul a fost creat cu succes
       if (data?.user) {
-        console.log("Utilizator creat cu ID:", data.user.id);
-        console.log(
-          "Email confirmat:",
-          data.user.email_confirmed_at ? "Da" : "Nu"
-        );
+        // Removed console statement
+        // Removed console statement
 
         // În aplicația reală, aici am salva datele profilului utilizatorului în baza de date
-        // De exemplu: await supabase.from('profiles').insert({ user_id: data.user.id, first_name: firstName, last_name: lastName, company })
+        try {
+        )
+        } catch (error) {
+          // Handle error appropriately
+        }
 
         // Verificăm dacă emailul trebuie confirmat
         if (!data.user.email_confirmed_at) {
@@ -107,7 +103,7 @@ const RegisterPage = () => {
         });
       }
     } catch (err: any) {
-      console.error("Excepție la înregistrare:", err);
+      // Removed console statement
       setError(err.message || "A apărut o eroare la crearea contului");
     } finally {
       setLoading(false);

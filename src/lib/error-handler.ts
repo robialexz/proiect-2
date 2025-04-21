@@ -57,7 +57,7 @@ export function createError(
  * @returns Eroarea de aplicație
  */
 export function handleError(error: any, showToast = true): AppError {
-  console.error('Error occurred:', error);
+  // Removed console statement
   
   let appError: AppError;
   

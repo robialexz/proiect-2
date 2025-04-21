@@ -37,7 +37,7 @@ const ConnectionStatus: React.FC<ConnectionStatusProps> = ({ className = '' }) =
         // Afișează notificarea doar dacă există probleme de conexiune
         setVisible(!internet || !supabase);
       } catch (error) {
-        console.error('Error checking connections:', error);
+        // Removed console statement
         setConnectionState({
           internet: false,
           supabase: false,

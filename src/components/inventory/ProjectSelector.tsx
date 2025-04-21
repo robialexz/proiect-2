@@ -55,7 +55,7 @@ const ProjectSelector: React.FC<ProjectSelectorProps> = React.memo(
 
           setProjects(projectsWithCorrectStatus);
         } catch (error: any) {
-          console.error("Error loading projects:", error);
+          // Removed console statement
           toast({
             title: t(
               "inventory.errors.projectsLoadFailed",

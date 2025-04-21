@@ -98,7 +98,7 @@ const BudgetForm: React.FC<BudgetFormProps> = ({
         if (error) throw error;
         setProjects(data || []);
       } catch (error) {
-        console.error("Error fetching projects:", error);
+        // Removed console statement
         toast({
           variant: "destructive",
           title: "Error loading projects",
@@ -165,7 +165,11 @@ const BudgetForm: React.FC<BudgetFormProps> = ({
         });
       } else {
         // Create new budget
+        try {
         const { error } = await supabase.from("budgets").insert({
+        } catch (error) {
+          // Handle error appropriately
+        }
           name: values.name,
           description: values.description,
           project_id: values.project_id,
@@ -187,7 +191,7 @@ const BudgetForm: React.FC<BudgetFormProps> = ({
       onOpenChange(false);
       onSuccess();
     } catch (error: any) {
-      console.error("Error saving budget:", error);
+      // Removed console statement
       toast({
         variant: "destructive",
         title: budget

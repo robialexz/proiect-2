@@ -434,7 +434,7 @@ export const inventoryService = {
       );
     } catch (error) {
       errorHandler.handleError(error, false);
-      console.error("Error creating subscription:", error);
+      // Removed console statement
 
       // Returnăm un obiect de abonament fals pentru a evita erorile
       return {

@@ -40,7 +40,11 @@ const DatabaseChecker: React.FC = () => {
         : { status: "ok" };
 
       // Check if projects table exists
+      try {
       const { data: projectsData, error: projectsError } = await supabase
+      } catch (error) {
+        // Handle error appropriately
+      }
         .from("projects")
         .select("*")
         .limit(1);
@@ -50,7 +54,11 @@ const DatabaseChecker: React.FC = () => {
         : { status: "ok" };
 
       // Check if materials table exists
+      try {
       const { data: materialsData, error: materialsError } = await supabase
+      } catch (error) {
+        // Handle error appropriately
+      }
         .from("materials")
         .select("*")
         .limit(1);
@@ -59,7 +67,7 @@ const DatabaseChecker: React.FC = () => {
         ? { status: "error", message: materialsError.message }
         : { status: "ok" };
     } catch (error) {
-      console.error("Error checking database:", error);
+      // Removed console statement
       toast({
         variant: "destructive",
         title: t("debug.checkFailed", "Verificare eșuată"),
@@ -85,23 +93,28 @@ const DatabaseChecker: React.FC = () => {
           "create_projects_table"
         );
         if (createProjectsError)
-          console.error("Error creating projects table:", createProjectsError);
+          // Removed console statement
       }
 
       // Create materials table if it doesn't exist
       if (results.materials?.status === "error") {
+        try {
         const { error: createMaterialsError } = await supabase.rpc(
+        } catch (error) {
+          // Handle error appropriately
+        }
           "create_materials_table"
         );
         if (createMaterialsError)
-          console.error(
-            "Error creating materials table:",
-            createMaterialsError
-          );
+          // Removed console statement
       }
 
       // Check database again after creating tables
+      try {
       await checkDatabase();
+      } catch (error) {
+        // Handle error appropriately
+      }
 
       toast({
         title: t("debug.fixSuccess", "Reparare reușită"),
@@ -111,7 +124,7 @@ const DatabaseChecker: React.FC = () => {
         ),
       });
     } catch (error) {
-      console.error("Error creating tables:", error);
+      // Removed console statement
       toast({
         variant: "destructive",
         title: t("debug.fixFailed", "Reparare eșuată"),

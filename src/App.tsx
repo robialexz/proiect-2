@@ -29,13 +29,13 @@ function App() {
 
   // Inițializăm sistemul de monitorizare a erorilor
   // Dezactivat temporar pentru a evita buclele infinite
-  // useEffect(() => {
+
   //   // Captăm informații despre sesiune la pornirea aplicației
-  //   errorMonitoring.captureError({
+
   //     message: "Application started",
   //     source: ErrorSource.CLIENT,
   //     severity: ErrorSeverity.INFO,
-  //     context: {
+
   //       url: window.location.href,
   //       userAgent: navigator.userAgent,
   //       timestamp: new Date().toISOString(),
@@ -46,15 +46,14 @@ function App() {
   // Handler pentru evenimentul session-expired
   useEffect(() => {
     const handleSessionExpired = (event: any) => {
-      console.log("Session expired event received");
+      // Removed console statement
 
       // Dezactivat temporar pentru a evita buclele infinite
       // // Captăm eroarea în sistemul de monitorizare
-      // errorMonitoring.captureError({
+      // errorMonitor.captureError({
       //   message: "Session expired",
       //   source: ErrorSource.AUTH,
       //   severity: ErrorSeverity.WARNING,
-      //   context: event.detail || {},
       // });
 
       // Afișăm un mesaj de notificare utilizatorului

@@ -79,11 +79,11 @@ export const inventoryAssistantService = {
     // (e.g., OpenAI, Google AI, a custom fine-tuned model) to analyze the user's message.
     // The AI model would ideally return a structured JSON object containing:
     // 1. The identified intent (e.g., 'getStock', 'setMinStockLevel').
-    // 2. Extracted parameters (e.g., { material: 'ciment', quantity: 100 }).
+    // 2. Any parameters extracted from the message (e.g., material name, quantity).
     // 3. A confidence score for the identified intent.
     // 4. Potentially a flag indicating if more information is needed ('clarification').
 
-    console.log(`Analyzing intent for message: "${message}"`);
+    // Removed console statement
 
     // --- Simulated AI Response (for demonstration) ---
     // This section simulates the response from an external AI model based on simple keyword matching.
@@ -389,7 +389,7 @@ export const inventoryAssistantService = {
         };
       }
     } catch (error) {
-      console.error("Error getting stock:", error);
+      // Removed console statement
       return {
         response: `A apărut o eroare în timpul verificării stocului. Te rog să încerci din nou mai târziu.`,
         action: {
@@ -475,10 +475,9 @@ export const inventoryAssistantService = {
       }
 
       // Actualizăm nivelul minim de stoc
-      const { data: updatedMaterial, error } =
-        await inventoryService.updateItem(materialToUpdate.id, {
-          min_stock_level: level,
-        });
+      const { data: updatedMaterial, error } = await inventoryService.updateItem(materialToUpdate.id, {
+        min_stock_level: level,
+      });
 
       if (error) {
         throw new Error(error.message);
@@ -503,7 +502,7 @@ export const inventoryAssistantService = {
         },
       };
     } catch (error) {
-      console.error("Error setting min stock level:", error);
+      // Removed console statement
       return {
         response: `A apărut o eroare în timpul setării nivelului minim de stoc. Te rog să încerci din nou mai târziu.`,
         action: {
@@ -520,8 +519,7 @@ export const inventoryAssistantService = {
   async handleGenerateReorderList(): Promise<AssistantResponse> {
     try {
       // Obținem materialele cu stoc scăzut
-      const { data: lowStockItems, error } =
-        await inventoryService.getLowStockItems();
+      const { data: lowStockItems, error } = await inventoryService.getLowStockItems();
 
       if (error) {
         throw new Error(error.message);
@@ -589,7 +587,7 @@ export const inventoryAssistantService = {
         },
       };
     } catch (error) {
-      console.error("Error generating reorder list:", error);
+      // Removed console statement
       return {
         response: `A apărut o eroare în timpul generării listei de reaprovizionare. Te rog să încerci din nou mai târziu.`,
         action: {
@@ -679,7 +677,11 @@ export const inventoryAssistantService = {
 
       // Actualizăm stocul
       const { data: updatedMaterial, error } =
+        try {
         await inventoryService.updateItem(materialToUpdate.id, {
+        } catch (error) {
+          // Handle error appropriately
+        }
           quantity: newQuantity,
         });
 
@@ -717,7 +719,7 @@ export const inventoryAssistantService = {
         },
       };
     } catch (error) {
-      console.error("Error adding stock:", error);
+      // Removed console statement
       return {
         response: `A apărut o eroare în timpul adăugării stocului. Te rog să încerci din nou mai târziu.`,
         action: {

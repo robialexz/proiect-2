@@ -13,7 +13,7 @@ export const emailService = {
    */
   async sendWelcomeEmail(email: string, displayName: string): Promise<{ success: boolean; error?: any }> {
     try {
-      console.log(`Trimitere email de bun venit către ${email}`);
+      // Removed console statement
       
       // Personalizăm șabloanele de email
       const personalizedHtmlEmail = welcomeEmailHtml
@@ -36,14 +36,14 @@ export const emailService = {
       });
       
       if (error) {
-        console.error("Eroare la trimiterea emailului:", error);
+        // Removed console statement
         return { success: false, error };
       }
       
-      console.log("Email de bun venit trimis cu succes:", data);
+      // Removed console statement
       return { success: true };
     } catch (error) {
-      console.error("Excepție la trimiterea emailului:", error);
+      // Removed console statement
       return { success: false, error };
     }
   },
@@ -55,7 +55,7 @@ export const emailService = {
    */
   async sendEmailConfirmation(email: string, confirmationLink: string): Promise<{ success: boolean; error?: any }> {
     try {
-      console.log(`Trimitere email de confirmare către ${email}`);
+      // Removed console statement
       
       // Folosim Supabase Edge Function pentru a trimite emailul
       const { data, error } = await supabase.functions.invoke("send-email", {
@@ -91,14 +91,14 @@ export const emailService = {
       });
       
       if (error) {
-        console.error("Eroare la trimiterea emailului de confirmare:", error);
+        // Removed console statement
         return { success: false, error };
       }
       
-      console.log("Email de confirmare trimis cu succes:", data);
+      // Removed console statement
       return { success: true };
     } catch (error) {
-      console.error("Excepție la trimiterea emailului de confirmare:", error);
+      // Removed console statement
       return { success: false, error };
     }
   },

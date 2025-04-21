@@ -14,9 +14,7 @@ export const checkAppVersion = (): void => {
   const lastVersion = localStorage.getItem("app_version");
 
   if (lastVersion && lastVersion !== APP_VERSION) {
-    console.log(
-      `Versiune diferită detectată: ${APP_VERSION} (stocată: ${lastVersion}). Forțăm reîncărcarea.`
-    );
+    // Removed console statement
 
     // Ștergem cache-ul pentru a forța încărcarea noii versiuni
     localStorage.setItem("app_version", APP_VERSION);
@@ -109,9 +107,7 @@ if (import.meta.env.DEV) {
 // Forțăm o reîncărcare completă a aplicației pentru a încărca versiunea corectă
 // Dar doar dacă nu am făcut deja acest lucru în această sesiune
 if (!sessionStorage.getItem("forced_reload_done")) {
-  console.log(
-    "Forțăm o reîncărcare completă a aplicației pentru a încărca versiunea corectă"
-  );
+  // Removed console statement
 
   // Ștergem cache-ul
   localStorage.clear();

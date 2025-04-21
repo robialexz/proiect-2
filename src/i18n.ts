@@ -2,7 +2,7 @@ import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
 // If using HTTP backend to load translations:
-// import HttpApi from 'i18next-http-backend';
+
 
 // Import translation files
 import enTeams from "./locales/en/teams.json";

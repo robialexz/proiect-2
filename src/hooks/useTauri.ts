@@ -27,7 +27,7 @@ export function useTauri() {
           setSystemInfo('Running in browser');
         }
       } catch (error) {
-        console.error('Error checking Tauri environment:', error);
+        // Removed console statement
         setSystemInfo('Error checking environment');
       } finally {
         setIsLoading(false);

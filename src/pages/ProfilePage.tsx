@@ -134,7 +134,7 @@ const ProfilePage: React.FC = () => {
           full_name: user.user_metadata?.full_name || "",
           avatar_url:
             user.user_metadata?.avatar_url ||
-            "https://api.dicebear.com/7.x/avataaars/svg?seed=Alex",
+            "{process.env.URL_1}",
           email: user.email,
           job_title: "",
           phone: "",
@@ -172,7 +172,7 @@ const ProfilePage: React.FC = () => {
         });
       }
     } catch (error: any) {
-      console.error("Error fetching profile:", error);
+      // Removed console statement
       toast({
         variant: "destructive",
         title: t("profile.errors.fetchFailed", "Failed to load profile"),
@@ -238,7 +238,7 @@ const ProfilePage: React.FC = () => {
     // In a real app, this would open a file picker
     // For now, we'll just generate a random avatar
     const randomSeed = Math.random().toString(36).substring(2, 8);
-    const newAvatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${randomSeed}`;
+    const newAvatarUrl = `https:
 
     setFormData((prev) => ({
       ...prev,
@@ -290,7 +290,7 @@ const ProfilePage: React.FC = () => {
       // Refresh profile data
       fetchProfileData();
     } catch (error: any) {
-      console.error("Error saving profile:", error);
+      // Removed console statement
       toast({
         variant: "destructive",
         title: t("profile.errors.saveFailed", "Failed to save profile"),
@@ -352,7 +352,7 @@ const ProfilePage: React.FC = () => {
         confirm_password: "",
       });
     } catch (error: any) {
-      console.error("Error changing password:", error);
+      // Removed console statement
       toast({
         variant: "destructive",
         title: t(
@@ -380,7 +380,7 @@ const ProfilePage: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-slate-900 text-white">
-      
+
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="sticky top-0 z-10 bg-slate-900 border-b border-slate-800 px-6 py-4 shrink-0">
           <div className="flex items-center justify-between">

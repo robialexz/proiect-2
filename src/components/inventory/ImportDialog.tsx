@@ -94,7 +94,7 @@ const ImportDialog: React.FC<ImportDialogProps> = ({
         setPreviewData(response.data.slice(0, 10)); // Afișăm doar primele 10 rânduri
       }
     } catch (error) {
-      console.error('Error previewing import:', error);
+      // Removed console statement
       setError(error instanceof Error ? error.message : 'Unknown error');
     } finally {
       setIsUploading(false);
@@ -120,7 +120,11 @@ const ImportDialog: React.FC<ImportDialogProps> = ({
         });
       }, 500);
       
+      try {
       const response = await inventoryService.importInventory(formData);
+      } catch (error) {
+        // Handle error appropriately
+      }
       
       clearInterval(progressInterval);
       setProgress(100);
@@ -144,7 +148,7 @@ const ImportDialog: React.FC<ImportDialogProps> = ({
         onClose();
       }, 1000);
     } catch (error) {
-      console.error('Error importing inventory:', error);
+      // Removed console statement
       setError(error instanceof Error ? error.message : 'Unknown error');
       
       toast({

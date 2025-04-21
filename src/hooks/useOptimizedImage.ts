@@ -37,12 +37,12 @@ export function useOptimizedImage(
           setIsLoading(false);
         })
         .catch((err) => {
-          console.error('Error preloading image:', err);
+          // Removed console statement
           setError(err);
           setIsLoading(false);
         });
     } catch (err) {
-      console.error('Error optimizing image:', err);
+      // Removed console statement
       setError(err instanceof Error ? err : new Error('Unknown error'));
       setOptimizedSrc(src); // Folosim sursa originală în caz de eroare
       setIsLoading(false);

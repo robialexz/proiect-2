@@ -9,15 +9,13 @@ const CACHED_RESOURCES = ["/", "/index.html", "/manifest.json", "/favicon.ico"];
 
 // Instalarea service worker-ului
 self.addEventListener("install", (event: any) => {
-  console.log("Service Worker: Installing...");
-
   // Forțăm activarea imediată a service worker-ului
   self.skipWaiting();
 
   // Cache-uim resursele statice
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log("Service Worker: Caching files");
+      // Cache files
       return cache.addAll(CACHED_RESOURCES);
     })
   );
@@ -25,8 +23,6 @@ self.addEventListener("install", (event: any) => {
 
 // Activarea service worker-ului
 self.addEventListener("activate", (event: any) => {
-  console.log("Service Worker: Activating...");
-
   // Preluăm controlul imediat asupra tuturor paginilor
   self.clients.claim();
 
@@ -36,7 +32,7 @@ self.addEventListener("activate", (event: any) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
           if (cacheName !== CACHE_NAME) {
-            console.log("Service Worker: Deleting old cache", cacheName);
+            // Delete old cache
             return caches.delete(cacheName);
           }
           return null;
@@ -81,8 +77,8 @@ self.addEventListener("fetch", (event: any) => {
           }
           return networkResponse;
         })
-        .catch((error) => {
-          console.error("Service Worker: Fetch failed", error);
+        .catch((_error) => {
+          // Error handling for fetch failure
           // Returnăm versiunea din cache dacă există
           return cachedResponse;
         });

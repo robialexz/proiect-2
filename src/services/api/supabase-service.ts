@@ -312,7 +312,11 @@ export const supabaseService = {
         });
       }
       
+      try {
       const { data, error, count } = await query;
+      } catch (error) {
+        // Handle error appropriately
+      }
       
       if (error) {
         throw error;

@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import React from "react"; // Needed for React.Dispatch
-// import { useTranslation } from 'react-i18next'; // Remove import from here
+ // Remove import from here
 import { TFunction } from "i18next"; // Import TFunction type
 
 // Define the shape of our data
@@ -59,7 +59,7 @@ export const getColumns = ({
   setMaterialToConfirmSuplimentar,
   t, // Destructure t function prop
 }: ColumnsProps): ColumnDef<Material>[] => {
-  // const { t } = useTranslation(); // Remove hook call from here
+   // Remove hook call from here
 
   // Define column headers using t()
   const columns: ColumnDef<Material>[] = [

@@ -109,7 +109,7 @@ export function usePerformanceMonitor<T extends (...args: any[]) => any>(
     const result = fn(...args);
     const end = performance.now();
     
-    console.log(`[Performance] ${name}: ${end - start}ms`);
+    // Removed console statement
     
     return result;
   }, [name, fn, enabled]) as T;
@@ -150,7 +150,7 @@ export function useRenderTracker(componentName: string, props: Record<string, an
     
     // Afișăm props-urile care s-au schimbat
     if (Object.keys(changedProps).length > 0) {
-      console.log(`[Render] ${componentName} re-rendered due to:`, changedProps);
+      // Removed console statement
     }
     
     // Actualizăm props-urile anterioare

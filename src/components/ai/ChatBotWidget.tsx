@@ -24,9 +24,20 @@ const getAIResponse = async (message: string) => {
       }>(cacheKey, { namespace: "data" });
 
       if (!stats) {
-        const { data, error } = await supabase
-          .from("materials")
-          .select("id, quantity", { count: "exact" });
+        let data = null;
+        let error = null;
+
+        try {
+          const response = await supabase
+            .from("materials")
+            .select("id, quantity", { count: "exact" });
+
+          data = response.data;
+          error = response.error;
+        } catch (err) {
+          // Handle error appropriately
+          error = err;
+        }
 
         if (error) throw error;
 
@@ -51,7 +62,7 @@ const getAIResponse = async (message: string) => {
         return "Pot să te ajut cu informații despre inventar, căutarea materialelor, sau exportul datelor în Excel. Ce anume dorești să afli?";
       }
     } catch (error) {
-      console.error("Error fetching inventory data:", error);
+      // Removed console statement
       return "Îmi pare rău, nu am putut accesa informațiile despre inventar în acest moment. Poți încerca din nou mai târziu sau contacta administratorul sistemului.";
     }
   }
@@ -170,7 +181,7 @@ const ChatBotWidget: React.FC<ChatBotWidgetProps> = ({
       const aiReply = await getAIResponse(userMessage);
       setMessages((m) => [...m, { sender: "bot", text: aiReply }]);
     } catch (error) {
-      console.error("Error getting AI response:", error);
+      // Removed console statement
       setMessages((m) => [
         ...m,
         {

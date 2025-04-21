@@ -1,6 +1,6 @@
 import {
   require_jsx_runtime
-} from "./chunk-NZAIND7N.js";
+} from "./chunk-JKTQC6Y7.js";
 import {
   require_react
 } from "./chunk-UVNPGZG7.js";
@@ -20,4 +20,4 @@ function useDirection(localDir) {
 export {
   useDirection
 };
-//# sourceMappingURL=chunk-RXAZMTH6.js.map
+//# sourceMappingURL=chunk-24DOTJ22.js.map

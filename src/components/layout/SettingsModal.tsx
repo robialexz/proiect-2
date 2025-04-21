@@ -29,12 +29,7 @@ const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 
   const handleSaveSettings = () => {
     // Here you would save the settings to your state management or localStorage
-    console.log("Saving settings:", {
-      theme,
-      notificationsEnabled,
-      emailNotifications,
-      autoSave,
-    });
+    // Removed console statement
 
     // Apply theme changes
     if (theme === "dark") {

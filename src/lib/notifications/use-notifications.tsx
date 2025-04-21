@@ -121,7 +121,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         },
       ]);
     } catch (error) {
-      console.error('Error saving notification to database:', error);
+      // Removed console statement
     }
   };
   
@@ -163,7 +163,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
           ]);
         }
       } catch (error) {
-        console.error('Error loading notifications:', error);
+        // Removed console statement
       }
     };
     

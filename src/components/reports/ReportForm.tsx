@@ -111,11 +111,12 @@ const ReportForm: React.FC<ReportFormProps> = ({
         if (templatesError) throw templatesError;
         setTemplates(templatesData || []);
       } catch (error) {
-        console.error("Error fetching data:", error);
+        // Removed console statement
         toast({
           variant: "destructive",
           title: "Error loading data",
-          description: "Could not load projects or templates. Please try again.",
+          description:
+            "Could not load projects or templates. Please try again.",
         });
       }
     };
@@ -157,7 +158,7 @@ const ReportForm: React.FC<ReportFormProps> = ({
       // If a template is selected, get its data
       let templateData = null;
       if (values.template_id) {
-        const template = templates.find(t => t.id === values.template_id);
+        const template = templates.find((t) => t.id === values.template_id);
         if (template) {
           templateData = template.template;
         }
@@ -167,23 +168,23 @@ const ReportForm: React.FC<ReportFormProps> = ({
       if (values.auto_generate && values.project_id) {
         try {
           // Call the database function to generate the report
-          const { error } = await supabase
-            .rpc('generate_project_report', {
-              project_id_param: values.project_id
-            });
+          const { error } = await supabase.rpc("generate_project_report", {
+            project_id_param: values.project_id,
+          });
 
           if (error) throw error;
 
           toast({
             title: "Auto-generated report created",
-            description: "A comprehensive report has been automatically generated",
+            description:
+              "A comprehensive report has been automatically generated",
           });
 
           onOpenChange(false);
           onSuccess();
           return;
         } catch (autoGenError: any) {
-          console.error("Error generating automatic report:", autoGenError);
+          // Removed console statement
           toast({
             variant: "destructive",
             title: "Error generating report",
@@ -237,12 +238,10 @@ const ReportForm: React.FC<ReportFormProps> = ({
       onOpenChange(false);
       onSuccess();
     } catch (error: any) {
-      console.error("Error saving report:", error);
+      // Removed console statement
       toast({
         variant: "destructive",
-        title: report
-          ? "Error updating report"
-          : "Error creating report",
+        title: report ? "Error updating report" : "Error creating report",
         description: error.message,
       });
     } finally {
@@ -388,22 +387,22 @@ const ReportForm: React.FC<ReportFormProps> = ({
                               <SelectValue placeholder="Select a template (optional)" />
                             </SelectTrigger>
                           </FormControl>
-                        <SelectContent className="bg-slate-800 border-slate-700 text-white">
-                          <SelectItem value="">None</SelectItem>
-                          {templates.map((template) => (
-                            <SelectItem key={template.id} value={template.id}>
-                              {template.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormDescription className="text-slate-400">
-                        Start with a pre-defined template
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                          <SelectContent className="bg-slate-800 border-slate-700 text-white">
+                            <SelectItem value="">None</SelectItem>
+                            {templates.map((template) => (
+                              <SelectItem key={template.id} value={template.id}>
+                                {template.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormDescription className="text-slate-400">
+                          Start with a pre-defined template
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
                   <FormField
                     control={form.control}
@@ -417,11 +416,10 @@ const ReportForm: React.FC<ReportFormProps> = ({
                           />
                         </FormControl>
                         <div className="space-y-1 leading-none">
-                          <FormLabel>
-                            Generate Automatic Report
-                          </FormLabel>
+                          <FormLabel>Generate Automatic Report</FormLabel>
                           <FormDescription className="text-slate-400">
-                            Automatically generate a comprehensive report with project status, materials, deliveries and purchases
+                            Automatically generate a comprehensive report with
+                            project status, materials, deliveries and purchases
                           </FormDescription>
                         </div>
                       </FormItem>
@@ -460,9 +458,7 @@ const ReportForm: React.FC<ReportFormProps> = ({
               </Button>
               <Button type="submit" disabled={loading}>
                 {loading ? (
-                  <motion.div
-                    className="h-4 w-4 rounded-full border-2 border-current border-r-transparent animate-spin"
-                  />
+                  <motion.div className="h-4 w-4 rounded-full border-2 border-current border-r-transparent animate-spin" />
                 ) : report ? (
                   "Save Changes"
                 ) : (

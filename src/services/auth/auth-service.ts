@@ -79,7 +79,7 @@ export const authService = {
     password: string
   ): Promise<SupabaseResponse<{ session: any; user: any }>> {
     try {
-      console.log("Începe procesul de autentificare pentru email:", email);
+      // Removed console statement
 
       // Adăugăm un timeout explicit pentru autentificare
       const authPromise = supabase.auth.signInWithPassword({
@@ -99,13 +99,20 @@ export const authService = {
       });
 
       // Folosim Promise.race pentru a implementa timeout-ul
-      const result = (await Promise.race([authPromise, timeoutPromise])) as any;
+      try {
+        const result = (await Promise.race([
+          authPromise,
+          timeoutPromise,
+        ])) as any;
+      } catch (error) {
+        // Handle error appropriately
+      }
 
       const { data, error } = result;
 
       // Verificăm dacă autentificarea a reușit
       if (error) {
-        console.error("Authentication error:", error);
+        // Removed console statement
         return {
           data: null,
           error: formatError(error),
@@ -129,18 +136,18 @@ export const authService = {
             "supabase.auth.token",
             JSON.stringify(sessionData)
           );
-          console.log("Session saved manually after successful authentication");
+          // Removed console statement
 
           // Setăm un flag pentru a indica o nouă logare
           sessionStorage.setItem("newLoginDetected", "true");
         } catch (storageError) {
-          console.error("Error saving session to storage:", storageError);
+          // Removed console statement
         }
       }
 
       return handleResponse(data, error as unknown as PostgrestError);
     } catch (error) {
-      console.error("Auth error caught:", error);
+      // Removed console statement
       return {
         data: null,
         error: formatError(error),
@@ -163,25 +170,36 @@ export const authService = {
     try {
       // Doar în dezvoltare, nu în producție
       if (process.env.NODE_ENV !== "production") {
-        console.log("Începe procesul de înregistrare pentru email:", email);
+        // Removed console statement
       }
 
       // Construim URL-ul de redirecționare pentru verificarea email-ului
       const redirectUrl = `${window.location.origin}/auth/callback?type=signup`;
 
       // Configurăm opțiunile pentru înregistrare
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: redirectUrl,
-          data: {
-            // Putem adăuga date suplimentare despre utilizator aici
-            display_name: displayName || email.split("@")[0],
-            signup_timestamp: new Date().toISOString(),
+      let data = null;
+      let error = null;
+
+      try {
+        const response = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: redirectUrl,
+            data: {
+              // Putem adăuga date suplimentare despre utilizator aici
+              display_name: displayName || email.split("@")[0],
+              signup_timestamp: new Date().toISOString(),
+            },
           },
-        },
-      });
+        });
+
+        data = response.data;
+        error = response.error;
+      } catch (err) {
+        // Handle error appropriately
+        error = err;
+      }
 
       return handleResponse(data, error as unknown as PostgrestError);
     } catch (error) {
@@ -204,19 +222,28 @@ export const authService = {
     try {
       // Doar în dezvoltare, nu în producție
       if (process.env.NODE_ENV !== "production") {
-        console.log("Retrimite email de confirmare pentru:", email);
+        // Removed console statement
       }
 
       // Construim URL-ul de redirecționare pentru verificarea email-ului
       const redirectUrl = `${window.location.origin}/auth/callback?type=recovery`;
 
-      const { error } = await supabase.auth.resend({
-        type: "signup",
-        email,
-        options: {
-          emailRedirectTo: redirectUrl,
-        },
-      });
+      let error = null;
+
+      try {
+        const response = await supabase.auth.resend({
+          type: "signup",
+          email,
+          options: {
+            emailRedirectTo: redirectUrl,
+          },
+        });
+
+        error = response.error;
+      } catch (err) {
+        // Handle error appropriately
+        error = err;
+      }
 
       return handleResponse(null, error as unknown as PostgrestError);
     } catch (error) {
@@ -299,7 +326,7 @@ export const authService = {
         status: "success",
       };
     } catch (error) {
-      console.error("Error getting session:", error);
+      // Removed console statement
       return {
         data: { session: null },
         error: formatError(error),
@@ -433,12 +460,9 @@ export const authService = {
             "supabase.auth.token",
             JSON.stringify(sessionData)
           );
-          console.log("Session refreshed and saved to storage");
+          // Removed console statement
         } catch (storageError) {
-          console.error(
-            "Error saving refreshed session to storage:",
-            storageError
-          );
+          // Removed console statement
         }
       }
 

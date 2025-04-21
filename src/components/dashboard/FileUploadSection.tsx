@@ -87,9 +87,13 @@ const FileUploadSection: React.FC<FileUploadSectionProps> = ({
           // Read the file as an ArrayBuffer
           reader.readAsArrayBuffer(file);
         } catch (importError) {
-          console.log("ExcelJS not available, simulating upload", importError);
+          // Removed console statement
           // Fallback to simulation if ExcelJS import fails
+          try {
           await new Promise((resolve) => setTimeout(resolve, 1500));
+          } catch (error) {
+            // Handle error appropriately
+          }
           setUploadStatus("success");
           toast({
             title: t("dashboard.uploadSuccess", "Upload Successful"),
@@ -102,7 +106,7 @@ const FileUploadSection: React.FC<FileUploadSectionProps> = ({
         }
       }
     } catch (error) {
-      console.error("Upload error:", error);
+      // Removed console statement
       setUploadStatus("error");
       toast({
         variant: "destructive",

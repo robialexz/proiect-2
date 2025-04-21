@@ -94,7 +94,7 @@ const ResourceForm: React.FC<ResourceFormProps> = ({
         if (error) throw error;
         setCategories(data || []);
       } catch (error) {
-        console.error("Error fetching categories:", error);
+        // Removed console statement
         toast({
           variant: "destructive",
           title: "Error loading categories",
@@ -131,7 +131,7 @@ const ResourceForm: React.FC<ResourceFormProps> = ({
           const categoryIds = (data || []).map(mapping => mapping.category_id);
           form.setValue("category_ids", categoryIds);
         } catch (error) {
-          console.error("Error fetching resource categories:", error);
+          // Removed console statement
         }
       };
 
@@ -173,7 +173,11 @@ const ResourceForm: React.FC<ResourceFormProps> = ({
         // Update category mappings
         if (values.category_ids && values.category_ids.length > 0) {
           // First delete existing mappings
+          try {
           const { error: deleteError } = await supabase
+          } catch (error) {
+            // Handle error appropriately
+          }
             .from("resource_category_mappings")
             .delete()
             .eq("resource_id", resource.id);
@@ -186,7 +190,11 @@ const ResourceForm: React.FC<ResourceFormProps> = ({
             category_id: categoryId,
           }));
 
+          try {
           const { error: insertError } = await supabase
+          } catch (error) {
+            // Handle error appropriately
+          }
             .from("resource_category_mappings")
             .insert(mappings);
 
@@ -199,7 +207,11 @@ const ResourceForm: React.FC<ResourceFormProps> = ({
         });
       } else {
         // Create new resource
+        try {
         const { data, error } = await supabase
+        } catch (error) {
+          // Handle error appropriately
+        }
           .from("resources")
           .insert({
             name: values.name,
@@ -221,7 +233,11 @@ const ResourceForm: React.FC<ResourceFormProps> = ({
             category_id: categoryId,
           }));
 
+          try {
           const { error: mappingError } = await supabase
+          } catch (error) {
+            // Handle error appropriately
+          }
             .from("resource_category_mappings")
             .insert(mappings);
 
@@ -237,7 +253,7 @@ const ResourceForm: React.FC<ResourceFormProps> = ({
       onOpenChange(false);
       onSuccess();
     } catch (error: any) {
-      console.error("Error saving resource:", error);
+      // Removed console statement
       toast({
         variant: "destructive",
         title: resource

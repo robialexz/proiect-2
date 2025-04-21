@@ -21,7 +21,7 @@ export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T 
       // Returnăm valoarea parsată sau valoarea implicită
       return item ? JSON.parse(item) : initialValue;
     } catch (error) {
-      console.warn(`Error reading localStorage key "${key}":`, error);
+      // Removed console statement
       return initialValue;
     }
   };
@@ -47,7 +47,7 @@ export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T 
         window.dispatchEvent(new Event('local-storage'));
       }
     } catch (error) {
-      console.warn(`Error setting localStorage key "${key}":`, error);
+      // Removed console statement
     }
   };
   

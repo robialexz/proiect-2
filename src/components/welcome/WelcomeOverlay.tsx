@@ -19,7 +19,7 @@ const WelcomeOverlay: React.FC<WelcomeOverlayProps> = ({ onComplete }) => {
     // Obținem mesajul de bun venit personalizat
     const message = getWelcomeMessage();
     setWelcomeMessage(message);
-    console.log("Welcome message set:", message);
+    // Removed console statement
 
     // Ascundem overlay-ul după 5 secunde pentru a fi mai vizibil
     const timer = setTimeout(() => {

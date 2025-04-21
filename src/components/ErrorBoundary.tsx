@@ -53,7 +53,7 @@ class ErrorBoundaryClass extends Component<Props, State> {
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     // Logăm eroarea
-    console.error("Error caught by ErrorBoundary:", error, errorInfo);
+    // Removed console statement
 
     // Actualizăm starea cu informațiile despre eroare
     this.setState({ errorInfo });

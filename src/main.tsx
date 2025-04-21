@@ -11,44 +11,41 @@ import "./utils/react-fix";
 import { cleanSite, isSiteCleaned } from "./utils/clean-site";
 
 // Dezactivăm service worker-ul temporar pentru a rezolva problema de reîncărcare continuă
-// if ("serviceWorker" in navigator && import.meta.env.PROD) {
-//   window.addEventListener("load", () => {
+
+
 //     navigator.serviceWorker
 //       .register("/service-worker.js")
 //       .then((registration) => {
-//         console.log(
-//           "Service Worker registered with scope:",
-//           registration.scope
-//         );
+//         // Removed console statement
 //
 //         // Verificăm dacă există o versiune nouă a service worker-ului
-//         registration.addEventListener("updatefound", () => {
-//           const newWorker = registration.installing;
-//           console.log("Service Worker update found!");
+
+
+//           // Removed console statement
 //
-//           newWorker?.addEventListener("statechange", () => {
+
 //             if (
 //               newWorker.state === "installed" &&
 //               navigator.serviceWorker.controller
 //             ) {
-//               console.log("Service Worker installed, reloading page...");
-//               window.location.reload();
+//               // Removed console statement
+
 //             }
 //           });
 //         });
 //       })
 //       .catch((error) => {
-//         console.error("Service Worker registration failed:", error);
+//         // Removed console statement
 //       });
 //   });
 // } else {
-//   console.log("Service Worker nu este înregistrat în modul de dezvoltare");
+//   // Removed console statement
 // }
 
 // Curățăm site-ul complet pentru a șterge versiunea veche
 // Dar doar dacă nu am făcut deja acest lucru în această sesiune
 if (!isSiteCleaned()) {
-  console.log("Curățăm site-ul pentru a șterge versiunea veche...");
+  // Removed console statement
   // Folosim setTimeout pentru a permite încărcarea paginii înainte de curățare
   setTimeout(() => {
     cleanSite();
@@ -77,8 +74,8 @@ import { routePreloader } from "./lib/route-preloader";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 // Dezactivăm temporar TempoDevtools pentru a îmbunătăți performanța
-// import { TempoDevtools } from "tempo-devtools";
-// TempoDevtools.init();
+
+
 
 // Preîncărcăm rutele și paginile frecvent accesate la pornirea aplicației
 routePreloader.preloadFrequentRoutes();

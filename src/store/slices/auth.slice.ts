@@ -274,7 +274,7 @@ export const createAuthSlice: StateCreator<
         userProfile: data as UserProfile,
       });
     } catch (error: any) {
-      console.error('Eroare la încărcarea profilului:', error);
+      // Removed console statement
       
       // Creăm un profil implicit dacă nu există
       set({ 

@@ -74,7 +74,7 @@ export const preloadRoute = (route: string): void => {
   if (componentLoader) {
     // Preîncărcăm componenta
     componentLoader().catch((err) => {
-      console.warn(`Failed to preload route ${route}:`, err);
+      // Removed console statement
     });
   }
 };
@@ -94,40 +94,34 @@ export const preloadComponent = (componentPath: string): void => {
     switch (importPath) {
       case "Dashboard":
         import("../pages/DashboardPage").catch((err) => {
-          console.warn(`Failed to preload component DashboardPage:`, err);
+          // Removed console statement
         });
         break;
       case "Overview":
         import("../pages/OverviewPage").catch((err) => {
-          console.warn(`Failed to preload component OverviewPage:`, err);
+          // Removed console statement
         });
         break;
       case "InventoryManagement":
         import("../pages/InventoryManagementPage").catch((err) => {
-          console.warn(
-            `Failed to preload component InventoryManagementPage:`,
-            err
-          );
+          // Removed console statement
         });
         break;
       case "Projects":
         import("../pages/ProjectsPage").catch((err) => {
-          console.warn(`Failed to preload component ProjectsPage:`, err);
+          // Removed console statement
         });
         break;
       case "CompanyInventory":
         import("../pages/CompanyInventoryPage").catch((err) => {
-          console.warn(
-            `Failed to preload component CompanyInventoryPage:`,
-            err
-          );
+          // Removed console statement
         });
         break;
       default:
-        console.warn(`No preload handler for component ${componentPath}`);
+        // Removed console statement
     }
   } catch (err) {
-    console.warn(`Failed to preload component ${componentPath}:`, err);
+    // Removed console statement
   }
 };
 
@@ -192,7 +186,7 @@ export const preloadRouteGroups = (): void => {
 
   // Folosim requestIdleCallback pentru a preîncărca în timpul inactiv
   const preloadFn = () => {
-    console.log("Preîncărcăm grupurile de rute...");
+    // Removed console statement
 
     // Preîncărcăm grupurile de rute
     preloadGroups.forEach((group, groupIndex) => {
@@ -203,7 +197,7 @@ export const preloadRouteGroups = (): void => {
           importFns.forEach((importFn, index) => {
             setTimeout(() => {
               importFn().catch((err) => {
-                console.warn(`Failed to preload group ${group}:`, err);
+                // Removed console statement
               });
             }, index * 200);
           });
@@ -233,7 +227,7 @@ export const preloadRouteGroup = (path: string): void => {
   if (group && groupComponents[group]) {
     // Folosim requestIdleCallback pentru a preîncărca în timpul inactiv
     const preloadFn = () => {
-      console.log(`Preîncărcăm grupul de rute ${group}...`);
+      // Removed console statement
 
       // Preîncărcăm componentele grupului
       const importFns = groupComponents[group];
@@ -241,7 +235,7 @@ export const preloadRouteGroup = (path: string): void => {
         importFns.forEach((importFn, index) => {
           setTimeout(() => {
             importFn().catch((err) => {
-              console.warn(`Failed to preload group ${group}:`, err);
+              // Removed console statement
             });
           }, index * 200);
         });

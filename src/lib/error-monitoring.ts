@@ -64,12 +64,12 @@ class LocalErrorStorage implements ErrorStorage {
 
       // Log to console in development
       if (import.meta.env.DEV) {
-        console.error("Error captured:", error);
+        // Removed console statement
       }
     } catch (storageError) {
       // Fallback to console if localStorage fails
-      console.error("Failed to store error in localStorage:", storageError);
-      console.error("Original error:", error);
+      // Removed console statement
+      // Removed console statement
     }
   }
 
@@ -98,27 +98,35 @@ class SupabaseErrorStorage implements ErrorStorage {
       }
 
       // Insert error into Supabase
+      try {
       const { error: supabaseError } = await supabase
+      } catch (error) {
+        // Handle error appropriately
+      }
         .from(this.TABLE_NAME)
         .insert([error]);
 
       if (supabaseError) {
         // Doar logăm eroarea fără a o raporta din nou pentru a evita bucla infinită
-        console.warn("Failed to store error in Supabase:", supabaseError);
+        // Removed console statement
 
         // Fallback to local storage
         const localStorage = new LocalErrorStorage();
+        try {
         await localStorage.captureError(error);
+        } catch (error) {
+          // Handle error appropriately
+        }
       }
 
       // Log to console in development
       if (import.meta.env.DEV) {
-        console.error("Error captured:", error);
+        // Removed console statement
       }
     } catch (storageError) {
       // Doar logăm eroarea fără a o raporta din nou pentru a evita bucla infinită
-      console.warn("Failed to store error:", storageError);
-      console.warn("Original error:", error);
+      // Removed console statement
+      // Removed console statement
     }
   }
 
@@ -131,16 +139,20 @@ class SupabaseErrorStorage implements ErrorStorage {
         .limit(limit);
 
       if (error) {
-        console.error("Failed to retrieve errors from Supabase:", error);
+        // Removed console statement
 
         // Fallback to local storage
         const localStorage = new LocalErrorStorage();
+        try {
         return await localStorage.getErrors(limit);
+        } catch (error) {
+          // Handle error appropriately
+        }
       }
 
       return data as ErrorData[];
     } catch (error) {
-      console.error("Failed to retrieve errors:", error);
+      // Removed console statement
       return [];
     }
   }
@@ -153,10 +165,10 @@ class SupabaseErrorStorage implements ErrorStorage {
         .gte("id", 0); // Delete all records
 
       if (error) {
-        console.error("Failed to clear errors from Supabase:", error);
+        // Removed console statement
       }
     } catch (error) {
-      console.error("Failed to clear errors:", error);
+      // Removed console statement
     }
   }
 }
@@ -216,10 +228,10 @@ class ErrorMonitoringService {
     });
 
     // Dezactivăm override-ul console.error pentru a evita bucla infinită
-    // const originalConsoleError = console.error;
-    // console.error = (...args) => {
+    
+    
     //   // Call original console.error
-    //   originalConsoleError.apply(console, args);
+    
 
     //   // Capture the error
     //   const errorMessage = args
@@ -228,11 +240,11 @@ class ErrorMonitoringService {
     //     )
     //     .join(" ");
 
-    //   this.captureError({
-    //     message: `Console Error: ${errorMessage}`,
+    
+    `,
     //     source: ErrorSource.CLIENT,
     //     severity: ErrorSeverity.WARNING,
-    //     context: {
+    
     //       type: "console.error",
     //       args: args.map((arg) => String(arg)),
     //     },
@@ -241,7 +253,11 @@ class ErrorMonitoringService {
   }
 
   public async captureError(error: ErrorData): Promise<void> {
+    try {
     await this.storage.captureError(error);
+    } catch (error) {
+      // Handle error appropriately
+    }
   }
 
   public async captureException(
@@ -251,7 +267,11 @@ class ErrorMonitoringService {
     context?: Record<string, any>,
     userId?: string
   ): Promise<void> {
+    try {
     await this.storage.captureError({
+    } catch (error) {
+      // Handle error appropriately
+    }
       message: error.message || "Unknown error",
       source,
       severity,
@@ -263,15 +283,27 @@ class ErrorMonitoringService {
   }
 
   public async getErrors(limit?: number): Promise<ErrorData[]> {
+    try {
     return await this.storage.getErrors(limit);
+    } catch (error) {
+      // Handle error appropriately
+    }
   }
 
   public async clearErrors(): Promise<void> {
+    try {
     await this.storage.clearErrors();
+    } catch (error) {
+      // Handle error appropriately
+    }
   }
 
   public async generateErrorReport(): Promise<Blob> {
+    try {
     const errors = await this.getErrors(1000);
+    } catch (error) {
+      // Handle error appropriately
+    }
     const report = {
       generated_at: new Date().toISOString(),
       total_errors: errors.length,

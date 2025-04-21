@@ -238,7 +238,7 @@ export function handleAuthError(error: any): boolean {
   const authError = processAuthError(error);
 
   // Logăm eroarea
-  console.error("Auth error:", authError);
+  // Removed console statement
 
   // Gestionăm eroarea în funcție de tip
   switch (authError.type) {

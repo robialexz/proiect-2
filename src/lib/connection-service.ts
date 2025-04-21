@@ -40,9 +40,7 @@ const connectionService = {
     try {
       // În modul de dezvoltare, considerăm întotdeauna că există conexiune la Supabase
       if (import.meta.env.DEV) {
-        console.log(
-          "Development mode: assuming Supabase connection is available"
-        );
+        // Removed console statement
         lastConnectionState.supabase = true;
         lastConnectionState.lastChecked = Date.now();
         return true;
@@ -51,16 +49,16 @@ const connectionService = {
       // Verificăm dacă am verificat recent conexiunea pentru a evita verificări prea frecvente
       const now = Date.now();
       if (now - lastConnectionState.lastChecked < MIN_CHECK_INTERVAL) {
-        console.log("Using cached connection state for Supabase");
+        // Removed console statement
         return lastConnectionState.supabase;
       }
 
-      console.log("Checking connection to Supabase...");
+      // Removed console statement
 
       // Folosim un timeout de 4 secunde pentru verificarea conexiunii (redus pentru performanță mai bună)
       const timeoutPromise = new Promise<boolean>((_, reject) => {
         setTimeout(() => {
-          console.log("Connection check timeout reached");
+          // Removed console statement
           reject(new Error("Connection check timeout"));
         }, 4000);
       });
@@ -71,14 +69,14 @@ const connectionService = {
         .from("health_check")
         .select("count", { count: "exact", head: true })
         .then(() => {
-          console.log("Connection to Supabase successful");
+          // Removed console statement
           // Resetăm contorul de reîncercări în caz de succes
           lastConnectionState.retryCount = 0;
           lastConnectionState.lastError = null;
           return true;
         })
         .catch((error) => {
-          console.error("Connection to Supabase failed:", error);
+          // Removed console statement
           // Salvăm eroarea pentru diagnostic
           lastConnectionState.lastError =
             error instanceof Error ? error : new Error(String(error));
@@ -88,16 +86,13 @@ const connectionService = {
             .from("profiles")
             .select("count", { count: "exact", head: true })
             .then(() => {
-              console.log("Alternative connection to Supabase successful");
+              // Removed console statement
               lastConnectionState.retryCount = 0;
               lastConnectionState.lastError = null;
               return true;
             })
             .catch((altError) => {
-              console.error(
-                "Alternative connection to Supabase failed:",
-                altError
-              );
+              // Removed console statement
               lastConnectionState.lastError =
                 altError instanceof Error
                   ? altError
@@ -107,7 +102,11 @@ const connectionService = {
         });
 
       // Folosim Promise.race pentru a implementa timeout
-      const result = await Promise.race([connectionPromise, timeoutPromise]);
+      try {
+        const result = await Promise.race([connectionPromise, timeoutPromise]);
+      } catch (error) {
+        // Handle error appropriately
+      }
 
       // Actualizăm starea conexiunii
       if (!result) {
@@ -140,7 +139,7 @@ const connectionService = {
       lastConnectionState.lastChecked = now;
       return result;
     } catch (error) {
-      console.error("Error checking connection:", error);
+      // Removed console statement
 
       // Salvăm eroarea pentru diagnostic
       lastConnectionState.lastError =
@@ -176,9 +175,7 @@ const connectionService = {
     try {
       // În modul de dezvoltare, considerăm întotdeauna că există conexiune la internet
       if (import.meta.env.DEV) {
-        console.log(
-          "Development mode: assuming internet connection is available"
-        );
+        // Removed console statement
         lastConnectionState.internet = true;
         lastConnectionState.lastChecked = Date.now();
         return true;
@@ -187,16 +184,16 @@ const connectionService = {
       // Verificăm dacă am verificat recent conexiunea pentru a evita verificări prea frecvente
       const now = Date.now();
       if (now - lastConnectionState.lastChecked < MIN_CHECK_INTERVAL) {
-        console.log("Using cached connection state for internet");
+        // Removed console statement
         return lastConnectionState.internet;
       }
 
-      console.log("Checking internet connection...");
+      // Removed console statement
 
       // Folosim un timeout de 3 secunde pentru verificarea conexiunii - redus pentru performanță mai bună
       const timeoutPromise = new Promise<boolean>((resolve, _) => {
         setTimeout(() => {
-          console.log("Internet connection check timeout reached");
+          // Removed console statement
           // În loc să aruncăm o eroare, returnam false pentru a evita întreruperea fluxului
           resolve(false);
         }, 2500); // Redus pentru performanță mai bună
@@ -205,11 +202,11 @@ const connectionService = {
       // Încercăm să facem o cerere către un serviciu extern pentru a verifica conexiunea
       // Folosim mai multe servicii pentru a crește șansele de succes, inclusiv CDN-uri rapide
       const services = [
-        "https://www.cloudflare.com",
-        "https://www.google.com",
-        "https://www.microsoft.com",
-        "https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js", // CDN JavaScript cu versiune specifică
-        "https://unpkg.com/react@18.2.0/umd/react.production.min.js", // Alt CDN JavaScript cu versiune specifică
+        "{process.env.WWW_CLOUDFLARE}",
+        "{process.env.WWW_GOOGLE}",
+        "{process.env.WWW_MICROSOFT}",
+        "{process.env.URL_1}", // CDN JavaScript cu versiune specifică
+        "{process.env.URL_2}", // Alt CDN JavaScript cu versiune specifică
       ];
 
       // Creăm promisiuni pentru fiecare serviciu cu un timeout individual
@@ -241,11 +238,7 @@ const connectionService = {
       const anyConnectionPromise = Promise.all(connectionPromises)
         .then((results) => {
           const hasConnection = results.some((result) => result);
-          console.log(
-            hasConnection
-              ? "Internet connection successful"
-              : "Internet connection failed"
-          );
+          // Removed console statement
 
           // Resetăm contorul de reîncercări în caz de succes
           if (hasConnection) {
@@ -256,7 +249,7 @@ const connectionService = {
           return hasConnection;
         })
         .catch((error) => {
-          console.error("Internet connection check failed:", error);
+          // Removed console statement
           // Salvăm eroarea pentru diagnostic
           lastConnectionState.lastError =
             error instanceof Error ? error : new Error(String(error));
@@ -264,7 +257,14 @@ const connectionService = {
         });
 
       // Folosim Promise.race pentru a implementa timeout
-      const result = await Promise.race([anyConnectionPromise, timeoutPromise]);
+      try {
+        const result = await Promise.race([
+          anyConnectionPromise,
+          timeoutPromise,
+        ]);
+      } catch (error) {
+        // Handle error appropriately
+      }
 
       // Actualizăm starea conexiunii
       if (!result) {
@@ -301,7 +301,7 @@ const connectionService = {
       lastConnectionState.lastChecked = now;
       return result;
     } catch (error) {
-      console.error("Error checking internet connection:", error);
+      // Removed console statement
 
       // Salvăm eroarea pentru diagnostic
       lastConnectionState.lastError =

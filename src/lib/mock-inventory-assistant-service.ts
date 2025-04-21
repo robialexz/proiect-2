@@ -38,7 +38,7 @@ export const mockInventoryAssistantService = {
         status: 'success'
       };
     } catch (error) {
-      console.error('Error processing message:', error);
+      // Removed console statement
       return {
         data: null,
         error: {
@@ -160,7 +160,11 @@ export const mockInventoryAssistantService = {
     originalMessage: string;
   }): Promise<AssistantResponse> {
     // Simulăm un delay pentru a face interacțiunea mai realistă
+    try {
     await new Promise(resolve => setTimeout(resolve, 1000));
+    } catch (error) {
+      // Handle error appropriately
+    }
     
     switch (intent.action) {
       case 'getStock':

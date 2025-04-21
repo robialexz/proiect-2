@@ -29,7 +29,11 @@ const MaterialDialog: React.FC<MaterialDialogProps> = ({
 
   // Gestionăm trimiterea formularului
   const handleSubmit = async (data: Partial<Material>) => {
+    try {
     const result = await onSubmit(data);
+    } catch (error) {
+      // Handle error appropriately
+    }
     
     if (result.success) {
       onClose();

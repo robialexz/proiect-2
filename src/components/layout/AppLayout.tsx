@@ -75,7 +75,7 @@ const AppLayout: React.FC = () => {
     if (user && !loading) {
       // Verificăm dacă este o nouă logare și nu am afișat deja mesajul
       if (isNewLogin === "true" && !welcomeShown) {
-        console.log("Showing welcome overlay for new login");
+        // Removed console statement
         setShowWelcomeOverlay(true);
 
         // Marcăm mesajul ca afișat pentru această sesiune
@@ -138,9 +138,7 @@ const AppLayout: React.FC = () => {
     (!user || loadingTimeout) &&
     !window.location.pathname.includes("/login")
   ) {
-    console.log(
-      "AppLayout: No authenticated user or loading timeout, redirecting to login."
-    );
+    // Removed console statement
 
     // Nu mai ștergem datele de autentificare pentru a păstra sesiunea la refresh
 

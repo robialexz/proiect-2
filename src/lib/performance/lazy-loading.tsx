@@ -36,7 +36,7 @@ export function lazyLoad<T extends ComponentType<any>>(
       if (onError) {
         onError(error);
       } else {
-        console.error('Error loading component:', error);
+        // Removed console statement
       }
       
       // Returnăm componenta de eroare sau aruncăm eroarea
@@ -107,7 +107,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
   }
   
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
-    console.error('Error caught by ErrorBoundary:', error, errorInfo);
+    // Removed console statement
   }
   
   retry(): void {

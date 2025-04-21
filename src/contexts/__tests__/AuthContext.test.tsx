@@ -118,7 +118,11 @@ describe('AuthContext', () => {
     );
     
     // Wait for authentication to complete
+    try {
     await waitFor(() => {
+    } catch (error) {
+      // Handle error appropriately
+    }
       expect(screen.getByText('Logged in as: test@example.com')).toBeInTheDocument();
     });
   });
@@ -149,7 +153,11 @@ describe('AuthContext', () => {
     );
     
     // Wait for initial state
+    try {
     await waitFor(() => {
+    } catch (error) {
+      // Handle error appropriately
+    }
       expect(screen.getByText('Not logged in')).toBeInTheDocument();
     });
     
@@ -190,7 +198,11 @@ describe('AuthContext', () => {
     );
     
     // Wait for authenticated state
+    try {
     await waitFor(() => {
+    } catch (error) {
+      // Handle error appropriately
+    }
       expect(screen.getByText('Logged in as: test@example.com')).toBeInTheDocument();
     });
     

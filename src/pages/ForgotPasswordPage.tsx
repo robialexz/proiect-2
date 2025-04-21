@@ -36,7 +36,7 @@ const ForgotPasswordPage = () => {
       );
       setEmail("");
     } catch (err: any) {
-      console.error("Eroare la resetarea parolei:", err);
+      // Removed console statement
       setError(err.message || "A apărut o eroare la trimiterea emailului de resetare");
     } finally {
       setLoading(false);

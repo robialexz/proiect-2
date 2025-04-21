@@ -20,7 +20,7 @@ const AuthCallbackPage = () => {
     const handleAuthCallback = async () => {
       try {
         setLoading(true);
-        console.log("Procesare callback de autentificare...");
+        // Removed console statement
 
         // Obținem parametrii din URL
         const hashParams = new URLSearchParams(
@@ -33,17 +33,11 @@ const AuthCallbackPage = () => {
         const refreshToken = hashParams.get("refresh_token");
         const type = queryParams.get("type");
 
-        console.log("Parametri URL:", {
-          accessToken: accessToken ? "Prezent" : "Absent",
-          refreshToken: refreshToken ? "Prezent" : "Absent",
-          type,
-          hash: window.location.hash,
-          search: window.location.search,
-        });
+        // Removed console statement
 
         // Verificăm dacă avem parametrul de tip în query
         if (type) {
-          console.log(`Procesare callback de tip: ${type}`);
+          // Removed console statement
 
           // Verificăm tipul de callback
           if (type === "recovery") {
@@ -67,7 +61,7 @@ const AuthCallbackPage = () => {
 
         // Dacă avem un token de acces în hash, încercăm să-l setăm în sesiune
         if (accessToken && refreshToken) {
-          console.log("Setare sesiune din token-uri OAuth...");
+          // Removed console statement
           try {
             const { error } = await supabase.auth.setSession({
               access_token: accessToken,
@@ -84,22 +78,21 @@ const AuthCallbackPage = () => {
             setTimeout(() => navigate("/dashboard"), 2000);
             return;
           } catch (sessionError) {
-            console.error("Eroare la setarea sesiunii:", sessionError);
+            // Removed console statement
             // Continuăm cu alte metode de autentificare
           }
         }
 
         // Folosim metoda getSession pentru a verifica dacă avem o sesiune validă
-        console.log("Verificare sesiune curentă...");
+        // Removed console statement
+        try {
         const { data: sessionData } = await supabase.auth.getSession();
+        } catch (error) {
+          // Handle error appropriately
+        }
 
         if (sessionData?.session) {
-          console.log("Sesiune validă găsită:", {
-            user: sessionData.session.user.email,
-            expiresAt: new Date(
-              sessionData.session.expires_at * 1000
-            ).toLocaleString(),
-          });
+          // Removed console statement
 
           setSuccess(
             "Autentificare reușită! Veți fi redirecționat în curând..."
@@ -109,15 +102,13 @@ const AuthCallbackPage = () => {
         }
 
         // Dacă nu avem o sesiune validă, redirecționăm către pagina de login
-        console.log(
-          "Nu s-a găsit o sesiune validă, redirecționare către login"
-        );
+        // Removed console statement
         setError(
           "Sesiune invalidă sau expirată. Vă rugăm să vă autentificați din nou."
         );
         setTimeout(() => navigate("/login"), 3000);
       } catch (err: any) {
-        console.error("Eroare la procesarea callback-ului:", err);
+        // Removed console statement
         setError(
           err.message ||
             "A apărut o eroare la procesarea callback-ului de autentificare"

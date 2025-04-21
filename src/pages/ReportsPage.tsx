@@ -65,7 +65,7 @@ const ReportsPage: React.FC = () => {
 
         setProjects(projectsWithCorrectStatus);
       } catch (error) {
-        console.error("Error loading projects:", error);
+        // Removed console statement
       } finally {
         setLoadingProjects(false);
       }
@@ -102,7 +102,7 @@ const ReportsPage: React.FC = () => {
     setIsLoading(reportsLoading);
 
     if (reportsError) {
-      console.error("Error fetching reports:", reportsError);
+      // Removed console statement
       // Evităm afișarea de notificări multiple pentru aceeași eroare
       // Folosim un timeout pentru a evita problemele de performanță
       const timer = setTimeout(() => {
@@ -133,7 +133,7 @@ const ReportsPage: React.FC = () => {
 
       setReports(data || []);
     } catch (error: any) {
-      console.error("Error fetching reports (fallback):", error);
+      // Removed console statement
       toast({
         variant: "destructive",
         title: "Error loading reports",
@@ -166,7 +166,7 @@ const ReportsPage: React.FC = () => {
         description: "The report has been successfully deleted",
       });
     } catch (error: any) {
-      console.error("Error deleting report:", error);
+      // Removed console statement
       toast({
         variant: "destructive",
         title: "Error deleting report",

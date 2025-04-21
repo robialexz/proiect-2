@@ -317,7 +317,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
       onOpenChange(false);
       onSuccess();
     } catch (error: any) {
-      console.error("Error saving project:", error);
+      // Removed console statement
       toast({
         variant: "destructive",
         title: project

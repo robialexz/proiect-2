@@ -51,7 +51,7 @@ const LoginPage = () => {
         throw new Error("Nu s-a putut obține sesiunea");
       }
     } catch (err: any) {
-      console.error("Eroare la autentificare:", err);
+      // Removed console statement
       setError(err.message || "A apărut o eroare la autentificare");
     } finally {
       setLoading(false);

@@ -22,7 +22,11 @@ export function useNotifications() {
   const requestPermission = useCallback(async () => {
     if (!isSupported) return false;
     
+    try {
     const granted = await notificationService.requestPermission();
+    } catch (error) {
+      // Handle error appropriately
+    }
     setHasPermission(granted);
     return granted;
   }, [isSupported]);
@@ -33,7 +37,11 @@ export function useNotifications() {
       if (!isSupported) return null;
       
       if (!hasPermission) {
+        try {
         const granted = await requestPermission();
+        } catch (error) {
+          // Handle error appropriately
+        }
         if (!granted) return null;
       }
       
@@ -51,7 +59,11 @@ export function useNotifications() {
       if (!isSupported) return null;
       
       if (!hasPermission) {
+        try {
         const granted = await requestPermission();
+        } catch (error) {
+          // Handle error appropriately
+        }
         if (!granted) return null;
       }
       
@@ -65,7 +77,11 @@ export function useNotifications() {
       if (!isSupported) return null;
       
       if (!hasPermission) {
+        try {
         const granted = await requestPermission();
+        } catch (error) {
+          // Handle error appropriately
+        }
         if (!granted) return null;
       }
       
@@ -79,7 +95,11 @@ export function useNotifications() {
       if (!isSupported) return null;
       
       if (!hasPermission) {
+        try {
         const granted = await requestPermission();
+        } catch (error) {
+          // Handle error appropriately
+        }
         if (!granted) return null;
       }
       

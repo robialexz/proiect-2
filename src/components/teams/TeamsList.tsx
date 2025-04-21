@@ -82,7 +82,7 @@ const TeamsList: React.FC<TeamsListProps> = ({
 
       setTeams(data || []);
     } catch (error) {
-      console.error("Error fetching teams:", error);
+      // Removed console statement
       toast({
         variant: "destructive",
         title: t("teams.errors.fetchFailed"),
@@ -110,7 +110,7 @@ const TeamsList: React.FC<TeamsListProps> = ({
         description: t("teams.notifications.teamDeletedDescription"),
       });
     } catch (error) {
-      console.error("Error deleting team:", error);
+      // Removed console statement
       toast({
         variant: "destructive",
         title: t("teams.errors.deleteFailed"),
