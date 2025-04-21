@@ -1,8 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { supabaseService } from "../services";
-import { Button } from "@/components/ui/button";
+import { enhancedSupabaseService as supabaseService } from "@/lib/enhanced-supabase-service";
 import {
   Card,
   CardContent,
@@ -11,24 +10,25 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Edit, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ArrowLeft, Edit, Trash2 } from "lucide-react";
 
+// Tipul pentru detaliile unui element
 interface ItemDetail {
   id: string;
   name: string;
   description?: string;
+  category?: string;
   quantity: number;
   unit?: string;
-  category?: string;
-  location?: string;
   cost_per_unit?: number;
-  supplier_id?: string;
+  location?: string;
   supplier_name?: string;
   created_at: string;
-  updated_at: string;
+  updated_at?: string;
   [key: string]: any; // Pentru alte proprietăți dinamice
 }
 
@@ -36,20 +36,16 @@ const ItemDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  // Folosim React Query pentru a gestiona starea și cache-ul
+  // Obținem detaliile elementului
   const {
     data: item,
     isLoading,
     error,
-  } = useQuery<ItemDetail>({
+  } = useQuery({
     queryKey: ["item", id],
     queryFn: async () => {
       if (!id) throw new Error("ID is required");
-      try {
       const res = await supabaseService.select<ItemDetail>("resources", "*", {
-      } catch (error) {
-        // Handle error appropriately
-      }
         filters: { id },
         single: true,
       });

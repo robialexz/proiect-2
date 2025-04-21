@@ -2,7 +2,7 @@
   "name": "starter",
   "private": true,
   "version": "0.0.0",
-  "type": "commonjs",
+  "type": "module",
   "engines": {
     "node": ">=20.0.0"
   },
@@ -27,10 +27,10 @@
     "db:seed": "node scripts/seed-database.js",
     "db:fresh": "npm run db:reset && npm run db:seed",
     "db:check": "ts-node src/scripts/check-db.ts",
-    "check:code": "node scripts/check-code-errors.js",
-    "check:pages": "node scripts/check-pages-errors.js",
-    "check:browser": "node scripts/check-browser-errors.js",
-    "check:all": "node scripts/run-all-checks.js",
+    "check:code": "node scripts/check-code-errors.cjs",
+    "check:pages": "node scripts/check-pages-errors.cjs",
+    "check:browser": "node scripts/check-browser-errors.cjs",
+    "check:all": "node scripts/run-all-checks.cjs",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",

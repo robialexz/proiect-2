@@ -1,5 +1,10 @@
 // Acest service worker va gestiona cache-ul și va asigura că utilizatorii primesc întotdeauna cea mai recentă versiune a aplicației
 
+/// <reference lib="webworker" />
+
+// Declarăm tipul pentru self în contextul Service Worker
+declare const self: ServiceWorkerGlobalScope;
+
 // Versiunea cache-ului - schimbă această valoare pentru a forța actualizarea cache-ului
 const CACHE_VERSION = "v1.0.1";
 const CACHE_NAME = `app-cache-${CACHE_VERSION}`;

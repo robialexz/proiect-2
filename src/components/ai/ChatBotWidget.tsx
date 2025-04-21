@@ -1,9 +1,46 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, X, HelpCircle, User } from "lucide-react";
+import {
+  Send,
+  X,
+  Bot,
+  User,
+  Sparkles,
+  Lightbulb,
+  MessageSquare,
+  Settings,
+  History,
+  Trash2,
+  Copy,
+  Check,
+  HelpCircle,
+} from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { cacheService } from "@/lib/cache-service";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLocation } from "react-router-dom";
+import { useAIService } from "@/hooks/useAIService";
+import { useToast } from "@/components/ui/use-toast";
+import { cn } from "@/lib/utils";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 // Enhanced AI reply logic with context awareness
 const getAIResponse = async (message: string) => {
@@ -104,6 +141,13 @@ const getAIResponse = async (message: string) => {
   return "Sunt asistentul tău AI! Pot să te ajut cu informații despre inventar, proiecte, materiale, import/export date sau utilizarea platformei. Ce întrebare ai?";
 };
 
+interface Message {
+  id: string;
+  role: "user" | "assistant" | "system";
+  content: string;
+  timestamp: Date;
+}
+
 interface ChatBotWidgetProps {
   initialMessage?: string;
   contextType?: "inventory" | "projects" | "general";
@@ -113,22 +157,37 @@ const ChatBotWidget: React.FC<ChatBotWidgetProps> = ({
   initialMessage = "Salut! Sunt asistentul AI. Cu ce te pot ajuta astăzi?",
   contextType = "general",
 }) => {
+  const { t } = useTranslation();
+  const { toast } = useToast();
   const { user } = useAuth();
+  const location = useLocation();
   const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState<
-    { sender: "user" | "bot"; text: string }[]
-  >([
+  const [isMinimized, setIsMinimized] = useState(false);
+  const [activeTab, setActiveTab] = useState<
+    "chat" | "suggestions" | "history"
+  >("chat");
+  const [messages, setMessages] = useState<Message[]>([
     {
-      sender: "bot",
-      text: initialMessage,
+      id: "welcome",
+      role: "assistant",
+      content: initialMessage,
+      timestamp: new Date(),
     },
   ]);
   const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [suggestions, setSuggestions] = useState<string[]>([]);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
-  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const {
+    generateResponse,
+    updateContext,
+    suggestions: aiSuggestions,
+    saveConversation,
+    analyzeSentiment,
+  } = useAIService();
+
+  const [suggestions, setSuggestions] = useState<string[]>([]);
 
   // Set context-specific suggestions based on the context type
   useEffect(() => {
@@ -162,68 +221,171 @@ const ChatBotWidget: React.FC<ChatBotWidgetProps> = ({
     }
   }, [open, messages]);
 
-  // Auto-scroll to bottom when messages change
+  // Actualizăm contextul când se schimbă pagina
   useEffect(() => {
-    if (messagesContainerRef.current) {
-      messagesContainerRef.current.scrollTop =
-        messagesContainerRef.current.scrollHeight;
-    }
-  }, [messages]);
+    updateContext({ page: location.pathname });
+  }, [location.pathname, updateContext]);
 
-  const handleSend = async () => {
+  // Funcție pentru a genera un ID unic
+  const generateId = () => {
+    return Math.random().toString(36).substring(2, 11);
+  };
+
+  // Funcție pentru a adăuga un mesaj în conversație
+  const addMessage = (
+    role: "user" | "assistant" | "system",
+    content: string
+  ) => {
+    const newMessage: Message = {
+      id: generateId(),
+      role,
+      content,
+      timestamp: new Date(),
+    };
+    setMessages((prev) => [...prev, newMessage]);
+  };
+
+  // Funcție pentru a trimite un mesaj
+  const sendMessage = async () => {
     if (!input.trim()) return;
-    const userMessage = input;
-    setMessages((m) => [...m, { sender: "user", text: userMessage }]);
+
+    // Adăugăm mesajul utilizatorului
+    const userMessage = input.trim();
+    addMessage("user", userMessage);
     setInput("");
-    setLoading(true);
+    setIsLoading(true);
 
     try {
-      const aiReply = await getAIResponse(userMessage);
-      setMessages((m) => [...m, { sender: "bot", text: aiReply }]);
-    } catch (error) {
-      // Removed console statement
-      setMessages((m) => [
-        ...m,
+      // Analizăm sentimentul mesajului
+      const sentiment = await analyzeSentiment(userMessage);
+
+      // Dacă sentimentul este negativ, afișăm un toast
+      if (sentiment === "negative") {
+        toast({
+          title: t("ai.negativeSentiment", "Feedback negativ detectat"),
+          description: t(
+            "ai.negativeSentimentDescription",
+            "Am detectat un sentiment negativ în mesajul dumneavoastră. Vom încerca să vă ajutăm cât mai bine."
+          ),
+          variant: "default",
+        });
+      }
+
+      // Obținem răspunsul de la AI
+      const response = await generateResponse(userMessage, messages);
+
+      // Adăugăm răspunsul asistentului
+      addMessage("assistant", response);
+
+      // Salvăm conversația
+      await saveConversation([
+        ...messages,
         {
-          sender: "bot",
-          text: "Îmi pare rău, am întâmpinat o problemă în procesarea întrebării tale. Te rog să încerci din nou.",
+          id: generateId(),
+          role: "user",
+          content: userMessage,
+          timestamp: new Date(),
+        },
+        {
+          id: generateId(),
+          role: "assistant",
+          content: response,
+          timestamp: new Date(),
         },
       ]);
+    } catch (error) {
+      console.error("Error generating AI response:", error);
+      addMessage(
+        "assistant",
+        t(
+          "ai.error",
+          "Îmi pare rău, am întâmpinat o problemă în procesarea cererii dumneavoastră. Vă rugăm să încercați din nou."
+        )
+      );
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   const handleSuggestionClick = (suggestion: string) => {
     setInput(suggestion);
-    setTimeout(() => handleSend(), 100);
+    setTimeout(() => sendMessage(), 100);
   };
 
   // Verificăm dacă utilizatorul este autentificat
   if (!user) return null;
 
+  // Funcție pentru a deschide/închide asistentul
+  const toggleAssistant = () => {
+    setOpen(!open);
+    setIsMinimized(false);
+  };
+
+  // Funcție pentru a minimiza/maximiza asistentul
+  const toggleMinimize = () => {
+    setIsMinimized(!isMinimized);
+  };
+
+  // Funcție pentru a șterge conversația
+  const clearConversation = () => {
+    setMessages([
+      {
+        id: "welcome",
+        role: "assistant",
+        content: t(
+          "ai.welcome",
+          "Bună ziua! Sunt asistentul AI al aplicației. Cum vă pot ajuta astăzi?"
+        ),
+        timestamp: new Date(),
+      },
+    ]);
+  };
+
+  // Funcție pentru a copia un mesaj
+  const copyMessage = (messageId: string, content: string) => {
+    navigator.clipboard.writeText(content);
+    setCopiedMessageId(messageId);
+
+    // Resetăm starea după 2 secunde
+    setTimeout(() => {
+      setCopiedMessageId(null);
+    }, 2000);
+  };
+
+  // Funcție pentru a folosi o sugestie
+  const useSuggestion = (suggestion: string) => {
+    setInput(suggestion);
+    setActiveTab("chat");
+    inputRef.current?.focus();
+  };
+
+  // Formatarea datei pentru afișare
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  };
+
   return (
-    <div style={{ position: "fixed", bottom: 24, right: 24, zIndex: 9999 }}>
-      <AnimatePresence>
-        {!open && (
-          <motion.button
-            key="open"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            onClick={() => setOpen(true)}
-            className="bg-indigo-600 text-white rounded-full shadow-lg p-4 hover:bg-indigo-700 focus:outline-none"
-            title="Deschide chat AI"
-          >
-            <div className="relative">
-              <HelpCircle size={28} />
-              <div className="absolute -top-1 -right-1 bg-white text-indigo-600 rounded-full w-4 h-4 flex items-center justify-center text-[10px] font-bold">
+    <>
+      {/* Buton pentru deschiderea asistentului */}
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              onClick={toggleAssistant}
+              className="fixed bottom-4 right-4 rounded-full h-14 w-14 shadow-lg"
+              size="icon"
+            >
+              <Bot className="h-7 w-7" />
+              <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
                 AI
-              </div>
-            </div>
-          </motion.button>
-        )}
-      </AnimatePresence>
+              </span>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="left">
+            <p>{t("ai.openAssistant", "Deschide asistentul AI")}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
       <AnimatePresence>
         {open && (
           <motion.div
@@ -248,17 +410,17 @@ const ChatBotWidget: React.FC<ChatBotWidgetProps> = ({
               </button>
             </div>
             <div
-              ref={messagesContainerRef}
+              ref={messagesEndRef}
               className="flex-1 overflow-y-auto px-4 py-3 space-y-3 bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-800 dark:via-slate-900 dark:to-slate-800"
             >
               {messages.map((msg, idx) => (
                 <div
                   key={idx}
                   className={`flex ${
-                    msg.sender === "user" ? "justify-end" : "justify-start"
+                    msg.role === "user" ? "justify-end" : "justify-start"
                   }`}
                 >
-                  {msg.sender === "bot" && (
+                  {msg.role === "assistant" && (
                     <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center mr-2 mt-1">
                       <HelpCircle
                         size={16}
@@ -268,21 +430,21 @@ const ChatBotWidget: React.FC<ChatBotWidgetProps> = ({
                   )}
                   <div
                     className={`px-4 py-2.5 rounded-lg shadow-sm text-sm max-w-[85%] ${
-                      msg.sender === "user"
+                      msg.role === "user"
                         ? "bg-indigo-600 text-white rounded-br-none"
                         : "bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700 rounded-bl-none"
                     }`}
                   >
-                    {msg.text}
+                    {msg.content}
                   </div>
-                  {msg.sender === "user" && (
+                  {msg.role === "user" && (
                     <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center ml-2 mt-1">
                       <User size={16} className="text-white" />
                     </div>
                   )}
                 </div>
               ))}
-              {loading && (
+              {isLoading && (
                 <div className="flex justify-start">
                   <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center mr-2">
                     <HelpCircle
@@ -335,7 +497,7 @@ const ChatBotWidget: React.FC<ChatBotWidgetProps> = ({
               className="flex items-center border-t border-slate-200 dark:border-slate-700 px-3 py-3 bg-white dark:bg-slate-900 rounded-b-xl"
               onSubmit={(e) => {
                 e.preventDefault();
-                handleSend();
+                sendMessage();
               }}
             >
               <input
@@ -345,13 +507,13 @@ const ChatBotWidget: React.FC<ChatBotWidgetProps> = ({
                 placeholder="Scrie un mesaj..."
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                disabled={loading}
+                disabled={isLoading}
                 autoComplete="off"
               />
               <button
                 type="submit"
                 className="ml-2 bg-indigo-600 text-white rounded-full p-2 hover:bg-indigo-700 disabled:opacity-50 disabled:hover:bg-indigo-600 transition-colors"
-                disabled={loading || !input.trim()}
+                disabled={isLoading || !input.trim()}
                 title="Trimite"
               >
                 <Send size={18} />
@@ -360,7 +522,7 @@ const ChatBotWidget: React.FC<ChatBotWidgetProps> = ({
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </>
   );
 };
 

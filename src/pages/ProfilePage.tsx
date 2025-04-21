@@ -132,9 +132,7 @@ const ProfilePage: React.FC = () => {
         const newProfile = {
           id: user.id,
           full_name: user.user_metadata?.full_name || "",
-          avatar_url:
-            user.user_metadata?.avatar_url ||
-            "{process.env.URL_1}",
+          avatar_url: user.user_metadata?.avatar_url || "{process.env.URL_1}",
           email: user.email,
           job_title: "",
           phone: "",
@@ -184,7 +182,7 @@ const ProfilePage: React.FC = () => {
   };
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value, type } = e.target as HTMLInputElement;
     setFormData((prev) => ({
@@ -238,7 +236,7 @@ const ProfilePage: React.FC = () => {
     // In a real app, this would open a file picker
     // For now, we'll just generate a random avatar
     const randomSeed = Math.random().toString(36).substring(2, 8);
-    const newAvatarUrl = `https:
+    const newAvatarUrl = `https://avatars.dicebear.com/api/initials/${randomSeed}.svg`;
 
     setFormData((prev) => ({
       ...prev,
@@ -249,7 +247,7 @@ const ProfilePage: React.FC = () => {
       title: t("profile.success.avatarChanged", "Avatar changed"),
       description: t(
         "profile.success.avatarChangedDesc",
-        "Your avatar has been updated successfully.",
+        "Your avatar has been updated successfully."
       ),
     });
   };
@@ -283,7 +281,7 @@ const ProfilePage: React.FC = () => {
         title: t("profile.success.saved", "Profile saved"),
         description: t(
           "profile.success.savedDesc",
-          "Your profile has been updated successfully.",
+          "Your profile has been updated successfully."
         ),
       });
 
@@ -311,7 +309,7 @@ const ProfilePage: React.FC = () => {
         title: t("profile.errors.passwordMismatch", "Passwords don't match"),
         description: t(
           "profile.errors.passwordMismatchDesc",
-          "New password and confirmation must match.",
+          "New password and confirmation must match."
         ),
       });
       return;
@@ -323,7 +321,7 @@ const ProfilePage: React.FC = () => {
         title: t("profile.errors.passwordTooShort", "Password too short"),
         description: t(
           "profile.errors.passwordTooShortDesc",
-          "Password must be at least 6 characters.",
+          "Password must be at least 6 characters."
         ),
       });
       return;
@@ -341,7 +339,7 @@ const ProfilePage: React.FC = () => {
         title: t("profile.success.passwordChanged", "Password changed"),
         description: t(
           "profile.success.passwordChangedDesc",
-          "Your password has been updated successfully.",
+          "Your password has been updated successfully."
         ),
       });
 
@@ -357,7 +355,7 @@ const ProfilePage: React.FC = () => {
         variant: "destructive",
         title: t(
           "profile.errors.passwordChangeFailed",
-          "Failed to change password",
+          "Failed to change password"
         ),
         description: error.message,
       });
@@ -380,7 +378,6 @@ const ProfilePage: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-slate-900 text-white">
-
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="sticky top-0 z-10 bg-slate-900 border-b border-slate-800 px-6 py-4 shrink-0">
           <div className="flex items-center justify-between">
@@ -509,13 +506,13 @@ const ProfilePage: React.FC = () => {
                         <CardTitle>
                           {t(
                             "profile.personalInfo.title",
-                            "Informații personale",
+                            "Informații personale"
                           )}
                         </CardTitle>
                         <CardDescription>
                           {t(
                             "profile.personalInfo.description",
-                            "Actualizează-ți informațiile personale aici.",
+                            "Actualizează-ți informațiile personale aici."
                           )}
                         </CardDescription>
                       </CardHeader>
@@ -525,7 +522,7 @@ const ProfilePage: React.FC = () => {
                             <Label htmlFor="full_name">
                               {t(
                                 "profile.personalInfo.fullName",
-                                "Nume complet",
+                                "Nume complet"
                               )}
                             </Label>
                             <Input
@@ -535,7 +532,7 @@ const ProfilePage: React.FC = () => {
                               onChange={handleInputChange}
                               placeholder={t(
                                 "profile.personalInfo.fullNamePlaceholder",
-                                "Introdu numele tău complet",
+                                "Introdu numele tău complet"
                               )}
                               className="bg-slate-700 border-slate-600"
                             />
@@ -551,7 +548,7 @@ const ProfilePage: React.FC = () => {
                               onChange={handleInputChange}
                               placeholder={t(
                                 "profile.personalInfo.jobTitlePlaceholder",
-                                "Introdu titlul jobului tău",
+                                "Introdu titlul jobului tău"
                               )}
                               className="bg-slate-700 border-slate-600"
                             />
@@ -562,7 +559,7 @@ const ProfilePage: React.FC = () => {
                             <Label htmlFor="phone">
                               {t(
                                 "profile.personalInfo.phone",
-                                "Număr de telefon",
+                                "Număr de telefon"
                               )}
                             </Label>
                             <Input
@@ -572,7 +569,7 @@ const ProfilePage: React.FC = () => {
                               onChange={handleInputChange}
                               placeholder={t(
                                 "profile.personalInfo.phonePlaceholder",
-                                "Introdu numărul tău de telefon",
+                                "Introdu numărul tău de telefon"
                               )}
                               className="bg-slate-700 border-slate-600"
                             />
@@ -588,7 +585,7 @@ const ProfilePage: React.FC = () => {
                               onChange={handleInputChange}
                               placeholder={t(
                                 "profile.personalInfo.locationPlaceholder",
-                                "Introdu locația ta",
+                                "Introdu locația ta"
                               )}
                               className="bg-slate-700 border-slate-600"
                             />
@@ -605,7 +602,7 @@ const ProfilePage: React.FC = () => {
                             onChange={handleInputChange}
                             placeholder={t(
                               "profile.personalInfo.bioPlaceholder",
-                              "Scrie câteva detalii despre tine",
+                              "Scrie câteva detalii despre tine"
                             )}
                             className="bg-slate-700 border-slate-600 min-h-[100px]"
                           />
@@ -635,7 +632,7 @@ const ProfilePage: React.FC = () => {
                               onChange={(e) => setNewSkill(e.target.value)}
                               placeholder={t(
                                 "profile.personalInfo.skillsPlaceholder",
-                                "Adaugă o competență nouă",
+                                "Adaugă o competență nouă"
                               )}
                               className="bg-slate-700 border-slate-600"
                             />
@@ -664,7 +661,7 @@ const ProfilePage: React.FC = () => {
                         <CardDescription>
                           {t(
                             "profile.preferences.description",
-                            "Personalizează experiența ta în aplicație.",
+                            "Personalizează experiența ta în aplicație."
                           )}
                         </CardDescription>
                       </CardHeader>
@@ -677,7 +674,7 @@ const ProfilePage: React.FC = () => {
                             <p className="text-sm text-slate-400">
                               {t(
                                 "profile.preferences.themeDescription",
-                                "Alege tema preferată pentru interfață.",
+                                "Alege tema preferată pentru interfață."
                               )}
                             </p>
                           </div>
@@ -737,7 +734,7 @@ const ProfilePage: React.FC = () => {
                             <p className="text-sm text-slate-400">
                               {t(
                                 "profile.preferences.languageDescription",
-                                "Selectează limba preferată pentru interfață.",
+                                "Selectează limba preferată pentru interfață."
                               )}
                             </p>
                           </div>
@@ -778,13 +775,13 @@ const ProfilePage: React.FC = () => {
                             <Label htmlFor="email_notifications">
                               {t(
                                 "profile.preferences.emailNotifications",
-                                "Notificări email",
+                                "Notificări email"
                               )}
                             </Label>
                             <p className="text-sm text-slate-400">
                               {t(
                                 "profile.preferences.emailNotificationsDescription",
-                                "Primește notificări importante prin email.",
+                                "Primește notificări importante prin email."
                               )}
                             </p>
                           </div>
@@ -802,13 +799,13 @@ const ProfilePage: React.FC = () => {
                             <Label htmlFor="mobile_notifications">
                               {t(
                                 "profile.preferences.mobileNotifications",
-                                "Notificări mobile",
+                                "Notificări mobile"
                               )}
                             </Label>
                             <p className="text-sm text-slate-400">
                               {t(
                                 "profile.preferences.mobileNotificationsDescription",
-                                "Primește notificări push pe dispozitivul mobil.",
+                                "Primește notificări push pe dispozitivul mobil."
                               )}
                             </p>
                           </div>
@@ -818,7 +815,7 @@ const ProfilePage: React.FC = () => {
                             onCheckedChange={(checked) =>
                               handleSwitchChange(
                                 checked,
-                                "mobile_notifications",
+                                "mobile_notifications"
                               )
                             }
                           />
@@ -843,7 +840,7 @@ const ProfilePage: React.FC = () => {
                         <CardDescription>
                           {t(
                             "profile.security.description",
-                            "Gestionează setările de securitate ale contului tău.",
+                            "Gestionează setările de securitate ale contului tău."
                           )}
                         </CardDescription>
                       </CardHeader>
@@ -852,7 +849,7 @@ const ProfilePage: React.FC = () => {
                           <Label htmlFor="current_password">
                             {t(
                               "profile.security.currentPassword",
-                              "Parola actuală",
+                              "Parola actuală"
                             )}
                           </Label>
                           <Input
@@ -884,7 +881,7 @@ const ProfilePage: React.FC = () => {
                             <Label htmlFor="confirm_password">
                               {t(
                                 "profile.security.confirmPassword",
-                                "Confirmă parola nouă",
+                                "Confirmă parola nouă"
                               )}
                             </Label>
                             <Input
@@ -903,7 +900,7 @@ const ProfilePage: React.FC = () => {
                           <p className="text-sm text-slate-400">
                             {t(
                               "profile.security.passwordRequirements",
-                              "Parola trebuie să conțină cel puțin 6 caractere și să includă o combinație de litere, cifre și caractere speciale.",
+                              "Parola trebuie să conțină cel puțin 6 caractere și să includă o combinație de litere, cifre și caractere speciale."
                             )}
                           </p>
                         </div>
@@ -917,7 +914,7 @@ const ProfilePage: React.FC = () => {
                             ? t("common.updating", "Se actualizează...")
                             : t(
                                 "profile.security.changePassword",
-                                "Schimbă parola",
+                                "Schimbă parola"
                               )}
                         </Button>
                       </CardFooter>
@@ -928,13 +925,13 @@ const ProfilePage: React.FC = () => {
                         <CardTitle>
                           {t(
                             "profile.security.activeSessions",
-                            "Sesiuni active",
+                            "Sesiuni active"
                           )}
                         </CardTitle>
                         <CardDescription>
                           {t(
                             "profile.security.activeSessionsDescription",
-                            "Gestionează dispozitivele conectate la contul tău.",
+                            "Gestionează dispozitivele conectate la contul tău."
                           )}
                         </CardDescription>
                       </CardHeader>
@@ -949,7 +946,7 @@ const ProfilePage: React.FC = () => {
                                 <p className="font-medium">
                                   {t(
                                     "profile.security.thisDevice",
-                                    "Acest dispozitiv",
+                                    "Acest dispozitiv"
                                   )}
                                 </p>
                                 <p className="text-sm text-slate-400">
@@ -960,7 +957,7 @@ const ProfilePage: React.FC = () => {
                                   •{" "}
                                   {t(
                                     "profile.security.currentLocation",
-                                    "Locație curentă",
+                                    "Locație curentă"
                                   )}
                                 </p>
                               </div>
@@ -978,7 +975,7 @@ const ProfilePage: React.FC = () => {
                         >
                           {t(
                             "profile.security.logoutAllDevices",
-                            "Deconectează toate dispozitivele",
+                            "Deconectează toate dispozitivele"
                           )}
                         </Button>
                       </CardFooter>
@@ -995,5 +992,3 @@ const ProfilePage: React.FC = () => {
 };
 
 export default ProfilePage;
-
-

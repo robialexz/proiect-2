@@ -34,6 +34,7 @@ import { useTranslation } from "react-i18next"; // Import useTranslation
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { GlobalSearch } from "@/components/ui/global-search";
 import { NotificationCenter } from "@/components/ui/notification-center";
+import { NotificationsPopover } from "@/components/notifications/NotificationsPopover";
 
 // Importăm hook-uri personalizate
 import { useAuth, useUI } from "@/store";
@@ -110,7 +111,7 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuToggle }) => {
   // Gestionăm deconectarea
   const handleSignOut = async () => {
     try {
-    await logout();
+      await logout();
     } catch (error) {
       // Handle error appropriately
     }
@@ -191,7 +192,10 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuToggle }) => {
         </Button>
 
         {/* Notifications */}
-        <NotificationCenter />
+        <NotificationsPopover />
+
+        {/* Theme toggle */}
+        <ThemeToggle />
 
         {/* User menu */}
         <DropdownMenu>
@@ -202,7 +206,7 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuToggle }) => {
             >
               <Avatar className="h-7 w-7">
                 <AvatarImage
-                  src={`https:
+                  src={`https://api.dicebear.com/7.x/micah/svg?seed=${
                     userProfile?.displayName ||
                     user?.email?.split("@")[0] ||
                     "user"

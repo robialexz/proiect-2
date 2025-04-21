@@ -79,10 +79,13 @@ const CalendarPage = lazyPage(() => import("./pages/CalendarPage"), {
 const ProjectsPage = lazyPage(() => import("./pages/ProjectsPage"), {
   preload: true,
 });
-const SuppliersPage = lazyPage(() => import("./pages/SuppliersPage"));
+const SuppliersPage = lazyPage(() => import("./pages/SuppliersPageNew"));
+const SupplierDetailsPage = lazyPage(
+  () => import("./pages/SupplierDetailsPage")
+);
 const TeamsPage = lazyPage(() => import("./pages/TeamsPage"));
 const BudgetPage = lazyPage(() => import("./pages/BudgetPage"));
-const ReportsPage = lazyPage(() => import("./pages/ReportsPage"));
+const ReportsPage = lazyPage(() => import("./pages/ReportsPageNew"));
 const ResourcesPage = lazyPage(() => import("./pages/ResourcesPage"));
 const ProfilePage = lazyPage(() => import("./pages/ProfilePage"));
 const SettingsPage = lazyPage(() => import("./pages/SettingsPage"));
@@ -163,6 +166,7 @@ export function AppRoutes() {
         <Route path="company-inventory" element={<CompanyInventoryPage />} />
         <Route path="projects" element={<ProjectsPage />} />
         <Route path="suppliers" element={<SuppliersPage />} />
+        <Route path="suppliers/:supplierId" element={<SupplierDetailsPage />} />
         <Route path="teams" element={<TeamsPage />} />
         <Route path="budget" element={<BudgetPage />} />
         <Route path="reports" element={<ReportsPage />} />

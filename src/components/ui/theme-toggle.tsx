@@ -1,25 +1,47 @@
-import React from 'react';
-import { Button } from './button';
-import { useTheme } from '@/contexts/ThemeContext';
-import { Moon, Sun } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './tooltip';
+import React from "react";
+import { Button } from "./button";
+import { useTheme } from "@/contexts/ThemeContext";
+import { Moon, Sun } from "lucide-react";
+import { motion } from "framer-motion";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "./tooltip";
 
 interface ThemeToggleProps {
   className?: string;
 }
 
-export const ThemeToggle = React.memo(function ThemeToggle({ className }: ThemeToggleProps) {
+export const ThemeToggle = React.memo(function ThemeToggle({
+  className,
+}: ThemeToggleProps) {
   const { theme, toggleTheme } = useTheme();
 
   // Memoize the tooltip content to prevent unnecessary re-renders
   const tooltipContent = React.useMemo(() => {
-    return theme === 'dark' ? 'Activează modul luminos' : 'Activează modul întunecat';
+    if (theme === "dark") return "Activează modul luminos";
+    if (theme === "light") return "Activează modul întunecat";
+    return "Activează tema personalizată";
   }, [theme]);
 
   // Memoize the icon to prevent unnecessary re-renders
   const themeIcon = React.useMemo(() => {
-    return theme === 'dark' ? (
+    if (theme === "dark") {
+      return <Moon className="h-5 w-5 text-yellow-300" />;
+    }
+
+    if (theme === "light") {
+      return <Sun className="h-5 w-5 text-yellow-500" />;
+    }
+
+    // Pentru tema de sistem, afișăm iconul în funcție de preferința sistemului
+    const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
+      .matches
+      ? "dark"
+      : "light";
+    return systemTheme === "dark" ? (
       <Moon className="h-5 w-5 text-yellow-300" />
     ) : (
       <Sun className="h-5 w-5 text-yellow-500" />
@@ -59,4 +81,4 @@ export const ThemeToggle = React.memo(function ThemeToggle({ className }: ThemeT
       </Tooltip>
     </TooltipProvider>
   );
-})
+});

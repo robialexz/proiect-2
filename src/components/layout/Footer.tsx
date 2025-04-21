@@ -23,7 +23,7 @@ const Footer = ({ className }: FooterProps = {}) => {
     <footer
       className={cn(
         "w-full bg-slate-900 text-white py-12 px-4 md:px-8 border-t border-slate-800",
-        className,
+        className
       )}
     >
       <div className="container mx-auto">
@@ -104,10 +104,18 @@ const Footer = ({ className }: FooterProps = {}) => {
               </li>
               <li>
                 <Link
-                  to="/inventory"
+                  to="/warehouse-inventory"
                   className="text-slate-300 hover:text-white transition-colors"
                 >
-                  Inventory Management
+                  Warehouse Inventory
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/project-inventory"
+                  className="text-slate-300 hover:text-white transition-colors"
+                >
+                  Project Inventory
                 </Link>
               </li>
               <li>
@@ -186,8 +194,7 @@ const Footer = ({ className }: FooterProps = {}) => {
 
         <div className="border-t border-slate-800 mt-10 pt-6 flex flex-col md:flex-row justify-between items-center">
           <p className="text-slate-400 text-sm mb-4 md:mb-0">
-            © {currentYear} Inventory Management Dashboard. All rights
-            reserved.
+            © {currentYear} Inventory Management Dashboard. All rights reserved.
           </p>
           <div className="flex space-x-6">
             <Link

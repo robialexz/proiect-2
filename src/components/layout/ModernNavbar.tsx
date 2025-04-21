@@ -30,6 +30,7 @@ import {
   ChevronRight,
   CheckCircle2,
   HelpCircle,
+  Building2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -92,25 +93,25 @@ const ModernNavbar = ({
       name: "Prezentare",
       path: "/overview",
       icon: <Home size={18} />,
-      description: "Vizualizare generală a proiectelor și activităților"
+      description: "Vizualizare generală a proiectelor și activităților",
     },
     {
       name: "Panou Control",
       path: "/dashboard",
       icon: <LayoutDashboard size={18} />,
-      description: "Statistici și informații importante"
+      description: "Statistici și informații importante",
     },
     {
       name: "Proiecte",
       path: "/projects",
       icon: <Briefcase size={18} />,
-      description: "Gestionarea proiectelor active și arhivate"
+      description: "Gestionarea proiectelor active și arhivate",
     },
     {
       name: "Inventar",
-      path: "/inventory-management",
+      path: "/warehouse-inventory",
       icon: <Package size={18} />,
-      description: "Administrarea materialelor și stocurilor"
+      description: "Administrarea materialelor și stocurilor",
     },
   ];
 
@@ -132,9 +133,26 @@ const ModernNavbar = ({
       name: "Management Inventar",
       icon: <Package size={18} />,
       items: [
-        { name: "Inventar", path: "/inventory-management", icon: <Package size={18} /> },
-        { name: "Adaugă Material", path: "/add-material", icon: <PlusCircle size={18} /> },
-        { name: "Încarcă Excel", path: "/upload-excel", icon: <Upload size={18} /> },
+        {
+          name: "Inventar Depozit",
+          path: "/warehouse-inventory",
+          icon: <Building2 size={18} />,
+        },
+        {
+          name: "Inventar Proiect",
+          path: "/project-inventory",
+          icon: <Package size={18} />,
+        },
+        {
+          name: "Adaugă Material",
+          path: "/add-material",
+          icon: <PlusCircle size={18} />,
+        },
+        {
+          name: "Încarcă Excel",
+          path: "/upload-excel",
+          icon: <Upload size={18} />,
+        },
       ],
     },
     {
@@ -173,7 +191,7 @@ const ModernNavbar = ({
 
   const handleLogout = async () => {
     try {
-    await signOut();
+      await signOut();
     } catch (error) {
       // Handle error appropriately
     }
@@ -194,9 +212,9 @@ const ModernNavbar = ({
       transition: {
         duration: 0.3,
         staggerChildren: 0.1,
-        delayChildren: 0.2
-      }
-    }
+        delayChildren: 0.2,
+      },
+    },
   };
 
   const itemVariants = {
@@ -204,8 +222,8 @@ const ModernNavbar = ({
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.3 }
-    }
+      transition: { duration: 0.3 },
+    },
   };
 
   const logoVariants = {
@@ -216,9 +234,9 @@ const ModernNavbar = ({
       transition: {
         duration: 0.5,
         type: "spring",
-        stiffness: 200
-      }
-    }
+        stiffness: 200,
+      },
+    },
   };
 
   const mobileMenuVariants = {
@@ -229,8 +247,8 @@ const ModernNavbar = ({
       transition: {
         duration: 0.3,
         staggerChildren: 0.05,
-        delayChildren: 0.1
-      }
+        delayChildren: 0.1,
+      },
     },
     exit: {
       opacity: 0,
@@ -238,15 +256,15 @@ const ModernNavbar = ({
       transition: {
         duration: 0.3,
         staggerChildren: 0.05,
-        staggerDirection: -1
-      }
-    }
+        staggerDirection: -1,
+      },
+    },
   };
 
   const mobileItemVariants = {
     hidden: { opacity: 0, x: -20 },
     visible: { opacity: 1, x: 0 },
-    exit: { opacity: 0, x: -20 }
+    exit: { opacity: 0, x: -20 },
   };
 
   return (
@@ -275,7 +293,7 @@ const ModernNavbar = ({
                   whileHover={{
                     scale: 1.05,
                     rotate: [0, -2, 2, -2, 0],
-                    transition: { duration: 0.5 }
+                    transition: { duration: 0.5 },
                   }}
                   whileTap={{ scale: 0.95 }}
                 >
@@ -368,10 +386,15 @@ const ModernNavbar = ({
                               className="flex items-center gap-1"
                               whileHover={{ y: -1 }}
                             >
-                              {category.icon && <span className="mr-1">{category.icon}</span>}
+                              {category.icon && (
+                                <span className="mr-1">{category.icon}</span>
+                              )}
                               {category.name}
                               <motion.span
-                                animate={{ rotate: activeCategory === category.id ? 180 : 0 }}
+                                animate={{
+                                  rotate:
+                                    activeCategory === category.id ? 180 : 0,
+                                }}
                                 transition={{ duration: 0.2 }}
                               >
                                 <ChevronDown size={16} />
@@ -390,7 +413,10 @@ const ModernNavbar = ({
                                 initial={{ opacity: 0, y: -10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -10 }}
-                                transition={{ duration: 0.2, delay: index * 0.05 }}
+                                transition={{
+                                  duration: 0.2,
+                                  delay: index * 0.05,
+                                }}
                               >
                                 <DropdownMenuItem
                                   className={cn(
@@ -441,12 +467,12 @@ const ModernNavbar = ({
                           className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-slate-900"
                           animate={{
                             scale: [1, 1.2, 1],
-                            opacity: [1, 0.8, 1]
+                            opacity: [1, 0.8, 1],
                           }}
                           transition={{
                             duration: 2,
                             repeat: Infinity,
-                            repeatType: "loop"
+                            repeatType: "loop",
                           }}
                         />
                       </Button>
@@ -466,9 +492,7 @@ const ModernNavbar = ({
                           <span className="text-sm font-medium text-white">
                             {userName}
                           </span>
-                          <span className="text-xs text-slate-400">
-                            Online
-                          </span>
+                          <span className="text-xs text-slate-400">Online</span>
                         </div>
                       </div>
                       <DropdownMenuSeparator className="bg-slate-700" />
@@ -560,7 +584,7 @@ const ModernNavbar = ({
                       <Link
                         to={link.path}
                         className={cn(
-                          "block px-3 py-2 rounded-md text-base font-medium flex items-center gap-2",
+                          "px-3 py-2 rounded-md text-base font-medium flex items-center gap-2",
                           isActive(link.path)
                             ? "text-white bg-primary/20"
                             : "text-slate-400 hover:text-white hover:bg-slate-800"
@@ -590,7 +614,7 @@ const ModernNavbar = ({
                         <Link
                           to={button.path}
                           className={cn(
-                            "block px-3 py-2 rounded-md text-base font-medium flex items-center gap-2",
+                            "px-3 py-2 rounded-md text-base font-medium flex items-center gap-2",
                             isActive(button.path)
                               ? "text-white bg-primary/20"
                               : "text-slate-400 hover:text-white hover:bg-slate-800"
@@ -621,7 +645,7 @@ const ModernNavbar = ({
                             <Link
                               to={item.path}
                               className={cn(
-                                "block px-3 py-2 rounded-md text-base font-medium flex items-center gap-2",
+                                "px-3 py-2 rounded-md text-base font-medium flex items-center gap-2",
                                 isActive(item.path)
                                   ? "text-white bg-primary/20"
                                   : "text-slate-400 hover:text-white hover:bg-slate-800"
@@ -656,14 +680,14 @@ const ModernNavbar = ({
                       <div className="mt-3 space-y-1">
                         <Link
                           to="/profile"
-                          className="block px-3 py-2 rounded-md text-base font-medium text-slate-400 hover:text-white hover:bg-slate-800 flex items-center gap-2"
+                          className="px-3 py-2 rounded-md text-base font-medium text-slate-400 hover:text-white hover:bg-slate-800 flex items-center gap-2"
                           onClick={() => setMobileMenuOpen(false)}
                         >
                           <User size={16} />
                           Profil
                         </Link>
                         <button
-                          className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-slate-400 hover:text-white hover:bg-slate-800 flex items-center gap-2"
+                          className="w-full text-left px-3 py-2 rounded-md text-base font-medium text-slate-400 hover:text-white hover:bg-slate-800 flex items-center gap-2"
                           onClick={() => {
                             setMobileMenuOpen(false);
                             setSettingsOpen(true);
@@ -673,7 +697,7 @@ const ModernNavbar = ({
                           Setări
                         </button>
                         <button
-                          className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-rose-400 hover:text-rose-300 hover:bg-rose-500/20 flex items-center gap-2"
+                          className="w-full text-left px-3 py-2 rounded-md text-base font-medium text-rose-400 hover:text-rose-300 hover:bg-rose-500/20 flex items-center gap-2"
                           onClick={() => {
                             setMobileMenuOpen(false);
                             handleLogout();

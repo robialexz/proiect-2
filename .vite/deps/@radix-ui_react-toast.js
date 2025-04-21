@@ -1,8 +1,5 @@
 "use client";
 import {
-  createCollection
-} from "./chunk-AL6AFYHZ.js";
-import {
   VisuallyHidden
 } from "./chunk-3IUOQFET.js";
 import {
@@ -10,6 +7,9 @@ import {
   Portal,
   Root
 } from "./chunk-WNU3ONTI.js";
+import {
+  createCollection
+} from "./chunk-AL6AFYHZ.js";
 import {
   useControllableState
 } from "./chunk-6RLWD52Y.js";

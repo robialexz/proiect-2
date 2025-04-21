@@ -9,10 +9,56 @@ export interface Supplier {
   phone?: string;
   address?: string;
   website?: string;
+  category?: string;
   notes?: string;
   rating?: number;
+  status?: "active" | "inactive" | "pending";
   created_at: string;
   updated_at?: string;
+}
+
+/**
+ * Model pentru furnizor cu detalii suplimentare
+ */
+export interface SupplierWithDetails extends Supplier {
+  last_order?: {
+    id: string;
+    order_number?: string;
+    order_date: string;
+    status: string;
+    total_amount?: number;
+  };
+  materials_count?: number;
+}
+
+/**
+ * Model pentru crearea unui furnizor
+ */
+export interface CreateSupplierInput {
+  name: string;
+  contact_person?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  website?: string;
+  category?: string;
+  notes?: string;
+}
+
+/**
+ * Model pentru actualizarea unui furnizor
+ */
+export interface UpdateSupplierInput {
+  name?: string;
+  contact_person?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  website?: string;
+  category?: string;
+  notes?: string;
+  rating?: number;
+  status?: "active" | "inactive" | "pending";
 }
 
 /**
@@ -24,7 +70,7 @@ export interface SupplierAnnouncement {
   supplier_name: string;
   title?: string;
   notes?: string;
-  status: 'active' | 'inactive' | 'archived';
+  status: "active" | "inactive" | "archived";
   project_id?: string;
   created_at: string;
   updated_at?: string;

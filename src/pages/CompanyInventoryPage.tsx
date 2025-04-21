@@ -61,7 +61,7 @@ const CompanyInventoryPage: React.FC = () => {
   const prefersReducedMotion = useReducedMotion();
 
   const fetchAllMaterials = useCallback(async () => {
-    const startMeasurement = measurePerformance("fetchAllMaterials");
+    const startMeasurement = measurePerformance("fetchAllMaterials", () => {});
     setLoadingData(true);
     setFetchError(null);
 

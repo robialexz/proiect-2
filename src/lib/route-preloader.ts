@@ -26,9 +26,10 @@ const routeComponents: Record<string, () => Promise<any>> = {
   "/inventory-management": () => import("../pages/InventoryManagementPage"),
   "/projects": () => import("../pages/ProjectsPage"),
   "/company-inventory": () => import("../pages/CompanyInventoryPage"),
-  "/suppliers": () => import("../pages/SuppliersPage"),
+  "/suppliers": () => import("../pages/SuppliersPageNew"),
+  "/suppliers/:supplierId": () => import("../pages/SupplierDetailsPage"),
   "/teams": () => import("../pages/TeamsPage"),
-  "/reports": () => import("../pages/ReportsPage"),
+  "/reports": () => import("../pages/ReportsPageNew"),
 };
 
 // Definim grupurile de rute care ar trebui preîncărcate
@@ -118,7 +119,7 @@ export const preloadComponent = (componentPath: string): void => {
         });
         break;
       default:
-        // Removed console statement
+      // Removed console statement
     }
   } catch (err) {
     // Removed console statement

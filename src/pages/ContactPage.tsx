@@ -17,7 +17,7 @@ const bgAnim = {
 
 const ContactPage = () => {
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white relative overflow-hidden">
       <motion.div
         className="absolute inset-0 z-0 pointer-events-none"
         style={{

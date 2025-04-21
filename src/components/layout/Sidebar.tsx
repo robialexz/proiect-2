@@ -4,6 +4,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import RoleIndicator from "@/components/auth/RoleIndicator";
 import {
   Tooltip,
   TooltipContent,
@@ -39,7 +40,12 @@ import {
   Bot,
   Sparkles,
   Laptop,
+  Wrench,
+  Zap,
+  Lock,
 } from "lucide-react";
+import RoleBasedSidebarItem from "./RoleBasedSidebarItem";
+import SystemHealthSidebarItem from "./SystemHealthSidebarItem";
 import { useTranslation } from "react-i18next";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useNotification } from "@/components/ui/notification";
@@ -120,14 +126,14 @@ const Sidebar = () => {
             href: "/inventory-overview",
           },
           {
-            title: t("sidebar.inventory", "Inventar Proiect"),
-            icon: <Package size={20} />,
-            href: "/inventory-management",
+            title: t("sidebar.warehouseInventory", "Warehouse Inventory"),
+            icon: <Warehouse size={20} />,
+            href: "/warehouse-inventory",
           },
           {
-            title: t("sidebar.companyInventory", "Company Inventory"),
+            title: t("sidebar.projectInventory", "Project Inventory"),
             icon: <Package size={20} />,
-            href: "/company-inventory",
+            href: "/project-inventory",
           },
           {
             title: t("sidebar.suppliers"),
@@ -199,7 +205,7 @@ const Sidebar = () => {
   // Gestionăm deconectarea - optimizat cu memoizare
   const handleSignOut = useMemoizedCallback(async () => {
     try {
-    await signOut();
+      await signOut();
     } catch (error) {
       // Handle error appropriately
     }
@@ -276,9 +282,17 @@ const Sidebar = () => {
               exit={{ opacity: 0, x: -10 }}
               className="ml-3"
             >
-              <p className="font-medium text-sm">
-                {userProfile?.displayName || "Utilizator"}
-              </p>
+              <div className="flex items-center gap-2">
+                <p className="font-medium text-sm">
+                  {userProfile?.displayName || "Utilizator"}
+                </p>
+                {userRole && (
+                  <RoleIndicator
+                    showIcon={false}
+                    className="text-xs py-0 px-1.5 h-4"
+                  />
+                )}
+              </div>
               <p className="text-xs text-slate-400 truncate max-w-[160px]">
                 {userProfile?.email || ""}
               </p>
@@ -411,150 +425,102 @@ const Sidebar = () => {
       {/* Footer */}
       <div className="p-4 border-t border-slate-800">
         <div className="space-y-2">
-          {/* Adăugăm link către pagina de administrare a rolurilor - vizibil doar pentru administratori */}
-          {isAdmin && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className={cn(
-                      "w-full text-slate-400 hover:text-white hover:bg-slate-800 justify-start",
-                      collapsed && "justify-center"
-                    )}
-                    onClick={() => navigate("/role-management")}
-                  >
-                    <Shield size={20} />
-                    {!collapsed && (
-                      <span className="ml-3">
-                        {t("sidebar.roleManagement", "Role Management")}
-                      </span>
-                    )}
-                  </Button>
-                </TooltipTrigger>
-                {collapsed && (
-                  <TooltipContent side="right">
-                    <p>{t("sidebar.roleManagement", "Role Management")}</p>
-                  </TooltipContent>
-                )}
-              </Tooltip>
-            </TooltipProvider>
-          )}
+          {/* Link către pagina de administrare a rolurilor - vizibil doar pentru administratori */}
+          <RoleBasedSidebarItem
+            path="/role-management"
+            icon={Shield}
+            label="Administrare Roluri"
+            translationKey="sidebar.roleManagement"
+            allowedRoles={["admin"]}
+            collapsed={collapsed}
+          />
+
+          {/* Link către pagina de administrare a permisiunilor - vizibil doar pentru administratori */}
+          <RoleBasedSidebarItem
+            path="/role-permissions"
+            icon={Lock}
+            label="Permisiuni"
+            translationKey="sidebar.rolePermissions"
+            allowedRoles={["admin"]}
+            collapsed={collapsed}
+          />
 
           {/* Link către pagina de asistent AI */}
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className={cn(
-                    "w-full text-slate-400 hover:text-white hover:bg-slate-800 justify-start",
-                    collapsed && "justify-center",
-                    location.pathname === "/ai-assistant" &&
-                      "bg-slate-800 text-white"
-                  )}
-                  onClick={() => navigate("/ai-assistant")}
-                >
-                  <Bot size={20} />
-                  {!collapsed && (
-                    <span className="ml-3 flex items-center">
-                      Asistent Inventar
-                      <Sparkles size={14} className="ml-1 text-yellow-400" />
-                    </span>
-                  )}
-                </Button>
-              </TooltipTrigger>
-              {collapsed && (
-                <TooltipContent side="right">
-                  <p>Asistent Inventar AI</p>
-                </TooltipContent>
-              )}
-            </Tooltip>
-          </TooltipProvider>
+          <RoleBasedSidebarItem
+            path="/ai-assistant"
+            icon={Bot}
+            label="Asistent Inventar"
+            translationKey="sidebar.aiAssistant"
+            allowedRoles={["admin", "manager", "user", "viewer"]}
+            collapsed={collapsed}
+            iconExtra={<Sparkles size={14} className="ml-1 text-yellow-400" />}
+          />
 
           {/* Link către pagina de tutorial și ajutor */}
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className={cn(
-                    "w-full text-slate-400 hover:text-white hover:bg-slate-800 justify-start",
-                    collapsed && "justify-center"
-                  )}
-                  onClick={() => navigate("/tutorial")}
-                >
-                  <BookOpen size={20} />
-                  {!collapsed && (
-                    <span className="ml-3">
-                      {t("sidebar.tutorial", "Tutoriale & Ajutor")}
-                    </span>
-                  )}
-                </Button>
-              </TooltipTrigger>
-              {collapsed && (
-                <TooltipContent side="right">
-                  <p>{t("sidebar.tutorial", "Tutoriale & Ajutor")}</p>
-                </TooltipContent>
-              )}
-            </Tooltip>
-          </TooltipProvider>
+          <RoleBasedSidebarItem
+            path="/tutorial"
+            icon={BookOpen}
+            label="Tutoriale & Ajutor"
+            translationKey="sidebar.tutorial"
+            allowedRoles={["admin", "manager", "user", "viewer"]}
+            collapsed={collapsed}
+          />
+
+          {/* Link către pagina de testare - doar pentru administratori */}
+          <RoleBasedSidebarItem
+            path="/tester"
+            icon={TestTube}
+            label="Testare Aplicație"
+            translationKey="sidebar.tester"
+            allowedRoles={["admin"]}
+            collapsed={collapsed}
+          />
+
+          {/* Link către pagina de monitorizare a stării sistemului */}
+          <SystemHealthSidebarItem collapsed={collapsed} />
+
+          {/* Acest link este duplicat și poate fi eliminat deoarece avem deja RoleBasedSidebarItem pentru asistentul AI */}
+
+          {/* Link către pagina de optimizator inventar */}
+          <RoleBasedSidebarItem
+            path="/inventory-optimizer"
+            icon={Zap}
+            label="Optimizator Inventar"
+            translationKey="sidebar.inventoryOptimizer"
+            allowedRoles={["admin", "manager", "user"]}
+            collapsed={collapsed}
+          />
+
+          {/* Link către pagina de reparare butoane inventar */}
+          <RoleBasedSidebarItem
+            path="/inventory-button-fixer"
+            icon={Wrench}
+            label="Reparare Butoane"
+            translationKey="sidebar.inventoryButtonFixer"
+            allowedRoles={["admin", "manager"]}
+            collapsed={collapsed}
+          />
 
           {/* Link către pagina de informații despre aplicația desktop */}
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className={cn(
-                    "w-full text-slate-400 hover:text-white hover:bg-slate-800 justify-start",
-                    collapsed && "justify-center",
-                    location.pathname === "/desktop-info" &&
-                      "bg-slate-800 text-white"
-                  )}
-                  onClick={() => navigate("/desktop-info")}
-                >
-                  <Laptop size={20} />
-                  {!collapsed && (
-                    <span className="ml-3">
-                      {t("desktop.sidebar.desktopInfo")}
-                    </span>
-                  )}
-                </Button>
-              </TooltipTrigger>
-              {collapsed && (
-                <TooltipContent side="right">
-                  <p>{t("desktop.sidebar.desktopInfo")}</p>
-                </TooltipContent>
-              )}
-            </Tooltip>
-          </TooltipProvider>
+          <RoleBasedSidebarItem
+            path="/desktop-info"
+            icon={Laptop}
+            label="Desktop Info"
+            translationKey="desktop.sidebar.desktopInfo"
+            allowedRoles={["admin", "manager", "user", "viewer"]}
+            collapsed={collapsed}
+          />
 
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className={cn(
-                    "w-full text-slate-400 hover:text-white hover:bg-slate-800 justify-start",
-                    collapsed && "justify-center"
-                  )}
-                  onClick={() => navigate("/settings")}
-                >
-                  <Settings size={20} />
-                  {!collapsed && (
-                    <span className="ml-3">{t("sidebar.settings")}</span>
-                  )}
-                </Button>
-              </TooltipTrigger>
-              {collapsed && (
-                <TooltipContent side="right">
-                  <p>{t("sidebar.settings")}</p>
-                </TooltipContent>
-              )}
-            </Tooltip>
-          </TooltipProvider>
+          <RoleBasedSidebarItem
+            path="/settings"
+            icon={Settings}
+            label="Setări"
+            translationKey="sidebar.settings"
+            allowedRoles={["admin", "manager"]}
+            collapsed={collapsed}
+          />
 
+          {/* Butonul de deconectare este disponibil pentru toți utilizatorii */}
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>

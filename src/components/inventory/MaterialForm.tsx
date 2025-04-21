@@ -426,29 +426,39 @@ const MaterialForm: React.FC<MaterialFormProps> = ({
               <Label htmlFor="supplier_id">
                 {t("inventory.form.supplier", "Furnizor")}
               </Label>
-              <Select
-                value={watch("supplier_id")}
-                onValueChange={(value) => setValue("supplier_id", value)}
-              >
-                <SelectTrigger id="supplier_id">
-                  <SelectValue
-                    placeholder={t(
-                      "inventory.form.supplierPlaceholder",
-                      "Selectați furnizorul"
-                    )}
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">
-                    {t("inventory.form.noSupplier", "Fără furnizor")}
-                  </SelectItem>
-                  {suppliers.map((supplier) => (
-                    <SelectItem key={supplier.id} value={supplier.id}>
-                      {supplier.name}
+              <div className="flex gap-2">
+                <Select
+                  value={watch("supplier_id")}
+                  onValueChange={(value) => setValue("supplier_id", value)}
+                  className="flex-1"
+                >
+                  <SelectTrigger id="supplier_id">
+                    <SelectValue
+                      placeholder={t(
+                        "inventory.form.supplierPlaceholder",
+                        "Selectați furnizorul"
+                      )}
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">
+                      {t("inventory.form.noSupplier", "Fără furnizor")}
                     </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                    {suppliers.map((supplier) => (
+                      <SelectItem key={supplier.id} value={supplier.id}>
+                        {supplier.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => window.open("/suppliers", "_blank")}
+                >
+                  {t("inventory.form.manageSuppliers", "Gestionare")}
+                </Button>
+              </div>
             </div>
           </div>
 

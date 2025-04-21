@@ -5,7 +5,7 @@ import Footer from "@/components/layout/Footer";
 
 const TermsPage = () => {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white relative overflow-hidden">
       <ModernNavbar />
       <div className="pt-20 pb-16 px-4">
         <div className="container mx-auto max-w-4xl">
@@ -15,8 +15,10 @@ const TermsPage = () => {
             transition={{ duration: 0.5 }}
             className="mb-12 text-center"
           >
-            <h1 className="text-4xl font-bold mb-4">Terms of Service</h1>
-            <p className="text-xl text-muted-foreground">
+            <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-white to-blue-300 bg-clip-text text-transparent">
+              Terms of Service
+            </h1>
+            <p className="text-xl text-slate-300">
               Please read these terms carefully before using our platform
             </p>
           </motion.div>
@@ -25,7 +27,7 @@ const TermsPage = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="prose prose-lg max-w-none"
+            className="prose prose-lg max-w-none prose-headings:text-blue-300 prose-p:text-slate-300"
           >
             <section className="mb-8">
               <h2 className="text-2xl font-bold mb-4">
@@ -123,7 +125,7 @@ const TermsPage = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.4 }}
-            className="mt-12 text-center text-muted-foreground"
+            className="mt-12 text-center text-slate-400"
           >
             <p>Last updated: {new Date().toLocaleDateString()}</p>
           </motion.div>
@@ -135,4 +137,3 @@ const TermsPage = () => {
 };
 
 export default TermsPage;
-

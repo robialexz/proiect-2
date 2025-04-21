@@ -3,7 +3,6 @@ import { initReactI18next } from "react-i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
 // If using HTTP backend to load translations:
 
-
 // Import translation files
 import enTeams from "./locales/en/teams.json";
 import roTeams from "./locales/ro/teams.json";
@@ -13,6 +12,8 @@ import enDebug from "./locales/en/debug.json";
 import roDebug from "./locales/ro/debug.json";
 import enDesktop from "./locales/en/desktop.json";
 import roDesktop from "./locales/ro/desktop.json";
+import { enSidebar } from "./i18n/en/sidebar";
+import { roSidebar } from "./i18n/ro/sidebar";
 
 // Define resources directly for simplicity initially
 // Later, you might switch to HttpApi to load from public/locales
@@ -27,31 +28,7 @@ const resources = {
         fr: "French",
         de: "German",
       },
-      sidebar: {
-        home: "Overview",
-        dashboard: "Dashboard",
-        projects: "Projects",
-        inventory: "Inventory Management",
-        inventoryOverview: "Inventory Overview",
-        projectInventory: "Project Inventory",
-        companyInventory: "Company Inventory",
-        teams: "Teams",
-        suppliers: "Suppliers",
-        budget: "Budget",
-        reports: "Reports",
-        resources: "Resources",
-        settings: "Settings",
-        profile: "Profile",
-        logout: "Logout",
-        help: "Help",
-        schedule: "Schedule",
-        documents: "Documents",
-        viewProfile: "View profile",
-        dashboardGroup: "Dashboard",
-        managementGroup: "Management",
-        reportsGroup: "Reports & Resources",
-        debug: "Debug & Development",
-      },
+      sidebar: enSidebar,
       overview: {
         title: "Overview",
         projects: "Projects",
@@ -250,31 +227,7 @@ const resources = {
         fr: "Franceză",
         de: "Germană",
       },
-      sidebar: {
-        home: "Acasă",
-        dashboard: "Panou Control",
-        projects: "Proiecte",
-        inventory: "Management Inventar",
-        inventoryOverview: "Prezentare Inventar",
-        projectInventory: "Inventar Proiect",
-        companyInventory: "Inventar Companie",
-        teams: "Echipe",
-        suppliers: "Furnizori",
-        budget: "Buget",
-        reports: "Rapoarte",
-        resources: "Resurse",
-        settings: "Setări",
-        profile: "Profil",
-        logout: "Deconectare",
-        help: "Ajutor",
-        schedule: "Program",
-        documents: "Documente",
-        viewProfile: "Vizualizare profil",
-        dashboardGroup: "Panou de Control",
-        managementGroup: "Management",
-        reportsGroup: "Rapoarte & Resurse",
-        debug: "Debug & Dezvoltare",
-      },
+      sidebar: roSidebar,
       common: {
         save: "Salvează",
         cancel: "Anulează",

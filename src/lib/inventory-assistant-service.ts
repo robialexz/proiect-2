@@ -475,9 +475,10 @@ export const inventoryAssistantService = {
       }
 
       // Actualizăm nivelul minim de stoc
-      const { data: updatedMaterial, error } = await inventoryService.updateItem(materialToUpdate.id, {
-        min_stock_level: level,
-      });
+      const { data: updatedMaterial, error } =
+        await inventoryService.updateItem(materialToUpdate.id, {
+          min_stock_level: level,
+        });
 
       if (error) {
         throw new Error(error.message);
@@ -519,7 +520,8 @@ export const inventoryAssistantService = {
   async handleGenerateReorderList(): Promise<AssistantResponse> {
     try {
       // Obținem materialele cu stoc scăzut
-      const { data: lowStockItems, error } = await inventoryService.getLowStockItems();
+      const { data: lowStockItems, error } =
+        await inventoryService.getLowStockItems();
 
       if (error) {
         throw new Error(error.message);
@@ -677,11 +679,7 @@ export const inventoryAssistantService = {
 
       // Actualizăm stocul
       const { data: updatedMaterial, error } =
-        try {
         await inventoryService.updateItem(materialToUpdate.id, {
-        } catch (error) {
-          // Handle error appropriately
-        }
           quantity: newQuantity,
         });
 
