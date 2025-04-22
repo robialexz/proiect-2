@@ -10,7 +10,6 @@ import { useIsMobile } from "./hooks";
 import AppRoutes from "./routes";
 
 // Importăm componentele UI
-import ChatBotWidget from "./components/ai/ChatBotWidget";
 
 // Importăm sistemul de monitorizare a erorilor
 import {
@@ -113,14 +112,7 @@ function App() {
     <ErrorBoundary>
       <AppRoutes />
 
-      {/* Show chatbot only on protected routes */}
-      {location.pathname.startsWith("/") &&
-        ![
-          "/login",
-          "/register",
-          "/forgot-password",
-          "/reset-password",
-        ].includes(location.pathname) && <ChatBotWidget />}
+      {/* Chatbot has been removed */}
     </ErrorBoundary>
   );
 }

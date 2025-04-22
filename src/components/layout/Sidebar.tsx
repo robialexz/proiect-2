@@ -43,6 +43,9 @@ import {
   Wrench,
   Zap,
   Lock,
+  Warehouse,
+  GanttChart,
+  Activity,
 } from "lucide-react";
 import RoleBasedSidebarItem from "./RoleBasedSidebarItem";
 import SystemHealthSidebarItem from "./SystemHealthSidebarItem";
@@ -126,9 +129,9 @@ const Sidebar = () => {
             href: "/inventory-overview",
           },
           {
-            title: t("sidebar.warehouseInventory", "Warehouse Inventory"),
+            title: t("sidebar.companyInventory", "Company Inventory"),
             icon: <Warehouse size={20} />,
-            href: "/warehouse-inventory",
+            href: "/company-inventory",
           },
           {
             title: t("sidebar.projectInventory", "Project Inventory"),
@@ -180,6 +183,11 @@ const Sidebar = () => {
             title: t("sidebar.resources"),
             icon: <FolderArchive size={20} />,
             href: "/resources",
+          },
+          {
+            title: t("sidebar.tenders", "Tenders"),
+            icon: <GanttChart size={20} />,
+            href: "/tenders",
           },
           // Eliminat elementul sidebar.task care nu ar trebui să existe
         ],
@@ -425,12 +433,12 @@ const Sidebar = () => {
       {/* Footer */}
       <div className="p-4 border-t border-slate-800">
         <div className="space-y-2">
-          {/* Link către pagina de administrare a rolurilor - vizibil doar pentru administratori */}
+          {/* Link către pagina de administrare - vizibil doar pentru administratori */}
           <RoleBasedSidebarItem
-            path="/role-management"
+            path="/admin"
             icon={Shield}
-            label="Administrare Roluri"
-            translationKey="sidebar.roleManagement"
+            label="Panou Administrare"
+            translationKey="sidebar.admin"
             allowedRoles={["admin"]}
             collapsed={collapsed}
           />
@@ -478,6 +486,16 @@ const Sidebar = () => {
 
           {/* Link către pagina de monitorizare a stării sistemului */}
           <SystemHealthSidebarItem collapsed={collapsed} />
+
+          {/* Link către pagina de activitate a utilizatorilor */}
+          <RoleBasedSidebarItem
+            path="/user-activity"
+            icon={Activity}
+            label="Activitate Utilizatori"
+            translationKey="sidebar.userActivity"
+            allowedRoles={["admin"]}
+            collapsed={collapsed}
+          />
 
           {/* Acest link este duplicat și poate fi eliminat deoarece avem deja RoleBasedSidebarItem pentru asistentul AI */}
 

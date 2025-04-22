@@ -1,0 +1,53 @@
+{
+  "pageTitle": "User Activity",
+  "title": "User Activity",
+  "subtitle": "Monitor and track user actions in the system",
+  "refresh": "Refresh",
+  "activityLog": "Activity Log",
+  "activityLogDescription": "View and filter user activities in the system",
+  "loading": "Loading activities...",
+  "noActivities": "No activities found.",
+  "stats": {
+    "totalActivities": "Total Activities",
+    "uniqueUsers": "Unique Users",
+    "uniqueActions": "Unique Actions",
+    "uniqueResources": "Unique Resources"
+  },
+  "filters": {
+    "search": "Search activities...",
+    "filter": "Filter",
+    "filterTitle": "Filter Activities",
+    "action": "Action",
+    "resource": "Resource",
+    "date": "Date Range",
+    "from": "From",
+    "to": "To",
+    "reset": "Reset",
+    "apply": "Apply Filters",
+    "clearAll": "Clear All",
+    "allActions": "All Actions",
+    "allResources": "All Resources",
+    "userFilter": "User",
+    "actionFilter": "Action",
+    "resourceFilter": "Resource",
+    "fromFilter": "From",
+    "toFilter": "To"
+  },
+  "table": {
+    "timestamp": "Timestamp",
+    "user": "User",
+    "action": "Action",
+    "resource": "Resource",
+    "details": "Details"
+  },
+  "pagination": {
+    "showing": "Showing",
+    "of": "of",
+    "activities": "activities",
+    "page": "Page"
+  },
+  "errors": {
+    "loadFailed": "Failed to load user activities",
+    "loadStatsFailed": "Failed to load activity statistics"
+  }
+}

@@ -24,6 +24,7 @@ export const enSidebar = {
   debug: "Debug & Development",
   tester: "Application Tester",
   aiAssistant: "AI Assistant",
+  userActivity: "User Activity",
   inventoryOptimizer: "Inventory Optimizer",
   inventoryButtonFixer: "Button Fixer",
   roleManagement: "Role Management",

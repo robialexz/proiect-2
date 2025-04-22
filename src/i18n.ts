@@ -12,6 +12,8 @@ import enDebug from "./locales/en/debug.json";
 import roDebug from "./locales/ro/debug.json";
 import enDesktop from "./locales/en/desktop.json";
 import roDesktop from "./locales/ro/desktop.json";
+import enUserActivity from "./locales/en/userActivity.json";
+import roUserActivity from "./locales/ro/userActivity.json";
 import { enSidebar } from "./i18n/en/sidebar";
 import { roSidebar } from "./i18n/ro/sidebar";
 
@@ -249,6 +251,7 @@ const resources = {
       inventory: roInventory,
       debug: roDebug,
       desktop: roDesktop,
+      userActivity: roUserActivity,
       // Vechea definiție a inventarului - înlocuită cu fișierul de traducere
       /*inventory: {
         pageTitle: "Management Inventar",
@@ -707,6 +710,7 @@ const resources = {
       inventory: enInventory,
       debug: enDebug,
       desktop: enDesktop,
+      userActivity: enUserActivity,
       settings: {
         pageTitle: "Settings",
         title: "Settings",

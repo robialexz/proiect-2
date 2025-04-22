@@ -67,11 +67,36 @@ const DashboardPage = lazyPage(() => import("./pages/DashboardPage"), {
   preload: true,
 });
 
+// Admin page
+const AdminPage = lazyPage(() => import("./pages/AdminPage"), {
+  preload: true,
+});
+
 // Noile pagini adăugate
 const AnalyticsPage = lazyPage(() => import("./pages/AnalyticsPage"), {
   preload: true,
 });
 const CalendarPage = lazyPage(() => import("./pages/CalendarPage"), {
+  preload: true,
+});
+
+// Pagini pentru inventar și licitații
+const CompanyInventoryPage = lazyPage(
+  () => import("./pages/CompanyInventoryPage"),
+  {
+    preload: true,
+  }
+);
+const ProjectInventoryPage = lazyPage(
+  () => import("./pages/ProjectInventoryPage"),
+  {
+    preload: true,
+  }
+);
+const TendersPage = lazyPage(() => import("./pages/TendersPage"), {
+  preload: true,
+});
+const UserActivityPage = lazyPage(() => import("./pages/UserActivityPage"), {
   preload: true,
 });
 
@@ -164,6 +189,8 @@ export function AppRoutes() {
         />
         <Route path="inventory-overview" element={<InventoryOverviewPage />} />
         <Route path="company-inventory" element={<CompanyInventoryPage />} />
+        <Route path="project-inventory" element={<ProjectInventoryPage />} />
+        <Route path="tenders" element={<TendersPage />} />
         <Route path="projects" element={<ProjectsPage />} />
         <Route path="suppliers" element={<SuppliersPage />} />
         <Route path="suppliers/:supplierId" element={<SupplierDetailsPage />} />
@@ -190,7 +217,9 @@ export function AppRoutes() {
         <Route path="import-export" element={<ImportExportPage />} />
         <Route path="notifications" element={<NotificationsPage />} />
         <Route path="users" element={<UsersManagementPage />} />
+        <Route path="admin" element={<AdminPage />} />
         <Route path="audit-logs" element={<AuditLogsPage />} />
+        <Route path="user-activity" element={<UserActivityPage />} />
         <Route path="ai-assistant" element={<AIInventoryAssistantPage />} />
         <Route path="forecast" element={<ForecastPage />} />
         <Route path="scan" element={<ScanPage />} />

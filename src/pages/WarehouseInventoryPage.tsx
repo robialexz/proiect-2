@@ -22,9 +22,14 @@ import OptimizedDataTable from "@/components/inventory/optimized-data-table";
 import { getColumns, type Material } from "@/components/inventory/columns";
 import ExcelJS from "exceljs";
 import { useTranslation } from "react-i18next";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
-import ChatBotWidget from "@/components/ai/ChatBotWidget";
 import {
   Dialog,
   DialogContent,
@@ -62,7 +67,8 @@ const WarehouseInventoryPage: React.FC = () => {
   const [inventoryData, setInventoryData] = useState<MaterialWithProject[]>([]);
   const [loadingData, setLoadingData] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
-  const [materialToView, setMaterialToView] = useState<MaterialWithProject | null>(null);
+  const [materialToView, setMaterialToView] =
+    useState<MaterialWithProject | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const prefersReducedMotion = useReducedMotion();
@@ -334,14 +340,6 @@ const WarehouseInventoryPage: React.FC = () => {
       </motion.div>
 
       <div className="flex h-screen">
-        <ChatBotWidget
-          initialMessage={t(
-            "inventory.chatbot.welcome",
-            "Welcome to the warehouse inventory! How can I help you?"
-          )}
-          contextType="inventory"
-        />
-
         <main className="flex-1 overflow-y-auto p-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -354,7 +352,10 @@ const WarehouseInventoryPage: React.FC = () => {
                 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent"
                 whileHover={prefersReducedMotion ? {} : { scale: 1.02 }}
               >
-                {t("inventory.warehouseInventory", "Complete Warehouse Inventory")}
+                {t(
+                  "inventory.warehouseInventory",
+                  "Complete Warehouse Inventory"
+                )}
               </motion.h1>
 
               <TooltipProvider>
@@ -392,19 +393,22 @@ const WarehouseInventoryPage: React.FC = () => {
               <div className="flex flex-wrap gap-2">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="bg-slate-800/50 border-slate-700">
+                    <Button
+                      variant="outline"
+                      className="bg-slate-800/50 border-slate-700"
+                    >
                       <Plus className="h-4 w-4 mr-2" />
                       {t("inventory.addMaterial", "Add Material")}
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="bg-slate-800 border-slate-700">
-                    <DropdownMenuItem 
+                    <DropdownMenuItem
                       className="text-slate-200 hover:bg-slate-700 cursor-pointer"
                       onClick={() => navigate("/add-material")}
                     >
                       {t("inventory.addSingleMaterial", "Add Single Material")}
                     </DropdownMenuItem>
-                    <DropdownMenuItem 
+                    <DropdownMenuItem
                       className="text-slate-200 hover:bg-slate-700 cursor-pointer"
                       onClick={() => navigate("/upload-excel")}
                     >
@@ -445,8 +449,8 @@ const WarehouseInventoryPage: React.FC = () => {
                   </Tooltip>
                 </TooltipProvider>
 
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="bg-slate-800/50 border-slate-700"
                   onClick={() => navigate("/inventory-overview")}
                 >
@@ -477,7 +481,10 @@ const WarehouseInventoryPage: React.FC = () => {
                   {t("inventory.allMaterials", "All Materials")}
                 </CardTitle>
                 <CardDescription>
-                  {t("inventory.warehouseDescription", "Complete list of all materials in the warehouse, regardless of project assignment")}
+                  {t(
+                    "inventory.warehouseDescription",
+                    "Complete list of all materials in the warehouse, regardless of project assignment"
+                  )}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -596,7 +603,8 @@ const WarehouseInventoryPage: React.FC = () => {
                     {t("inventory.columns.category", "Category")}
                   </h3>
                   <p className="text-lg">
-                    {materialToView.category || t("inventory.notSpecified", "Not specified")}
+                    {materialToView.category ||
+                      t("inventory.notSpecified", "Not specified")}
                   </p>
                 </div>
                 <div>
@@ -612,7 +620,8 @@ const WarehouseInventoryPage: React.FC = () => {
                     {t("inventory.columns.project", "Project")}
                   </h3>
                   <p className="text-lg">
-                    {materialToView.project_name || t("inventory.noProject", "No Project")}
+                    {materialToView.project_name ||
+                      t("inventory.noProject", "No Project")}
                   </p>
                 </div>
                 <div>
@@ -620,7 +629,8 @@ const WarehouseInventoryPage: React.FC = () => {
                     {t("inventory.columns.location", "Location")}
                   </h3>
                   <p className="text-lg">
-                    {materialToView.location || t("inventory.notSpecified", "Not specified")}
+                    {materialToView.location ||
+                      t("inventory.notSpecified", "Not specified")}
                   </p>
                 </div>
                 <div>
@@ -641,7 +651,8 @@ const WarehouseInventoryPage: React.FC = () => {
                     {t("inventory.columns.notes", "Notes")}
                   </h3>
                   <p className="text-md bg-slate-700/50 p-3 rounded-md">
-                    {materialToView.notes || t("inventory.noNotes", "No notes available")}
+                    {materialToView.notes ||
+                      t("inventory.noNotes", "No notes available")}
                   </p>
                 </div>
               </motion.div>
