@@ -1,0 +1,191 @@
+{
+  // Dezactivăm verificarea TypeScript în timp real pentru fișierele de test
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.disableAutomaticTypeAcquisition": true,
+  "typescript.tsserver.maxTsServerMemory": 4096,
+  "typescript.tsserver.watchOptions": {
+    "watchFile": "useFsEvents",
+    "watchDirectory": "useFsEvents",
+    "fallbackPolling": "dynamicPriority",
+    "excludeDirectories": ["**/node_modules", "**/dist", "**/.git", "**/reports"]
+  },
+  "typescript.tsserver.experimental.enableProjectDiagnostics": false,
+
+  // Dezactivăm validarea pentru fișierele de test
+  "typescript.validate.enable": true,
+  "javascript.validate.enable": true,
+  "typescript.workspaceSymbols.excludeLibrarySymbols": true,
+
+  // Excludem fișierele care nu trebuie monitorizate
+  "files.watcherExclude": {
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/node_modules/**": true,
+    "**/dist/**": true,
+    "**/reports/**": true,
+    "**/.vite/**": true
+  },
+
+  // Excludem fișierele care nu trebuie indexate
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/.git": true,
+    "**/reports": true,
+    "**/.vite": true
+  },
+
+  // Dezactivăm analizele în timp real pentru ESLint
+  "eslint.run": "onSave",
+  "eslint.lintTask.enable": false,
+
+  // Dezactivăm validarea automată pentru anumite fișiere
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact"
+  ],
+
+  // Dezactivăm formatarea automată pentru anumite fișiere
+  "editor.formatOnSave": true,
+  "[typescript]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescriptreact]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+
+  // Dezactivăm sugestiile în timp real pentru anumite fișiere
+  "editor.quickSuggestions": {
+    "other": true,
+    "comments": false,
+    "strings": false
+  },
+
+  // Dezactivăm validarea în timp real pentru anumite fișiere
+  "javascript.suggestionActions.enabled": false,
+  "typescript.suggestionActions.enabled": false,
+
+  // Dezactivăm analizele în timp real pentru anumite extensii
+  "npm.packageManager": "npm",
+  "npm.autoDetect": "off",
+
+  // Dezactivăm analizele în timp real pentru anumite fișiere
+  "files.associations": {
+    "*.test.tsx": "typescriptreact",
+    "*.test.ts": "typescript",
+    "*.spec.tsx": "typescriptreact",
+    "*.spec.ts": "typescript"
+  },
+
+  // Dezactivăm analizele în timp real pentru anumite extensii
+  "typescript.surveys.enabled": false,
+  "telemetry.telemetryLevel": "off",
+
+  // Optimizăm performanța editorului
+  "editor.maxTokenizationLineLength": 2500,
+  "diffEditor.maxComputationTime": 0,
+  "diffEditor.maxFileSize": 50,
+  "workbench.editor.closeOnFileDelete": false,
+  "workbench.editor.limit.enabled": true,
+  "workbench.editor.limit.value": 10,
+  "workbench.editor.limit.perEditorGroup": true,
+  "cSpell.words": [
+    "Această",
+    "Acasă",
+    "Adaugă",
+    "ajutor",
+    "Ajutor",
+    "Anulează",
+    "aplicația",
+    "aplicației",
+    "Atenție",
+    "autentificare",
+    "Bază",
+    "bazei",
+    "Berichte",
+    "Buget",
+    "Bună",
+    "comenzi",
+    "complet",
+    "completă",
+    "Confirmă",
+    "Control",
+    "curând",
+    "dacă",
+    "datele",
+    "Deconectare",
+    "Depozit",
+    "dezvoltare",
+    "dezvoltatori",
+    "Dezvoltare",
+    "Dezvoltator",
+    "Diagnosticare",
+    "dimineața",
+    "disponibile",
+    "Documente",
+    "doriți",
+    "eșuată",
+    "există",
+    "Franceză",
+    "Furnizori",
+    "Germană",
+    "Gestionare",
+    "Gestionați",
+    "Închide",
+    "Informații",
+    "Instrumente",
+    "Inventar",
+    "Limbă",
+    "lipsă",
+    "Logistică",
+    "Magazioner",
+    "Management",
+    "Manager",
+    "mediul",
+    "necunoscută",
+    "Operațiune",
+    "Operațiuni",
+    "pagina",
+    "pagină",
+    "Panou",
+    "pentru",
+    "pierderea",
+    "Platformă",
+    "Populare",
+    "Producție",
+    "Profil",
+    "Program",
+    "Proiecte",
+    "Rapoarte",
+    "Reîmprospătare",
+    "Reparare",
+    "reușită",
+    "Resetare",
+    "Resurse",
+    "rezultat",
+    "Română",
+    "Salvează",
+    "Setări",
+    "Sigur",
+    "Stare",
+    "Șterge",
+    "supabase",
+    "Supabase",
+    "tabelele",
+    "toate",
+    "testare",
+    "toate",
+    "Tutoriale",
+    "utilizat",
+    "Utilizarea",
+    "Verificare",
+    "Verifică",
+    "Vizualizare",
+    "Vizualizează"
+  ],
+  "cSpell.enabled": false
+}

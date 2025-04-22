@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "skipLibCheck": true,
+    "noEmitOnError": false,
+    "noImplicitAny": false,
+    "ignoreDeprecations": "5.0",
+    "exactOptionalPropertyTypes": false,
+    "strict": false
+  }
+}

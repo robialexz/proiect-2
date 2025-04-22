@@ -1,0 +1,29 @@
+{
+  "title": "Informații Aplicație Desktop",
+  "subtitle": "Informații despre aplicația desktop",
+  "description": "Această aplicație rulează ca o aplicație desktop folosind Tauri.",
+  "webDescription": "Această aplicație rulează într-un browser web, dar poate fi utilizată și ca aplicație desktop.",
+  "tauriDescription": "Tauri ne permite să construim aplicații desktop ușoare și sigure folosind tehnologii web. Acest lucru înseamnă că putem folosi același cod sursă atât pentru aplicații web, cât și pentru aplicații desktop.",
+  "downloadInfo": "Vrei să folosești această aplicație ca desktop?",
+  "downloadDescription": "Poți descărca versiunea desktop a acestei aplicații pentru Windows, macOS sau Linux. Versiunea desktop oferă funcționalități suplimentare, cum ar fi accesul la sistemul de fișiere și performanță îmbunătățită.",
+  "systemInfo": "Informații Sistem",
+  "fileAccess": "Acces Fișiere",
+  "directoryAccess": "Acces Director",
+  "noFileSelected": "Niciun fișier selectat",
+  "noDirectorySelected": "Niciun director selectat",
+  "openFile": "Deschide Fișier",
+  "openDirectory": "Deschide Director",
+  "tauriDocumentation": "Documentație Tauri",
+  "features": {
+    "title": "Funcționalități Desktop",
+    "fileSystem": "Acces nativ la sistemul de fișiere",
+    "performance": "Performanță îmbunătățită",
+    "offline": "Funcționează offline",
+    "integration": "Integrare cu sistemul",
+    "updates": "Actualizări automate",
+    "windowControls": "Controale personalizate pentru fereastră"
+  },
+  "sidebar": {
+    "desktopInfo": "Info Aplicație Desktop"
+  }
+}
