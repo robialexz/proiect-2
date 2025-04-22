@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teste Aplicație</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    h1 {
+      color: #333;
+      margin-top: 0;
+    }
+    
+    .test-section {
+      margin-bottom: 20px;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    
+    .test-section h2 {
+      margin-top: 0;
+      color: #444;
+    }
+    
+    .test-button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-right: 10px;
+    }
+    
+    .test-button:hover {
+      background-color: #45a049;
+    }
+    
+    .results {
+      margin-top: 15px;
+      padding: 10px;
+      background-color: #f9f9f9;
+      border-radius: 4px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    
+    .log-entry {
+      margin-bottom: 5px;
+      font-family: monospace;
+      font-size: 12px;
+    }
+    
+    .log-entry.info {
+      color: #333;
+    }
+    
+    .log-entry.warning {
+      color: #ff9800;
+    }
+    
+    .log-entry.error {
+      color: #f44336;
+    }
+    
+    .log-entry.success {
+      color: #4CAF50;
+    }
+    
+    .status {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 3px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+    
+    .status.running {
+      background-color: #2196F3;
+      color: white;
+    }
+    
+    .status.completed {
+      background-color: #4CAF50;
+      color: white;
+    }
+    
+    .status.failed {
+      background-color: #f44336;
+      color: white;
+    }
+    
+    iframe {
+      width: 100%;
+      height: 500px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Teste Aplicație</h1>
+    
+    <div class="test-section">
+      <h2>Testare Răspuns Pagini</h2>
+      <button id="run-pages-test" class="test-button">Rulează Testul</button>
+      <span id="pages-status" class="status">Neexecutat</span>
+      <div id="pages-results" class="results"></div>
+    </div>
+    
+    <div class="test-section">
+      <h2>Testare Butoane Autentificare</h2>
+      <button id="run-auth-test" class="test-button">Rulează Testul</button>
+      <span id="auth-status" class="status">Neexecutat</span>
+      <div id="auth-results" class="results"></div>
+    </div>
+    
+    <div class="test-section">
+      <h2>Vizualizare Aplicație</h2>
+      <button id="open-app" class="test-button">Deschide Aplicația</button>
+      <div id="app-container" style="margin-top: 15px; display: none;">
+        <iframe id="app-frame" src=""></iframe>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // Funcție pentru a adăuga o intrare în log
+    function addLogEntry(containerId, message, type = 'info') {
+      const container = document.getElementById(containerId);
+      const entry = document.createElement('div');
+      entry.className = `log-entry ${type}`;
+      entry.textContent = message;
+      container.appendChild(entry);
+      container.scrollTop = container.scrollHeight;
+    }
+    
+    // Funcție pentru a actualiza statusul unui test
+    function updateStatus(statusId, status, text) {
+      const statusElement = document.getElementById(statusId);
+      statusElement.className = `status ${status}`;
+      statusElement.textContent = text;
+    }
+    
+    // Funcție pentru a rula testul de răspuns pagini
+    document.getElementById('run-pages-test').addEventListener('click', function() {
+      this.disabled = true;
+      updateStatus('pages-status', 'running', 'Rulează');
+      
+      // Golim rezultatele anterioare
+      document.getElementById('pages-results').innerHTML = '';
+      
+      // Creăm un iframe pentru a rula testul
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      iframe.src = 'http://localhost:5173/login';
+      document.body.appendChild(iframe);
+      
+      // Așteptăm încărcarea iframe-ului
+      iframe.onload = function() {
+        // Injectăm scriptul de test
+        const script = iframe.contentDocument.createElement('script');
+        script.src = 'test-pages.js';
+        
+        // Captăm log-urile din iframe
+        iframe.contentWindow.console.log = function(message) {
+          addLogEntry('pages-results', message, message.includes('✅') ? 'success' : (message.includes('❌') ? 'error' : 'info'));
+        };
+        
+        iframe.contentWindow.console.error = function(message) {
+          addLogEntry('pages-results', message, 'error');
+        };
+        
+        iframe.contentWindow.console.warn = function(message) {
+          addLogEntry('pages-results', message, 'warning');
+        };
+        
+        iframe.contentDocument.head.appendChild(script);
+        
+        // Actualizăm statusul
+        updateStatus('pages-status', 'completed', 'Completat');
+        document.getElementById('run-pages-test').disabled = false;
+      };
+    });
+    
+    // Funcție pentru a rula testul de butoane autentificare
+    document.getElementById('run-auth-test').addEventListener('click', function() {
+      this.disabled = true;
+      updateStatus('auth-status', 'running', 'Rulează');
+      
+      // Golim rezultatele anterioare
+      document.getElementById('auth-results').innerHTML = '';
+      
+      // Creăm un iframe pentru a rula testul
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      iframe.src = 'http://localhost:5173/login';
+      document.body.appendChild(iframe);
+      
+      // Așteptăm încărcarea iframe-ului
+      iframe.onload = function() {
+        // Injectăm scriptul de test
+        const script = iframe.contentDocument.createElement('script');
+        script.src = 'test-auth-buttons.js';
+        
+        // Captăm log-urile din iframe
+        iframe.contentWindow.console.log = function(message) {
+          addLogEntry('auth-results', message, message.includes('✅') ? 'success' : (message.includes('❌') ? 'error' : 'info'));
+        };
+        
+        iframe.contentWindow.console.error = function(message) {
+          addLogEntry('auth-results', message, 'error');
+        };
+        
+        iframe.contentWindow.console.warn = function(message) {
+          addLogEntry('auth-results', message, 'warning');
+        };
+        
+        iframe.contentDocument.head.appendChild(script);
+        
+        // Actualizăm statusul
+        updateStatus('auth-status', 'completed', 'Completat');
+        document.getElementById('run-auth-test').disabled = false;
+      };
+    });
+    
+    // Funcție pentru a deschide aplicația
+    document.getElementById('open-app').addEventListener('click', function() {
+      const appContainer = document.getElementById('app-container');
+      const appFrame = document.getElementById('app-frame');
+      
+      if (appContainer.style.display === 'none') {
+        appFrame.src = 'http://localhost:5173/login';
+        appContainer.style.display = 'block';
+        this.textContent = 'Închide Aplicația';
+      } else {
+        appFrame.src = '';
+        appContainer.style.display = 'none';
+        this.textContent = 'Deschide Aplicația';
+      }
+    });
+  </script>
+</body>
+</html>

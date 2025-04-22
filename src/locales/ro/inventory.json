@@ -1,0 +1,195 @@
+{
+  "inventory": {
+    "pageTitle": "Gestionare Inventar",
+    "title": "Inventar",
+    "subtitle": "Gestionează materialele și stocurile",
+    "overview": {
+      "title": "Prezentare generală a inventarului",
+      "description": "Vizualizează statistici și informații despre inventar",
+      "refreshed": "Inventar reîmprospătat",
+      "refreshedDescription": "Datele au fost actualizate cu succes",
+      "recentMaterials": "Materiale recente",
+      "lowStock": "Stoc scăzut",
+      "allStockGood": "Toate stocurile sunt bune",
+      "noLowStockItems": "Nu există materiale cu stoc scăzut",
+      "recentActivity": "Activitate recentă",
+      "noRecentActivity": "Nicio activitate recentă",
+      "noRecentActivityDescription": "Nu există activitate recentă în inventar",
+      "quickActions": "Acțiuni rapide",
+      "viewLowStock": "Vezi stoc scăzut",
+      "searchInventory": "Caută în inventar",
+      "filterByCategory": "Filtrează după categorie",
+      "exportToCSV": "Exportă în CSV",
+      "generateReport": "Generează raport"
+    },
+    "selectProject": "Selectează Proiect",
+    "noProjects": "Nu există proiecte încă",
+    "createNewProject": "Creează Proiect Nou",
+    "newProjectDialog": {
+      "title": "Creează Proiect Nou",
+      "description": "Introdu un nume pentru noul proiect.",
+      "namePlaceholder": "Nume Proiect"
+    },
+    "materials": {
+      "title": "Materiale",
+      "description": "Lista completă a materialelor din inventar"
+    },
+    "stats": {
+      "title": "Statistici",
+      "description": "Informații despre inventar",
+      "totalItems": "Total materiale",
+      "totalValue": "Valoare totală",
+      "categories": "Categorii",
+      "lowStock": "Stoc scăzut",
+      "lowStockDescription": "Materiale sub nivelul minim de stoc",
+      "lastUpdated": "Ultima actualizare",
+      "addStock": "Adaugă"
+    },
+    "table": {
+      "id": "ID",
+      "name": "Nume",
+      "quantity": "Cantitate",
+      "category": "Categorie",
+      "location": "Locație",
+      "price": "Preț",
+      "actions": "Acțiuni",
+      "noMaterials": "Nu există materiale în inventar."
+    },
+    "actions": {
+      "addMaterial": "Adaugă Material",
+      "edit": "Editează",
+      "delete": "Șterge",
+      "confirmSuplimentar": "Confirmă cantitatea suplimentară",
+      "export": "Exportă",
+      "import": "Importă",
+      "refresh": "Reîmprospătează",
+      "reorderList": "Listă Reaprovizionare"
+    },
+    "dialog": {
+      "addTitle": "Adaugă Material Nou",
+      "editTitle": "Editează Material",
+      "addDescription": "Completează detaliile pentru noul material",
+      "editDescription": "Modifică detaliile materialului",
+      "deleteTitle": "Șterge Material",
+      "deleteDescription": "Ești sigur că vrei să ștergi acest material? Această acțiune nu poate fi anulată.",
+      "importTitle": "Importă Materiale",
+      "importDescription": "Încarcă un fișier CSV sau Excel cu materiale pentru import.",
+      "reorderTitle": "Listă Reaprovizionare",
+      "reorderDescription": "Materiale care trebuie reaprovizionate în baza nivelurilor minime de stoc."
+    },
+    "form": {
+      "name": "Nume",
+      "namePlaceholder": "Nume Material",
+      "dimension": "Dimensiune",
+      "dimensionPlaceholder": "ex., 100x50, DN25",
+      "unit": "Unitate",
+      "unitPlaceholder": "ex., buc, m, kg",
+      "quantity": "Cantitate",
+      "manufacturer": "Producător",
+      "manufacturerPlaceholder": "Nume Producător",
+      "category": "Categorie",
+      "categoryPlaceholder": "ex., Țevi, Fitinguri",
+      "location": "Locație",
+      "locationPlaceholder": "ex., Depozit A, Raft B3",
+      "costPerUnit": "Cost per Unitate",
+      "minStockLevel": "Nivel Minim Stoc",
+      "maxStockLevel": "Nivel Maxim Stoc",
+      "notes": "Note",
+      "notesPlaceholder": "Informații suplimentare despre material"
+    },
+    "filters": {
+      "search": "Caută materiale...",
+      "category": "Categorie",
+      "allCategories": "Toate Categoriile",
+      "lowStock": "Doar Stoc Scăzut"
+    },
+    "import": {
+      "dragAndDrop": "Trage și plasează fișierul aici, sau click pentru a naviga",
+      "supportedFormats": "Formate suportate: .xlsx, .xls, .csv",
+      "downloadTemplate": "Descarcă Șablon",
+      "preview": "Previzualizare",
+      "import": "Importă",
+      "cancel": "Anulează"
+    },
+    "export": {
+      "title": "Exportă Inventar",
+      "description": "Alege un format pentru a exporta datele de inventar.",
+      "csv": "CSV",
+      "excel": "Excel",
+      "json": "JSON",
+      "pdf": "PDF"
+    },
+    "reorder": {
+      "title": "Listă Reaprovizionare",
+      "description": "Materiale care trebuie reaprovizionate în baza nivelurilor minime de stoc.",
+      "generate": "Generează Listă",
+      "export": "Exportă Listă",
+      "material": "Material",
+      "currentStock": "Stoc Curent",
+      "minLevel": "Nivel Minim",
+      "reorderQuantity": "Cantitate Reaprovizionare",
+      "noItems": "Nu există materiale care necesită reaprovizionare în acest moment."
+    },
+    "success": {
+      "created": "Material Adăugat",
+      "createdDescription": "Materialul a fost adăugat cu succes",
+      "updated": "Material Actualizat",
+      "updatedDescription": "Materialul a fost actualizat cu succes",
+      "deleted": "Material Șters",
+      "deletedDescription": "Materialul a fost șters cu succes",
+      "confirmed": "Cantitate Confirmată",
+      "confirmedDescription": "Cantitatea suplimentară a fost adăugată la stoc",
+      "imported": "Materiale Importate",
+      "importedDescription": "S-au importat cu succes {count} materiale"
+    },
+    "errors": {
+      "loadFailed": "Eroare la încărcarea inventarului",
+      "createFailed": "Eroare la adăugarea materialului",
+      "updateFailed": "Eroare la actualizarea materialului",
+      "deleteFailed": "Eroare la ștergerea materialului",
+      "confirmFailed": "Eroare la confirmarea cantității",
+      "reorderListFailed": "Eroare la generarea listei de reaprovizionare",
+      "exportFailed": "Eroare la exportul inventarului",
+      "importFailed": "Eroare la importul materialelor"
+    },
+    "assistant": {
+      "title": "Asistent Inventar",
+      "poweredBy": "Powered by AI",
+      "welcome": "Bună! Sunt asistentul tău pentru inventar. Cum te pot ajuta astăzi?",
+      "thinking": "Se gândește...",
+      "placeholder": "Întreabă ceva despre inventar...",
+      "suggestions": {
+        "lowStock": "Stoc scăzut",
+        "recommendations": "Recomandări",
+        "statistics": "Statistici",
+        "addMaterial": "Adaugă material"
+      },
+      "responses": {
+        "addMaterial": "Am deschis dialogul pentru adăugarea unui material nou.",
+        "noLowStock": "Nu există materiale cu stoc scăzut în acest moment.",
+        "noRecommendations": "Nu am recomandări în acest moment, toate stocurile sunt la niveluri optime.",
+        "noReorderNeeded": "Nu există materiale care necesită reaprovizionare în acest moment.",
+        "noResults": "Nu am găsit materiale care să conțină \"{search}\".",
+        "error": "Îmi pare rău, am întâmpinat o eroare în procesarea cererii tale. Te rog să încerci din nou.",
+        "default": "Pot să te ajut cu informații despre inventar, să caut materiale, să verific stocurile scăzute sau să îți ofer recomandări de reaprovizionare. Ce dorești să afli?"
+      }
+    }
+  },
+  "projects": {
+    "selectProject": "Selectează Proiect",
+    "noProjects": "Nu există proiecte",
+    "newProject": "Proiect Nou",
+    "newProjectDescription": "Creează un proiect nou pentru a gestiona materiale.",
+    "name": "Nume",
+    "namePlaceholder": "Nume Proiect",
+    "errors": {
+      "loadFailed": "Eroare la încărcarea proiectelor",
+      "createFailed": "Eroare la crearea proiectului",
+      "nameRequired": "Numele proiectului este obligatoriu"
+    },
+    "success": {
+      "created": "Proiect Creat",
+      "createdDescription": "Proiectul a fost creat cu succes"
+    }
+  }
+}

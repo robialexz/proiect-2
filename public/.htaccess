@@ -1,0 +1,36 @@
+# Setăm tipurile MIME corecte pentru fișierele JavaScript
+<IfModule mod_mime.c>
+  # JavaScript
+  AddType application/javascript .js
+  AddType application/javascript .mjs
+  
+  # CSS
+  AddType text/css .css
+  
+  # Fonts
+  AddType font/woff .woff
+  AddType font/woff2 .woff2
+  
+  # Images
+  AddType image/svg+xml .svg
+  AddType image/png .png
+  AddType image/jpeg .jpg .jpeg
+  AddType image/webp .webp
+</IfModule>
+
+# Activăm CORS pentru toate resursele
+<IfModule mod_headers.c>
+  <FilesMatch "\.(js|css|svg|woff|woff2|png|jpg|jpeg|webp)$">
+    Header set Access-Control-Allow-Origin "*"
+  </FilesMatch>
+</IfModule>
+
+# Redirecționăm toate cererile către index.html pentru SPA
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+  RewriteRule ^index\.html$ - [L]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule . /index.html [L]
+</IfModule>

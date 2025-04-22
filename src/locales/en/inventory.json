@@ -1,0 +1,195 @@
+{
+  "inventory": {
+    "pageTitle": "Inventory Management",
+    "title": "Inventory",
+    "subtitle": "Manage materials and stock levels",
+    "overview": {
+      "title": "Inventory Overview",
+      "description": "View statistics and information about inventory",
+      "refreshed": "Inventory Refreshed",
+      "refreshedDescription": "Data has been successfully updated",
+      "recentMaterials": "Recent Materials",
+      "lowStock": "Low Stock",
+      "allStockGood": "All stocks are good",
+      "noLowStockItems": "No materials with low stock",
+      "recentActivity": "Recent Activity",
+      "noRecentActivity": "No recent activity",
+      "noRecentActivityDescription": "No recent activity in inventory",
+      "quickActions": "Quick Actions",
+      "viewLowStock": "View Low Stock",
+      "searchInventory": "Search Inventory",
+      "filterByCategory": "Filter by Category",
+      "exportToCSV": "Export to CSV",
+      "generateReport": "Generate Report"
+    },
+    "selectProject": "Select Project",
+    "noProjects": "No projects yet",
+    "createNewProject": "Create New Project",
+    "newProjectDialog": {
+      "title": "Create New Project",
+      "description": "Enter a name for the new project.",
+      "namePlaceholder": "Project Name"
+    },
+    "materials": {
+      "title": "Materials",
+      "description": "Complete list of inventory materials"
+    },
+    "stats": {
+      "title": "Statistics",
+      "description": "Inventory information",
+      "totalItems": "Total items",
+      "totalValue": "Total value",
+      "categories": "Categories",
+      "lowStock": "Low stock",
+      "lowStockDescription": "Materials below minimum stock level",
+      "lastUpdated": "Last updated",
+      "addStock": "Add stock"
+    },
+    "table": {
+      "id": "ID",
+      "name": "Name",
+      "quantity": "Quantity",
+      "category": "Category",
+      "location": "Location",
+      "price": "Price",
+      "actions": "Actions",
+      "noMaterials": "No materials in inventory."
+    },
+    "actions": {
+      "addMaterial": "Add Material",
+      "edit": "Edit",
+      "delete": "Delete",
+      "confirmSuplimentar": "Confirm supplementary quantity",
+      "export": "Export",
+      "import": "Import",
+      "refresh": "Refresh",
+      "reorderList": "Reorder List"
+    },
+    "dialog": {
+      "addTitle": "Add New Material",
+      "editTitle": "Edit Material",
+      "addDescription": "Fill in the details for the new material",
+      "editDescription": "Modify the material details",
+      "deleteTitle": "Delete Material",
+      "deleteDescription": "Are you sure you want to delete this material? This action cannot be undone.",
+      "importTitle": "Import Materials",
+      "importDescription": "Upload a CSV or Excel file with materials to import.",
+      "reorderTitle": "Reorder List",
+      "reorderDescription": "Materials that need to be reordered based on minimum stock levels."
+    },
+    "form": {
+      "name": "Name",
+      "namePlaceholder": "Material Name",
+      "dimension": "Dimension",
+      "dimensionPlaceholder": "e.g., 100x50, DN25",
+      "unit": "Unit",
+      "unitPlaceholder": "e.g., pcs, m, kg",
+      "quantity": "Quantity",
+      "manufacturer": "Manufacturer",
+      "manufacturerPlaceholder": "Manufacturer Name",
+      "category": "Category",
+      "categoryPlaceholder": "e.g., Pipes, Fittings",
+      "location": "Location",
+      "locationPlaceholder": "e.g., Warehouse A, Shelf B3",
+      "costPerUnit": "Cost per Unit",
+      "minStockLevel": "Minimum Stock Level",
+      "maxStockLevel": "Maximum Stock Level",
+      "notes": "Notes",
+      "notesPlaceholder": "Additional information about the material"
+    },
+    "filters": {
+      "search": "Search materials...",
+      "category": "Category",
+      "allCategories": "All Categories",
+      "lowStock": "Low Stock Only"
+    },
+    "import": {
+      "dragAndDrop": "Drag and drop your file here, or click to browse",
+      "supportedFormats": "Supported formats: .xlsx, .xls, .csv",
+      "downloadTemplate": "Download Template",
+      "preview": "Preview",
+      "import": "Import",
+      "cancel": "Cancel"
+    },
+    "export": {
+      "title": "Export Inventory",
+      "description": "Choose a format to export your inventory data.",
+      "csv": "CSV",
+      "excel": "Excel",
+      "json": "JSON",
+      "pdf": "PDF"
+    },
+    "reorder": {
+      "title": "Reorder List",
+      "description": "Materials that need to be reordered based on minimum stock levels.",
+      "generate": "Generate List",
+      "export": "Export List",
+      "material": "Material",
+      "currentStock": "Current Stock",
+      "minLevel": "Min Level",
+      "reorderQuantity": "Reorder Quantity",
+      "noItems": "No materials need to be reordered at this time."
+    },
+    "success": {
+      "created": "Material Added",
+      "createdDescription": "The material has been successfully added",
+      "updated": "Material Updated",
+      "updatedDescription": "The material has been successfully updated",
+      "deleted": "Material Deleted",
+      "deletedDescription": "The material has been successfully deleted",
+      "confirmed": "Quantity Confirmed",
+      "confirmedDescription": "The supplementary quantity has been added to stock",
+      "imported": "Materials Imported",
+      "importedDescription": "Successfully imported {count} materials"
+    },
+    "errors": {
+      "loadFailed": "Error loading inventory",
+      "createFailed": "Error adding material",
+      "updateFailed": "Error updating material",
+      "deleteFailed": "Error deleting material",
+      "confirmFailed": "Error confirming quantity",
+      "reorderListFailed": "Error generating reorder list",
+      "exportFailed": "Error exporting inventory",
+      "importFailed": "Error importing materials"
+    },
+    "assistant": {
+      "title": "Inventory Assistant",
+      "poweredBy": "Powered by AI",
+      "welcome": "Hello! I'm your inventory assistant. How can I help you today?",
+      "thinking": "Thinking...",
+      "placeholder": "Ask something about inventory...",
+      "suggestions": {
+        "lowStock": "Low stock",
+        "recommendations": "Recommendations",
+        "statistics": "Statistics",
+        "addMaterial": "Add material"
+      },
+      "responses": {
+        "addMaterial": "I've opened the dialog to add a new material.",
+        "noLowStock": "There are no materials with low stock at the moment.",
+        "noRecommendations": "I don't have any recommendations at the moment, all stocks are at optimal levels.",
+        "noReorderNeeded": "There are no materials that need to be reordered at this time.",
+        "noResults": "I couldn't find any materials containing \"{search}\".",
+        "error": "I'm sorry, I encountered an error processing your request. Please try again.",
+        "default": "I can help you with inventory information, search for materials, check low stocks, or give you reordering recommendations. What would you like to know?"
+      }
+    }
+  },
+  "projects": {
+    "selectProject": "Select Project",
+    "noProjects": "No projects",
+    "newProject": "New Project",
+    "newProjectDescription": "Create a new project to manage materials.",
+    "name": "Name",
+    "namePlaceholder": "Project Name",
+    "errors": {
+      "loadFailed": "Error loading projects",
+      "createFailed": "Error creating project",
+      "nameRequired": "Project name is required"
+    },
+    "success": {
+      "created": "Project Created",
+      "createdDescription": "The project has been successfully created"
+    }
+  }
+}

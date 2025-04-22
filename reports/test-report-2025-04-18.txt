@@ -1,0 +1,407 @@
+# Raport de testare - 18/04/2025, 11:23:01
+
+## Componente fără teste (173/201)
+
+Următoarele componente nu au teste asociate:
+
+- ChatBotWidget (components\ai\ChatBotWidget.tsx)
+- BudgetForm (components\budget\BudgetForm.tsx)
+- BudgetList (components\budget\BudgetList.tsx)
+- ExpensesList (components\budget\ExpensesList.tsx)
+- DatabaseChecker (components\debug\DatabaseChecker.tsx)
+- DocumentCollaboration (components\documents\DocumentCollaboration.tsx)
+- CallToAction (components\home\CallToAction.tsx)
+- FeatureGrid (components\home\FeatureGrid.tsx)
+- HeroSection (components\home\HeroSection.tsx)
+- AutomatedOrderingSystem (components\inventory\AutomatedOrderingSystem.tsx)
+- columns (components\inventory\columns.tsx)
+- data-table (components\inventory\data-table.tsx)
+- ManagerFields (components\inventory\ManagerFields.tsx)
+- optimized-data-table (components\inventory\optimized-data-table.tsx)
+- SupplierAnnouncementList (components\inventory\SupplierAnnouncementList.tsx)
+- SupplierAnnouncementUpload (components\inventory\SupplierAnnouncementUpload.tsx)
+- ProjectDetails (components\projects\ProjectDetails.tsx)
+- ProjectForm (components\projects\ProjectForm.tsx)
+- ProjectsList (components\projects\ProjectsList.tsx)
+- ReportForm (components\reports\ReportForm.tsx)
+- ReportsList (components\reports\ReportsList.tsx)
+- ReportViewer (components\reports\ReportViewer.tsx)
+- ResourceAllocations (components\resources\ResourceAllocations.tsx)
+- ResourceForm (components\resources\ResourceForm.tsx)
+- ResourcesList (components\resources\ResourcesList.tsx)
+- TaskManagement (components\tasks\TaskManagement.tsx)
+- TeamForm (components\teams\TeamForm.tsx)
+- TeamMembers (components\teams\TeamMembers.tsx)
+- TeamsList (components\teams\TeamsList.tsx)
+- TutorialOverlay (components\tutorial\TutorialOverlay.tsx)
+- accordion (components\ui\accordion.tsx)
+- alert-dialog (components\ui\alert-dialog.tsx)
+- alert (components\ui\alert.tsx)
+- aspect-ratio (components\ui\aspect-ratio.tsx)
+- avatar (components\ui\avatar.tsx)
+- badge (components\ui\badge.tsx)
+- button (components\ui\button.tsx)
+- calendar (components\ui\calendar.tsx)
+- card (components\ui\card.tsx)
+- carousel (components\ui\carousel.tsx)
+- checkbox (components\ui\checkbox.tsx)
+- collapsible (components\ui\collapsible.tsx)
+- command (components\ui\command.tsx)
+- connection-status (components\ui\connection-status.tsx)
+- context-menu (components\ui\context-menu.tsx)
+- date-picker-with-range (components\ui\date-picker-with-range.tsx)
+- dialog (components\ui\dialog.tsx)
+- drawer (components\ui\drawer.tsx)
+- dropdown-menu (components\ui\dropdown-menu.tsx)
+- form (components\ui\form.tsx)
+- global-search (components\ui\global-search.tsx)
+- hover-card (components\ui\hover-card.tsx)
+- input (components\ui\input.tsx)
+- label (components\ui\label.tsx)
+- menubar (components\ui\menubar.tsx)
+- navigation-menu (components\ui\navigation-menu.tsx)
+- notification-center (components\ui\notification-center.tsx)
+- notification (components\ui\notification.tsx)
+- offline-indicator (components\ui\offline-indicator.tsx)
+- optimized-image (components\ui\optimized-image.tsx)
+- pagination (components\ui\pagination.tsx)
+- popover (components\ui\popover.tsx)
+- progress (components\ui\progress.tsx)
+- radio-group (components\ui\radio-group.tsx)
+- resizable (components\ui\resizable.tsx)
+- scroll-area (components\ui\scroll-area.tsx)
+- select (components\ui\select.tsx)
+- separator (components\ui\separator.tsx)
+- sheet (components\ui\sheet.tsx)
+- skeleton (components\ui\skeleton.tsx)
+- slider (components\ui\slider.tsx)
+- spline-scene-demo (components\ui\spline-scene-demo.tsx)
+- spline-scene (components\ui\spline-scene.tsx)
+- spotlight (components\ui\spotlight.tsx)
+- switch (components\ui\switch.tsx)
+- table (components\ui\table.tsx)
+- tabs (components\ui\tabs.tsx)
+- textarea (components\ui\textarea.tsx)
+- theme-toggle (components\ui\theme-toggle.tsx)
+- toast (components\ui\toast.tsx)
+- toaster (components\ui\toaster.tsx)
+- toggle (components\ui\toggle.tsx)
+- tooltip (components\ui\tooltip.tsx)
+- Button (design-system\components\Button.tsx)
+- Card (design-system\components\Card.tsx)
+- Input (design-system\components\Input.tsx)
+- AboutPage (pages\AboutPage.tsx)
+- AddMaterialPage (pages\AddMaterialPage.tsx)
+- AIInventoryAssistantPage (pages\AIInventoryAssistantPage.tsx)
+- AuditLogsPage (pages\AuditLogsPage.tsx)
+- BudgetPage (pages\BudgetPage.tsx)
+- CategoryManagementPage (pages\CategoryManagementPage.tsx)
+- ChangePasswordPage (pages\ChangePasswordPage.tsx)
+- CompanyInventoryPage (pages\CompanyInventoryPage.tsx)
+- ContactPage (pages\ContactPage.tsx)
+- CreateItemPage (pages\CreateItemPage.tsx)
+- DashboardPage (pages\DashboardPage.tsx)
+- DebugPage (pages\DebugPage.tsx)
+- DocumentsPage (pages\DocumentsPage.tsx)
+- EditProfilePage (pages\EditProfilePage.tsx)
+- ForecastPage (pages\ForecastPage.tsx)
+- ForgotPasswordPage (pages\ForgotPasswordPage.tsx)
+- HomePage (pages\HomePage.tsx)
+- ImportExportPage (pages\ImportExportPage.tsx)
+- InventoryAssistantPage (pages\InventoryAssistantPage.tsx)
+- InventoryListPage (pages\InventoryListPage.tsx)
+- InventoryManagementPage (pages\InventoryManagementPage.tsx)
+- ItemDetailPage (pages\ItemDetailPage.tsx)
+- LoginPage (pages\LoginPage.tsx)
+- NotificationsDemo (pages\NotificationsDemo.tsx)
+- NotificationsPage (pages\NotificationsPage.tsx)
+- OverviewPage (pages\OverviewPage.tsx)
+- PreferencesPage (pages\PreferencesPage.tsx)
+- PricingPage (pages\PricingPage.tsx)
+- ProfilePage (pages\ProfilePage.tsx)
+- ProjectsPage (pages\ProjectsPage.tsx)
+- RegisterPage (pages\RegisterPage.tsx)
+- ReportsPage (pages\ReportsPage.tsx)
+- ResetPasswordPage (pages\ResetPasswordPage.tsx)
+- ResourcesPage (pages\ResourcesPage.tsx)
+- RoleManagementPage (pages\RoleManagementPage.tsx)
+- ScanPage (pages\ScanPage.tsx)
+- SchedulePage (pages\SchedulePage.tsx)
+- SettingsPage (pages\SettingsPage.tsx)
+- SplineDemo (pages\SplineDemo.tsx)
+- SuppliersPage (pages\SuppliersPage.tsx)
+- TasksPage (pages\TasksPage.tsx)
+- TeamsPage (pages\TeamsPage.tsx)
+- TermsPage (pages\TermsPage.tsx)
+- TestDashboardPage (pages\TestDashboardPage.tsx)
+- TutorialPage (pages\TutorialPage.tsx)
+- UploadExcelPage (pages\UploadExcelPage.tsx)
+- UsersManagementPage (pages\UsersManagementPage.tsx)
+- VerifyEmailPage (pages\VerifyEmailPage.tsx)
+- accordion.stories (stories\accordion.stories.tsx)
+- alert-dialog.stories (stories\alert-dialog.stories.tsx)
+- alert.stories (stories\alert.stories.tsx)
+- aspect-ratio.stories (stories\aspect-ratio.stories.tsx)
+- avatar.stories (stories\avatar.stories.tsx)
+- badge.stories (stories\badge.stories.tsx)
+- button.stories (stories\button.stories.tsx)
+- calendar.stories (stories\calendar.stories.tsx)
+- card.stories (stories\card.stories.tsx)
+- carousel.stories (stories\carousel.stories.tsx)
+- checkbox.stories (stories\checkbox.stories.tsx)
+- collapsible.stories (stories\collapsible.stories.tsx)
+- command.stories (stories\command.stories.tsx)
+- context-menu.stories (stories\context-menu.stories.tsx)
+- dialog.stories (stories\dialog.stories.tsx)
+- drawer.stories (stories\drawer.stories.tsx)
+- dropdown-menu.stories (stories\dropdown-menu.stories.tsx)
+- hover-card.stories (stories\hover-card.stories.tsx)
+- input.stories (stories\input.stories.tsx)
+- label.stories (stories\label.stories.tsx)
+- menubar.stories (stories\menubar.stories.tsx)
+- navigation-menu.stories (stories\navigation-menu.stories.tsx)
+- pagination.stories (stories\pagination.stories.tsx)
+- popover.stories (stories\popover.stories.tsx)
+- progress.stories (stories\progress.stories.tsx)
+- radio-group.stories (stories\radio-group.stories.tsx)
+- resizable.stories (stories\resizable.stories.tsx)
+- scroll-area.stories (stories\scroll-area.stories.tsx)
+- select.stories (stories\select.stories.tsx)
+- separator.stories (stories\separator.stories.tsx)
+- sheet.stories (stories\sheet.stories.tsx)
+- skeleton.stories (stories\skeleton.stories.tsx)
+- slider.stories (stories\slider.stories.tsx)
+- switch.stories (stories\switch.stories.tsx)
+- table.stories (stories\table.stories.tsx)
+- tabs.stories (stories\tabs.stories.tsx)
+- textarea.stories (stories\textarea.stories.tsx)
+- toggle.stories (stories\toggle.stories.tsx)
+- tooltip.stories (stories\tooltip.stories.tsx)
+
+**Recomandări:**
+- Creați teste pentru componentele critice mai întâi
+- Folosiți Testing Library pentru a testa comportamentul, nu implementarea
+- Implementați cel puțin teste de bază pentru fiecare componentă
+
+## Componente complexe (4/201)
+
+Următoarele componente au complexitate ridicată și pot fi dificil de întreținut:
+
+- TaskManagement.tsx (components\tasks\TaskManagement.tsx) - Scor: 30.1
+  - Condiții de randare: 8
+  - Apeluri useEffect: 2
+  - Apeluri useState: 3
+  - Componente imbricate: 0
+  - Elemente JSX: 83
+- InventoryManagementPage.tsx (pages\InventoryManagementPage.tsx) - Scor: 55.7
+  - Condiții de randare: 1
+  - Apeluri useEffect: 9
+  - Apeluri useState: 13
+  - Componente imbricate: 0
+  - Elemente JSX: 151
+- TestDashboardPage.tsx (pages\TestDashboardPage.tsx) - Scor: 31.1
+  - Condiții de randare: 12
+  - Apeluri useEffect: 1
+  - Apeluri useState: 3
+  - Componente imbricate: 0
+  - Elemente JSX: 78
+- TutorialPage.tsx (pages\TutorialPage.tsx) - Scor: 43.2
+  - Condiții de randare: 0
+  - Apeluri useEffect: 0
+  - Apeluri useState: 2
+  - Componente imbricate: 0
+  - Elemente JSX: 211
+
+**Recomandări:**
+- Refactorizați componentele mari în componente mai mici și reutilizabile
+- Extrageți logica complexă în hooks personalizate
+- Folosiți pattern-uri precum Compound Components pentru a simplifica interfețele
+
+## Probleme de performanță (93 în 78 componente)
+
+Au fost detectate următoarele probleme potențiale de performanță:
+
+- App.tsx (App.tsx):
+  - Componente funcționale fără React.memo (1 instanțe)
+- ChatBotWidget.tsx (components\ai\ChatBotWidget.tsx):
+  - Multe obiecte create în render care pot cauza re-renderizări (20 instanțe)
+- ExpensesList.tsx (components\budget\ExpensesList.tsx):
+  - Multe obiecte create în render care pot cauza re-renderizări (8 instanțe)
+- DashboardOverview.tsx (components\dashboard\DashboardOverview.tsx):
+  - Multe obiecte create în render care pot cauza re-renderizări (6 instanțe)
+- EmailWidget.tsx (components\dashboard\EmailWidget.tsx):
+  - Funcții inline în JSX care pot cauza re-renderizări inutile (1 instanțe)
+- NotificationsPanel.tsx (components\dashboard\NotificationsPanel.tsx):
+  - Multe obiecte create în render care pot cauza re-renderizări (7 instanțe)
+- SplineWidget.tsx (components\dashboard\SplineWidget.tsx):
+  - Multe obiecte create în render care pot cauza re-renderizări (12 instanțe)
+- DatabaseChecker.tsx (components\debug\DatabaseChecker.tsx):
+  - useEffect cu array de dependențe gol care rulează doar la montare (1 instanțe)
+  - Componente funcționale fără React.memo (1 instanțe)
+  - Multe obiecte create în render care pot cauza re-renderizări (14 instanțe)
+- CallToAction.tsx (components\home\CallToAction.tsx):
+  - Multe obiecte create în render care pot cauza re-renderizări (16 instanțe)
+- FeatureGrid.tsx (components\home\FeatureGrid.tsx):
+  - Multe obiecte create în render care pot cauza re-renderizări (24 instanțe)
+- HeroSection.tsx (components\home\HeroSection.tsx):
+  - Multe obiecte create în render care pot cauza re-renderizări (17 instanțe)
+- home.tsx (components\home.tsx):
+  - Componente funcționale fără React.memo (1 instanțe)
+- AutomatedOrderingSystem.tsx (components\inventory\AutomatedOrderingSystem.tsx):
+  - Multe obiecte create în render care pot cauza re-renderizări (9 instanțe)
+- SupplierAnnouncementList.tsx (components\inventory\SupplierAnnouncementList.tsx):
+  - Multe obiecte create în render care pot cauza re-renderizări (7 instanțe)
+- AppLayout.tsx (components\layout\AppLayout.tsx):
+  - Funcții inline în JSX care pot cauza re-renderizări inutile (1 instanțe)
+- LanguageSwitcher.tsx (components\layout\LanguageSwitcher.tsx):
+  - Multe obiecte create în render care pot cauza re-renderizări (6 instanțe)
+- ModernNavbar.tsx (components\layout\ModernNavbar.tsx):
+  - Multe obiecte create în render care pot cauza re-renderizări (54 instanțe)
+- SettingsModal.tsx (components\layout\SettingsModal.tsx):
+  - Funcții inline în JSX care pot cauza re-renderizări inutile (1 instanțe)
+- Sidebar.tsx (components\layout\Sidebar.tsx):
+  - Multe obiecte create în render care pot cauza re-renderizări (26 instanțe)
+- ProjectDetails.tsx (components\projects\ProjectDetails.tsx):
+  - Multe obiecte create în render care pot cauza re-renderizări (13 instanțe)
+- ProjectForm.tsx (components\projects\ProjectForm.tsx):
+  - Multe obiecte create în render care pot cauza re-renderizări (18 instanțe)
+- ProjectsList.tsx (components\projects\ProjectsList.tsx):
+  - Multe obiecte create în render care pot cauza re-renderizări (7 instanțe)
+- ReportsList.tsx (components\reports\ReportsList.tsx):
+  - Funcții inline în JSX care pot cauza re-renderizări inutile (1 instanțe)
+- ResourceAllocations.tsx (components\resources\ResourceAllocations.tsx):
+  - Multe obiecte create în render care pot cauza re-renderizări (8 instanțe)
+- TaskManagement.tsx (components\tasks\TaskManagement.tsx):
+  - Funcții inline în JSX care pot cauza re-renderizări inutile (2 instanțe)
+  - Multe obiecte create în render care pot cauza re-renderizări (7 instanțe)
+- TeamMembers.tsx (components\teams\TeamMembers.tsx):
+  - Multe obiecte create în render care pot cauza re-renderizări (9 instanțe)
+- TeamsList.tsx (components\teams\TeamsList.tsx):
+  - Funcții inline în JSX care pot cauza re-renderizări inutile (2 instanțe)
+  - useEffect cu array de dependențe gol care rulează doar la montare (1 instanțe)
+  - Multe obiecte create în render care pot cauza re-renderizări (8 instanțe)
+- TutorialOverlay.tsx (components\tutorial\TutorialOverlay.tsx):
+  - Multe obiecte create în render care pot cauza re-renderizări (17 instanțe)
+- badge.tsx (components\ui\badge.tsx):
+  - Componente funcționale fără React.memo (1 instanțe)
+- calendar.tsx (components\ui\calendar.tsx):
+  - Componente funcționale fără React.memo (1 instanțe)
+- date-picker-with-range.tsx (components\ui\date-picker-with-range.tsx):
+  - Componente funcționale fără React.memo (1 instanțe)
+- global-search.tsx (components\ui\global-search.tsx):
+  - Componente funcționale fără React.memo (1 instanțe)
+- notification-center.tsx (components\ui\notification-center.tsx):
+  - Funcții inline în JSX care pot cauza re-renderizări inutile (1 instanțe)
+  - Componente funcționale fără React.memo (1 instanțe)
+- notification.tsx (components\ui\notification.tsx):
+  - Multe obiecte create în render care pot cauza re-renderizări (6 instanțe)
+- offline-indicator.tsx (components\ui\offline-indicator.tsx):
+  - Componente funcționale fără React.memo (1 instanțe)
+- optimized-image.tsx (components\ui\optimized-image.tsx):
+  - Componente funcționale fără React.memo (1 instanțe)
+- skeleton.tsx (components\ui\skeleton.tsx):
+  - Componente funcționale fără React.memo (1 instanțe)
+- spline-scene-demo.tsx (components\ui\spline-scene-demo.tsx):
+  - Componente funcționale fără React.memo (1 instanțe)
+- spline-scene.tsx (components\ui\spline-scene.tsx):
+  - Componente funcționale fără React.memo (1 instanțe)
+- spotlight.tsx (components\ui\spotlight.tsx):
+  - Componente funcționale fără React.memo (1 instanțe)
+- theme-toggle.tsx (components\ui\theme-toggle.tsx):
+  - Componente funcționale fără React.memo (1 instanțe)
+- toaster.tsx (components\ui\toaster.tsx):
+  - Componente funcționale fără React.memo (1 instanțe)
+- WelcomeOverlay.tsx (components\welcome\WelcomeOverlay.tsx):
+  - Multe obiecte create în render care pot cauza re-renderizări (17 instanțe)
+- AdvancedRoleContext.tsx (contexts\AdvancedRoleContext.tsx):
+  - Componente funcționale fără React.memo (1 instanțe)
+  - Multe obiecte create în render care pot cauza re-renderizări (13 instanțe)
+- AuthContext.tsx (contexts\AuthContext.tsx):
+  - Componente funcționale fără React.memo (1 instanțe)
+  - Multe obiecte create în render care pot cauza re-renderizări (19 instanțe)
+- OfflineContext.tsx (contexts\OfflineContext.tsx):
+  - Componente funcționale fără React.memo (1 instanțe)
+- RoleContext.tsx (contexts\RoleContext.tsx):
+  - Componente funcționale fără React.memo (1 instanțe)
+- ThemeContext.tsx (contexts\ThemeContext.tsx):
+  - Componente funcționale fără React.memo (1 instanțe)
+- Button.tsx (design-system\components\Button.tsx):
+  - Multe obiecte create în render care pot cauza re-renderizări (10 instanțe)
+- AboutPage.tsx (pages\AboutPage.tsx):
+  - Multe obiecte create în render care pot cauza re-renderizări (15 instanțe)
+- BudgetPage.tsx (pages\BudgetPage.tsx):
+  - Multe obiecte create în render care pot cauza re-renderizări (7 instanțe)
+- CompanyInventoryPage.tsx (pages\CompanyInventoryPage.tsx):
+  - Funcții inline în JSX care pot cauza re-renderizări inutile (1 instanțe)
+  - Multe obiecte create în render care pot cauza re-renderizări (20 instanțe)
+- ContactPage.tsx (pages\ContactPage.tsx):
+  - Multe obiecte create în render care pot cauza re-renderizări (9 instanțe)
+- DashboardPage.tsx (pages\DashboardPage.tsx):
+  - Multe obiecte create în render care pot cauza re-renderizări (76 instanțe)
+- DebugPage.tsx (pages\DebugPage.tsx):
+  - Componente funcționale fără React.memo (1 instanțe)
+- DocumentsPage.tsx (pages\DocumentsPage.tsx):
+  - Multe obiecte create în render care pot cauza re-renderizări (7 instanțe)
+- ForgotPasswordPage.tsx (pages\ForgotPasswordPage.tsx):
+  - useEffect cu array de dependențe gol care rulează doar la montare (1 instanțe)
+  - Multe obiecte create în render care pot cauza re-renderizări (31 instanțe)
+- HomePage.tsx (pages\HomePage.tsx):
+  - Multe obiecte create în render care pot cauza re-renderizări (64 instanțe)
+- InventoryAssistantPage.tsx (pages\InventoryAssistantPage.tsx):
+  - Multe obiecte create în render care pot cauza re-renderizări (6 instanțe)
+- InventoryListPage.tsx (pages\InventoryListPage.tsx):
+  - useEffect cu array de dependențe gol care rulează doar la montare (1 instanțe)
+- InventoryManagementPage.tsx (pages\InventoryManagementPage.tsx):
+  - Funcții inline în JSX care pot cauza re-renderizări inutile (1 instanțe)
+  - Multe obiecte create în render care pot cauza re-renderizări (27 instanțe)
+- LoginPage.tsx (pages\LoginPage.tsx):
+  - useEffect cu array de dependențe gol care rulează doar la montare (1 instanțe)
+  - Multe obiecte create în render care pot cauza re-renderizări (39 instanțe)
+- OverviewPage.tsx (pages\OverviewPage.tsx):
+  - Multe obiecte create în render care pot cauza re-renderizări (15 instanțe)
+- PricingPage.tsx (pages\PricingPage.tsx):
+  - Multe obiecte create în render care pot cauza re-renderizări (12 instanțe)
+- ReportsPage.tsx (pages\ReportsPage.tsx):
+  - Multe obiecte create în render care pot cauza re-renderizări (7 instanțe)
+- ResourcesPage.tsx (pages\ResourcesPage.tsx):
+  - Multe obiecte create în render care pot cauza re-renderizări (7 instanțe)
+- RoleManagementPage.tsx (pages\RoleManagementPage.tsx):
+  - Funcții inline în JSX care pot cauza re-renderizări inutile (1 instanțe)
+  - Multe obiecte create în render care pot cauza re-renderizări (8 instanțe)
+- SchedulePage.tsx (pages\SchedulePage.tsx):
+  - Funcții inline în JSX care pot cauza re-renderizări inutile (1 instanțe)
+  - Multe obiecte create în render care pot cauza re-renderizări (7 instanțe)
+- SuppliersPage.tsx (pages\SuppliersPage.tsx):
+  - Funcții inline în JSX care pot cauza re-renderizări inutile (1 instanțe)
+- TeamsPage.tsx (pages\TeamsPage.tsx):
+  - Funcții inline în JSX care pot cauza re-renderizări inutile (1 instanțe)
+  - Multe obiecte create în render care pot cauza re-renderizări (8 instanțe)
+- TermsPage.tsx (pages\TermsPage.tsx):
+  - Multe obiecte create în render care pot cauza re-renderizări (9 instanțe)
+- TestDashboardPage.tsx (pages\TestDashboardPage.tsx):
+  - useEffect cu array de dependențe gol care rulează doar la montare (1 instanțe)
+- TutorialPage.tsx (pages\TutorialPage.tsx):
+  - Multe obiecte create în render care pot cauza re-renderizări (43 instanțe)
+- UploadExcelPage.tsx (pages\UploadExcelPage.tsx):
+  - Multe obiecte create în render care pot cauza re-renderizări (6 instanțe)
+- button.stories.tsx (stories\button.stories.tsx):
+  - Multe obiecte create în render care pot cauza re-renderizări (8 instanțe)
+- input.stories.tsx (stories\input.stories.tsx):
+  - Multe obiecte create în render care pot cauza re-renderizări (6 instanțe)
+- textarea.stories.tsx (stories\textarea.stories.tsx):
+  - Multe obiecte create în render care pot cauza re-renderizări (6 instanțe)
+- toggle.stories.tsx (stories\toggle.stories.tsx):
+  - Multe obiecte create în render care pot cauza re-renderizări (6 instanțe)
+
+**Recomandări:**
+- Folosiți React.memo pentru a preveni re-renderizări inutile
+- Evitați definirea funcțiilor inline în JSX
+- Utilizați useCallback și useMemo pentru a memora funcții și valori
+- Optimizați array-urile de dependențe în useEffect
+
+## Rezumat
+
+- Total componente: 201
+- Componente cu teste: 28 (13.9%)
+- Componente complexe: 4 (2.0%)
+- Componente cu probleme de performanță: 78 (38.8%)
