@@ -124,7 +124,6 @@ const CompanyInventoryPage: React.FC = () => {
       }
     } finally {
       setLoadingData(false);
-      startMeasurement();
     }
   }, [t, inventoryData.length, toast]);
 
