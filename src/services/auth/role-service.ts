@@ -17,54 +17,73 @@ export const roleService = {
    */
   async getUserRole(userId: string): Promise<UserRoles> {
     try {
-      // Verificăm mai întâi în tabelul de profile
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", userId)
-        .single();
+      console.log("RoleService: Getting user role for", userId);
 
-      if (profileError) {
-        // Removed console statement
-      }
-
-      // Dacă avem un profil cu rol, îl returnăm
-      if (profile?.role) {
-        return profile.role as UserRoles;
-      }
-
-      // Dacă nu avem un profil cu rol, verificăm în tabelul de roluri utilizatori
-      let userRole = null;
-      let userRoleError = null;
-
+      // Verificăm mai întâi dacă utilizatorul este admin de site
       try {
-        const response = await supabase
+        const { data: siteAdmin, error: siteAdminError } = await supabase
+          .from("site_admins")
+          .select("*")
+          .eq("user_id", userId)
+          .maybeSingle();
+
+        if (siteAdminError) {
+          console.error(
+            "RoleService: Error checking site admin",
+            siteAdminError
+          );
+        } else if (siteAdmin) {
+          console.log("RoleService: User is a site admin");
+          return UserRoles.SITE_ADMIN;
+        }
+      } catch (error) {
+        console.error("RoleService: Error checking site admin", error);
+      }
+
+      // Verificăm în tabelul de profile
+      try {
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", userId)
+          .maybeSingle();
+
+        if (profileError) {
+          console.error(
+            "RoleService: Error getting profile role",
+            profileError
+          );
+        } else if (profile?.role) {
+          console.log("RoleService: Found role in profile", profile.role);
+          return profile.role as UserRoles;
+        }
+      } catch (error) {
+        console.error("RoleService: Error getting profile", error);
+      }
+
+      // Verificăm în tabelul de roluri utilizatori
+      try {
+        const { data: userRole, error: userRoleError } = await supabase
           .from("user_roles")
           .select("role")
           .eq("user_id", userId)
-          .single();
+          .maybeSingle();
 
-        userRole = response.data;
-        userRoleError = response.error;
+        if (userRoleError && userRoleError.code !== "PGRST116") {
+          console.error("RoleService: Error getting user role", userRoleError);
+        } else if (userRole?.role) {
+          console.log("RoleService: Found role in user_roles", userRole.role);
+          return userRole.role as UserRoles;
+        }
       } catch (error) {
-        // Handle error appropriately
-        userRoleError = error;
-      }
-
-      if (userRoleError && userRoleError.code !== "PGRST116") {
-        // PGRST116 = not found
-        // Removed console statement
-      }
-
-      // Dacă avem un utilizator cu rol, îl returnăm
-      if (userRole?.role) {
-        return userRole.role as UserRoles;
+        console.error("RoleService: Error getting user role", error);
       }
 
       // Dacă nu avem nici un rol, returnăm rolul implicit
+      console.log("RoleService: No role found, returning default role");
       return UserRoles.VIEWER;
     } catch (error) {
-      // Removed console statement
+      console.error("RoleService: Unexpected error getting user role", error);
       return UserRoles.VIEWER;
     }
   },
@@ -119,41 +138,92 @@ export const roleService = {
     permissions: RolePermissions;
   }> {
     try {
+      console.log("RoleService: Getting user profile for", user.id);
+
+      // Verificăm dacă utilizatorul există în tabelul profiles
+      let profile = null;
+      let profileError = null;
+
+      try {
+        const profileResponse = await supabase
+          .from("profiles")
+          .select("display_name, email")
+          .eq("id", user.id)
+          .maybeSingle();
+
+        profile = profileResponse.data;
+        profileError = profileResponse.error;
+
+        if (profileError) {
+          console.error(
+            "RoleService: Error getting user profile",
+            profileError
+          );
+        } else if (!profile) {
+          console.log("RoleService: Profile not found, creating one");
+
+          // Dacă profilul nu există, îl creăm
+          const { data: newProfile, error: createError } = await supabase
+            .from("profiles")
+            .insert({
+              id: user.id,
+              email: user.email,
+              display_name: user.email?.split("@")[0] || "Utilizator",
+              role: UserRoles.VIEWER,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            })
+            .select()
+            .single();
+
+          if (createError) {
+            console.error("RoleService: Error creating profile", createError);
+          } else {
+            profile = newProfile;
+            console.log("RoleService: Profile created successfully", profile);
+          }
+        } else {
+          console.log("RoleService: Profile found", profile);
+        }
+      } catch (error) {
+        console.error("RoleService: Error checking/creating profile", error);
+      }
+
       // Obținem rolul utilizatorului
       const role = await this.getUserRole(user.id);
+      console.log("RoleService: User role", role);
 
       // Obținem permisiunile asociate rolului
       const permissions = this.getRolePermissions(role);
-
-      // Obținem profilul utilizatorului
-      const { data: profile, error } = await supabase
-        .from("profiles")
-        .select("display_name, email")
-        .eq("id", user.id)
-        .single();
-
-      if (error) {
-        // Removed console statement
-      }
+      console.log("RoleService: User permissions", permissions);
 
       // Construim profilul utilizatorului
-      return {
+      const userProfile = {
         displayName:
           profile?.display_name || user.email?.split("@")[0] || "Utilizator",
         email: profile?.email || user.email || "",
         role,
         permissions,
       };
+
+      console.log("RoleService: Returning user profile", userProfile);
+      return userProfile;
     } catch (error) {
-      // Removed console statement
+      console.error(
+        "RoleService: Unexpected error getting user profile",
+        error
+      );
 
       // Returnăm un profil implicit în caz de eroare
-      return {
+      const defaultProfile = {
         displayName: user.email?.split("@")[0] || "Utilizator",
         email: user.email || "",
         role: UserRoles.VIEWER,
         permissions: ROLE_PERMISSIONS[UserRoles.VIEWER],
       };
+
+      console.log("RoleService: Returning default profile", defaultProfile);
+      return defaultProfile;
     }
   },
 

@@ -19,6 +19,7 @@ import {
   FileSpreadsheet,
   Briefcase,
   Building,
+  Building2,
   Shield,
   DollarSign,
   BarChart,
@@ -46,6 +47,7 @@ import {
   Warehouse,
   GanttChart,
   Activity,
+  Globe,
 } from "lucide-react";
 import RoleBasedSidebarItem from "./RoleBasedSidebarItem";
 import SystemHealthSidebarItem from "./SystemHealthSidebarItem";
@@ -439,7 +441,27 @@ const Sidebar = () => {
             icon={Shield}
             label="Panou Administrare"
             translationKey="sidebar.admin"
-            allowedRoles={["admin"]}
+            allowedRoles={["admin", "site_admin", "company_admin"]}
+            collapsed={collapsed}
+          />
+
+          {/* Link către pagina de administrare a site-ului - vizibil doar pentru administratorii de site */}
+          <RoleBasedSidebarItem
+            path="/site-admin"
+            icon={Globe}
+            label="Administrare Site"
+            translationKey="sidebar.siteAdmin"
+            allowedRoles={["site_admin"]}
+            collapsed={collapsed}
+          />
+
+          {/* Link către pagina de administrare a companiilor - vizibil doar pentru administratorii de site */}
+          <RoleBasedSidebarItem
+            path="/companies"
+            icon={Building2}
+            label="Administrare Companii"
+            translationKey="sidebar.companies"
+            allowedRoles={["site_admin"]}
             collapsed={collapsed}
           />
 

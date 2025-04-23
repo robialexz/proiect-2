@@ -9,19 +9,19 @@ import {
   styleSingleton,
   useMergeRefs,
   zeroRightClassName
-} from "./chunk-7RYZVXKU.js";
+} from "./chunk-FNFGFQ3F.js";
 import {
   useCallbackRef
 } from "./chunk-GDZR3K2D.js";
 import {
   Primitive
-} from "./chunk-NPKK25WZ.js";
+} from "./chunk-FN2YEC6U.js";
 import {
   useComposedRefs
-} from "./chunk-PSF76TR2.js";
+} from "./chunk-XBZMPOVV.js";
 import {
   require_jsx_runtime
-} from "./chunk-JKTQC6Y7.js";
+} from "./chunk-NZAIND7N.js";
 import {
   require_react
 } from "./chunk-UVNPGZG7.js";
@@ -29,39 +29,14 @@ import {
   __toESM
 } from "./chunk-OL46QLBJ.js";
 
-// node_modules/@radix-ui/react-focus-guards/dist/index.mjs
-var React = __toESM(require_react(), 1);
-var count = 0;
-function useFocusGuards() {
-  React.useEffect(() => {
-    const edgeGuards = document.querySelectorAll("[data-radix-focus-guard]");
-    document.body.insertAdjacentElement("afterbegin", edgeGuards[0] ?? createFocusGuard());
-    document.body.insertAdjacentElement("beforeend", edgeGuards[1] ?? createFocusGuard());
-    count++;
-    return () => {
-      if (count === 1) {
-        document.querySelectorAll("[data-radix-focus-guard]").forEach((node) => node.remove());
-      }
-      count--;
-    };
-  }, []);
-}
-function createFocusGuard() {
-  const element = document.createElement("span");
-  element.setAttribute("data-radix-focus-guard", "");
-  element.tabIndex = 0;
-  element.style.cssText = "outline: none; opacity: 0; position: fixed; pointer-events: none";
-  return element;
-}
-
 // node_modules/@radix-ui/react-focus-scope/dist/index.mjs
-var React2 = __toESM(require_react(), 1);
+var React = __toESM(require_react(), 1);
 var import_jsx_runtime = __toESM(require_jsx_runtime(), 1);
 var AUTOFOCUS_ON_MOUNT = "focusScope.autoFocusOnMount";
 var AUTOFOCUS_ON_UNMOUNT = "focusScope.autoFocusOnUnmount";
 var EVENT_OPTIONS = { bubbles: false, cancelable: true };
 var FOCUS_SCOPE_NAME = "FocusScope";
-var FocusScope = React2.forwardRef((props, forwardedRef) => {
+var FocusScope = React.forwardRef((props, forwardedRef) => {
   const {
     loop = false,
     trapped = false,
@@ -69,12 +44,12 @@ var FocusScope = React2.forwardRef((props, forwardedRef) => {
     onUnmountAutoFocus: onUnmountAutoFocusProp,
     ...scopeProps
   } = props;
-  const [container, setContainer] = React2.useState(null);
+  const [container, setContainer] = React.useState(null);
   const onMountAutoFocus = useCallbackRef(onMountAutoFocusProp);
   const onUnmountAutoFocus = useCallbackRef(onUnmountAutoFocusProp);
-  const lastFocusedElementRef = React2.useRef(null);
+  const lastFocusedElementRef = React.useRef(null);
   const composedRefs = useComposedRefs(forwardedRef, (node) => setContainer(node));
-  const focusScope = React2.useRef({
+  const focusScope = React.useRef({
     paused: false,
     pause() {
       this.paused = true;
@@ -83,7 +58,7 @@ var FocusScope = React2.forwardRef((props, forwardedRef) => {
       this.paused = false;
     }
   }).current;
-  React2.useEffect(() => {
+  React.useEffect(() => {
     if (trapped) {
       let handleFocusIn2 = function(event) {
         if (focusScope.paused || !container) return;
@@ -119,7 +94,7 @@ var FocusScope = React2.forwardRef((props, forwardedRef) => {
       };
     }
   }, [trapped, container, focusScope.paused]);
-  React2.useEffect(() => {
+  React.useEffect(() => {
     if (container) {
       focusScopesStack.add(focusScope);
       const previouslyFocusedElement = document.activeElement;
@@ -150,7 +125,7 @@ var FocusScope = React2.forwardRef((props, forwardedRef) => {
       };
     }
   }, [container, onMountAutoFocus, onUnmountAutoFocus, focusScope]);
-  const handleKeyDown = React2.useCallback(
+  const handleKeyDown = React.useCallback(
     (event) => {
       if (!loop && !trapped) return;
       if (focusScope.paused) return;
@@ -256,6 +231,31 @@ function arrayRemove(array, item) {
 }
 function removeLinks(items) {
   return items.filter((item) => item.tagName !== "A");
+}
+
+// node_modules/@radix-ui/react-focus-guards/dist/index.mjs
+var React2 = __toESM(require_react(), 1);
+var count = 0;
+function useFocusGuards() {
+  React2.useEffect(() => {
+    const edgeGuards = document.querySelectorAll("[data-radix-focus-guard]");
+    document.body.insertAdjacentElement("afterbegin", edgeGuards[0] ?? createFocusGuard());
+    document.body.insertAdjacentElement("beforeend", edgeGuards[1] ?? createFocusGuard());
+    count++;
+    return () => {
+      if (count === 1) {
+        document.querySelectorAll("[data-radix-focus-guard]").forEach((node) => node.remove());
+      }
+      count--;
+    };
+  }, []);
+}
+function createFocusGuard() {
+  const element = document.createElement("span");
+  element.setAttribute("data-radix-focus-guard", "");
+  element.tabIndex = 0;
+  element.style.cssText = "outline: none; opacity: 0; position: fixed; pointer-events: none";
+  return element;
 }
 
 // node_modules/react-remove-scroll/dist/es2015/Combination.js
@@ -594,8 +594,8 @@ ReactRemoveScroll.classNames = RemoveScroll.classNames;
 var Combination_default = ReactRemoveScroll;
 
 export {
-  useFocusGuards,
   FocusScope,
+  useFocusGuards,
   Combination_default
 };
-//# sourceMappingURL=chunk-GQS5QI3Y.js.map
+//# sourceMappingURL=chunk-MUPM5GVT.js.map
