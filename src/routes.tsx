@@ -81,12 +81,6 @@ const CalendarPage = lazyPage(() => import("./pages/CalendarPage"), {
 });
 
 // Pagini pentru inventar și licitații
-const CompanyInventoryPage = lazyPage(
-  () => import("./pages/CompanyInventoryPage"),
-  {
-    preload: true,
-  }
-);
 const ProjectInventoryPage = lazyPage(
   () => import("./pages/ProjectInventoryPage"),
   {
