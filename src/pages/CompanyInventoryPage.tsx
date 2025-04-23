@@ -23,7 +23,6 @@ import ExcelJS from "exceljs";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
-import ChatBotWidget from "@/components/ai/ChatBotWidget";
 import {
   Dialog,
   DialogContent,
@@ -125,7 +124,6 @@ const CompanyInventoryPage: React.FC = () => {
       }
     } finally {
       setLoadingData(false);
-      startMeasurement();
     }
   }, [t, inventoryData.length, toast]);
 
@@ -333,14 +331,6 @@ const CompanyInventoryPage: React.FC = () => {
       </motion.div>
 
       <div className="flex h-screen">
-        <ChatBotWidget
-          initialMessage={t(
-            "inventory.chatbot.welcome",
-            "Welcome to the company inventory! How can I help you?"
-          )}
-          contextType="inventory"
-        />
-
         <main className="flex-1 overflow-y-auto p-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}

@@ -19,7 +19,6 @@ import {
   Zap,
 } from "lucide-react";
 import { AIAnalytics } from "@/components/ai/AIAnalytics";
-import ChatBotWidget from "@/components/ai/ChatBotWidget";
 import {
   AnimatedContainer,
   AnimatedText,

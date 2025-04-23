@@ -12,6 +12,8 @@ import ConnectionStatus from "@/components/ui/connection-status";
 import { routePreloader } from "@/lib/route-preloader";
 import WelcomeOverlay from "@/components/welcome/WelcomeOverlay";
 import { measurePageLoad } from "@/lib/performance-optimizer";
+import DrawerButtons from "@/components/ui/drawer-buttons";
+import LoginAnimation from "@/components/auth/LoginAnimation";
 
 // Importăm hook-uri personalizate
 import { useAuth } from "@/contexts/AuthContext";
@@ -64,27 +66,17 @@ const AppLayout: React.FC = () => {
   // Stare pentru afișarea overlay-ului de bun venit
   const [showWelcomeOverlay, setShowWelcomeOverlay] = useState(false);
 
-  // Afișăm un mesaj de bun venit doar la prima logare
-  // This logic relies on sessionStorage flags set during login
+  // Stare pentru afișarea animației de logare
+  const [showLoginAnimation, setShowLoginAnimation] = useState(false);
+
+  // Verificăm dacă este o nouă logare
   useEffect(() => {
-    // Folosim sessionStorage pentru a verifica dacă mesajul a fost deja afișat în această sesiune
-    // Folosim sessionStorage în loc de localStorage pentru a reseta la închiderea browserului
-    const welcomeShown = sessionStorage.getItem("welcomeMessageShown");
     const isNewLogin = sessionStorage.getItem("newLoginDetected");
 
-    if (user && !loading) {
-      // Verificăm dacă este o nouă logare și nu am afișat deja mesajul
-      if (isNewLogin === "true" && !welcomeShown) {
-        // Removed console statement
-        setShowWelcomeOverlay(true);
-
-        // Marcăm mesajul ca afișat pentru această sesiune
-        sessionStorage.setItem("welcomeMessageShown", "true");
-        // Resetăm flag-ul de nouă logare
-        sessionStorage.removeItem("newLoginDetected");
-      }
+    if (user && !loading && isNewLogin === "true") {
+      // Afișăm animația de logare
+      setShowLoginAnimation(true);
     }
-    // Depends on the new 'loading' state which indicates initial session load is complete
   }, [user, loading]);
 
   // Gestionăm deschiderea/închiderea meniului pe mobil - optimizat cu memoizare
@@ -155,6 +147,11 @@ const AppLayout: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-slate-900 text-white overflow-hidden">
+      {/* Animație de logare - afișată doar la logare */}
+      {showLoginAnimation && (
+        <LoginAnimation onComplete={() => setShowLoginAnimation(false)} />
+      )}
+
       {/* Overlay de bun venit - afișat doar la prima încărcare */}
       {showWelcomeOverlay && (
         <WelcomeOverlay onComplete={() => setShowWelcomeOverlay(false)} />
@@ -163,18 +160,8 @@ const AppLayout: React.FC = () => {
       {/* Componenta de stare a conexiunii */}
       <ConnectionStatus />
 
-      {/* Buton pentru forțarea reîncărcării paginii */}
-      {import.meta.env.DEV && (
-        <button
-          onClick={() => {
-            clearAllCacheAndReload();
-          }}
-          className="fixed bottom-4 right-4 z-50 flex items-center justify-center p-2 bg-red-600 text-white rounded-full shadow-lg hover:bg-red-700 transition-colors"
-          title="Forțează reîncărcarea paginii și șterge cache-ul"
-        >
-          <RefreshCw size={20} />
-        </button>
-      )}
+      {/* Sertar pentru butoanele din dreapta jos */}
+      <DrawerButtons />
       {/* Sidebar - ascuns pe mobil când este închis */}
       <div
         className={`fixed inset-y-0 left-0 z-40 transform ${

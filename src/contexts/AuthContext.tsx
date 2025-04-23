@@ -128,16 +128,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Verificăm sesiunea la încărcarea componentei și ascultăm schimbările
   useEffect(() => {
-    // Removed console statement
+    console.log("AuthContext: Initializing auth context");
     // Variabilă pentru a ține evidența dacă componenta este montată
     let isMounted = true;
 
     // Verificăm dacă este o nouă versiune a aplicației
-    const appVersion = "1.0.0"; // Schimbă această valoare la fiecare versiune nouă
+    const appVersion = "1.0.1"; // Schimbă această valoare la fiecare versiune nouă
     const lastVersion = localStorage.getItem("app_version");
 
     if (lastVersion !== appVersion) {
-      // Removed console statement
+      console.log("AuthContext: New app version detected");
       // Ștergem cache-ul pentru a forța încărcarea noii versiuni
       localStorage.setItem("app_version", appVersion);
 
@@ -152,9 +152,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Funcție pentru a obține sesiunea curentă de la Supabase
     const getInitialSession = async () => {
       try {
-        // Removed console statement
-
-        // Nu mai ștergem datele de autentificare pentru a păstra sesiunea la refresh
+        console.log("AuthContext: Getting initial session");
 
         // Obținem sesiunea de la Supabase
         let session = null;
@@ -164,76 +162,67 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const response = await supabase.auth.getSession();
           session = response.data.session;
           error = response.error;
+          console.log("AuthContext: Session response", {
+            session: !!session,
+            error: !!error,
+          });
         } catch (err) {
-          // Handle error appropriately
+          console.error("AuthContext: Error getting session", err);
           error = err;
         }
 
         // Verificăm dacă componenta este încă montată
-        if (!isMounted) return;
+        if (!isMounted) {
+          console.log("AuthContext: Component unmounted, aborting");
+          return;
+        }
 
         if (error) {
-          // Removed console statement
+          console.error("AuthContext: Session error", error);
           setSession(null);
           setUser(null);
           setUserProfile(null);
+          setLoading(false);
         } else {
           setSession(session);
           setUser(session?.user || null);
+
           if (session?.user) {
+            console.log("AuthContext: User found in session, fetching profile");
             try {
               await fetchUserProfile(session.user);
-            } catch (error) {
-              // Handle error appropriately
+              console.log("AuthContext: User profile fetched successfully");
+            } catch (profileError) {
+              console.error(
+                "AuthContext: Error fetching user profile",
+                profileError
+              );
+              // Set default profile in case of error
+              if (session.user.email) {
+                setUserProfile({
+                  displayName: session.user.email.split("@")[0],
+                  email: session.user.email,
+                  role: UserRoles.VIEWER,
+                  permissions: ROLE_PERMISSIONS[UserRoles.VIEWER],
+                });
+              }
             }
           } else {
+            console.log("AuthContext: No user in session");
             setUserProfile(null);
           }
-        }
 
-        // Setăm loading la false după ce am obținut sesiunea
-        if (isMounted) {
-          setLoading(false);
-        }
-
-        // Codul de mai jos este dezactivat pentru a evita problemele cu sesiunea persistentă
-        /*
-        let session = null;
-        let error = null;
-
-        try {
-          const response = await supabase.auth.getSession();
-          session = response.data.session;
-          error = response.error;
-        } catch (err) {
-          // Handle error appropriately
-          error = err;
-        }
-
-        // Verificăm dacă componenta este încă montată
-        if (!isMounted) return;
-
-        if (error) {
-          // Removed console statement
-          setSession(null);
-          setUser(null);
-          setUserProfile(null);
-        } else {
-          setSession(session);
-          setUser(session?.user || null);
-          if (session?.user) {
-            try {
-            await fetchUserProfile(session.user);
-            } catch (error) {
-              // Handle error appropriately
-            }
-          } else {
-            setUserProfile(null);
+          // Setăm loading la false după ce am obținut sesiunea
+          if (isMounted) {
+            console.log("AuthContext: Setting loading to false");
+            setLoading(false);
           }
         }
-        */
       } catch (error) {
-        // Removed console statement
+        console.error(
+          "AuthContext: Unexpected error in getInitialSession",
+          error
+        );
         if (isMounted) {
           setSession(null);
           setUser(null);
@@ -249,29 +238,59 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Ascultăm pentru schimbări de autentificare în timp real
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      // Removed console statement
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("AuthContext: Auth state changed", {
+        event,
+        session: !!session,
+      });
+
       // Verificăm dacă componenta este încă montată
-      if (!isMounted) return;
+      if (!isMounted) {
+        console.log(
+          "AuthContext: Component unmounted during auth state change"
+        );
+        return;
+      }
 
       setSession(session);
       setUser(session?.user || null);
 
       if (session?.user) {
+        console.log(
+          "AuthContext: User found in auth state change, fetching profile"
+        );
         try {
           await fetchUserProfile(session.user);
+          console.log(
+            "AuthContext: User profile fetched successfully in auth state change"
+          );
         } catch (error) {
-          // Handle error appropriately
+          console.error(
+            "AuthContext: Error fetching user profile in auth state change",
+            error
+          );
+          // Set default profile in case of error
+          if (session.user.email) {
+            setUserProfile({
+              displayName: session.user.email.split("@")[0],
+              email: session.user.email,
+              role: UserRoles.VIEWER,
+              permissions: ROLE_PERMISSIONS[UserRoles.VIEWER],
+            });
+          }
         }
       } else {
+        console.log("AuthContext: No user in auth state change");
         setUserProfile(null);
       }
+
       // Ensure loading is false after auth state change
       setLoading(false);
     });
 
     // Curățăm subscripția la demontare
     return () => {
+      console.log("AuthContext: Cleaning up auth context");
       isMounted = false;
       subscription.unsubscribe();
     };

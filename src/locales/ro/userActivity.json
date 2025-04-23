@@ -1,0 +1,53 @@
+{
+  "pageTitle": "Activitate Utilizatori",
+  "title": "Activitate Utilizatori",
+  "subtitle": "Monitorizează și urmărește acțiunile utilizatorilor în sistem",
+  "refresh": "Reîmprospătare",
+  "activityLog": "Jurnal de Activitate",
+  "activityLogDescription": "Vizualizează și filtrează activitățile utilizatorilor în sistem",
+  "loading": "Se încarcă activitățile...",
+  "noActivities": "Nu s-au găsit activități.",
+  "stats": {
+    "totalActivities": "Total Activități",
+    "uniqueUsers": "Utilizatori Unici",
+    "uniqueActions": "Acțiuni Unice",
+    "uniqueResources": "Resurse Unice"
+  },
+  "filters": {
+    "search": "Caută activități...",
+    "filter": "Filtrare",
+    "filterTitle": "Filtrează Activitățile",
+    "action": "Acțiune",
+    "resource": "Resursă",
+    "date": "Interval de Date",
+    "from": "De la",
+    "to": "Până la",
+    "reset": "Resetare",
+    "apply": "Aplică Filtre",
+    "clearAll": "Șterge Tot",
+    "allActions": "Toate Acțiunile",
+    "allResources": "Toate Resursele",
+    "userFilter": "Utilizator",
+    "actionFilter": "Acțiune",
+    "resourceFilter": "Resursă",
+    "fromFilter": "De la",
+    "toFilter": "Până la"
+  },
+  "table": {
+    "timestamp": "Timestamp",
+    "user": "Utilizator",
+    "action": "Acțiune",
+    "resource": "Resursă",
+    "details": "Detalii"
+  },
+  "pagination": {
+    "showing": "Se afișează",
+    "of": "din",
+    "activities": "activități",
+    "page": "Pagina"
+  },
+  "errors": {
+    "loadFailed": "Nu s-au putut încărca activitățile utilizatorilor",
+    "loadStatsFailed": "Nu s-au putut încărca statisticile de activitate"
+  }
+}

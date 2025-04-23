@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { useTranslation } from "react-i18next";
-import ChatBotWidget from "@/components/ai/ChatBotWidget";
 import {
   FileSpreadsheet,
   Upload,
@@ -93,7 +92,7 @@ const UploadExcelPage: React.FC = () => {
               : t("There was an error processing your file. Please try again."),
         });
       },
-      [t, toast],
+      [t, toast]
     );
 
     if (!selectedProject) {
@@ -159,7 +158,7 @@ const UploadExcelPage: React.FC = () => {
             toast({
               title: t("Upload Complete"),
               description: t(
-                "Your Excel file has been successfully processed.",
+                "Your Excel file has been successfully processed."
               ),
             });
           }, 500);
@@ -196,12 +195,6 @@ const UploadExcelPage: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-slate-900 text-white">
-      {/* AI Assistant */}
-      <ChatBotWidget
-        initialMessage="Bun venit în secțiunea de upload Excel! Pot să te ajut cu informații despre formatul fișierelor acceptate, procesul de import sau rezolvarea problemelor. Cu ce te pot ajuta?"
-        contextType="inventory"
-      />
-
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
         <header className="sticky top-0 z-10 bg-slate-900 border-b border-slate-800 px-6 py-4 shrink-0">
@@ -313,12 +306,12 @@ const UploadExcelPage: React.FC = () => {
                             {uploadStatus === "uploading"
                               ? t("Uploading...")
                               : selectedFile
-                                ? selectedFile.name
-                                : t("Drag and drop or click to upload")}
+                              ? selectedFile.name
+                              : t("Drag and drop or click to upload")}
                           </h3>
                           <p className="text-slate-400">
                             {t(
-                              "Supported formats: Excel (.xlsx, .xls), CSV (.csv)",
+                              "Supported formats: Excel (.xlsx, .xls), CSV (.csv)"
                             )}
                           </p>
                         </div>
@@ -370,7 +363,7 @@ const UploadExcelPage: React.FC = () => {
                 <CardContent>
                   <p className="text-slate-400 mb-4">
                     {t(
-                      "Download our Excel template to ensure your data is formatted correctly for upload.",
+                      "Download our Excel template to ensure your data is formatted correctly for upload."
                     )}
                   </p>
                   <Button variant="outline">
@@ -409,7 +402,11 @@ const UploadExcelPage: React.FC = () => {
                                   {item.filename}
                                 </h4>
                                 <span
-                                  className={`text-xs px-2 py-0.5 rounded-full ${item.status === "success" ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"}`}
+                                  className={`text-xs px-2 py-0.5 rounded-full ${
+                                    item.status === "success"
+                                      ? "bg-green-500/20 text-green-400"
+                                      : "bg-red-500/20 text-red-400"
+                                  }`}
                                 >
                                   {item.status === "success"
                                     ? t("Success")

@@ -1,7 +1,12 @@
 import React from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Badge } from "@/components/ui/badge";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -22,7 +27,8 @@ const RoleIndicator: React.FC<RoleIndicatorProps> = ({
   showTooltip = true,
   className,
 }) => {
-  const { userRole } = useAuth();
+  const { userProfile } = useAuth();
+  const userRole = userProfile?.role;
 
   // Dacă nu există un rol, nu afișăm nimic
   if (!userRole) {
@@ -89,10 +95,7 @@ const RoleIndicator: React.FC<RoleIndicatorProps> = ({
 
   // Dacă nu se afișează tooltip-ul, afișăm doar badge-ul
   return (
-    <Badge
-      variant="outline"
-      className={cn(roleColor, className)}
-    >
+    <Badge variant="outline" className={cn(roleColor, className)}>
       {showIcon && <Shield className="h-3 w-3 mr-1" />}
       {userRole.charAt(0).toUpperCase() + userRole.slice(1)}
     </Badge>

@@ -24,6 +24,7 @@ export const roSidebar = {
   debug: "Debug & Dezvoltare",
   tester: "Testare Aplicație",
   aiAssistant: "Asistent AI",
+  userActivity: "Activitate Utilizatori",
   inventoryOptimizer: "Optimizator Inventar",
   inventoryButtonFixer: "Reparare Butoane",
   roleManagement: "Administrare Roluri",
