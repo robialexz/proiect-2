@@ -294,7 +294,7 @@ const Sidebar = () => {
                 <p className="font-medium text-sm">
                   {userProfile?.displayName || "Utilizator"}
                 </p>
-                {userRole && (
+                {userProfile?.role && (
                   <RoleIndicator
                     showIcon={false}
                     className="text-xs py-0 px-1.5 h-4"
